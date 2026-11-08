@@ -31,7 +31,8 @@ Translation notes (details in STMTS.md):
   `(V \ W).card = |V| − t + k` from `W ⊆ V`, `|W| = t − k`.
 * The «in particular» clause is a separate declaration
   (`L3_3_good_layer_density`) so that each half can be proved independently.
-* `sorry`: M1 placeholders — proof targets `Proofs/Layers.lean` (M2, M3).
+* M1 carried `sorry` placeholders; M2/M3 replaced them, so every lemma below is
+  now PROVED in `Proofs/Layers.lean` (statement-of-record) — see PROGRESS.md.
 -/
 import SubsetSumL25.Statements.LayerDefs
 
