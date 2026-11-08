@@ -51,7 +51,9 @@ Translation notes (details in STMTS.md):
   paper lemmas**: the paper performs these counts inline («When W is uniform,
   S' is a uniform σ-subset of V»; «A uniform σ-subset of a uniform v-subset of M
   is a uniform σ-subset of M»; «Every σ-set S has a_k(S) ≥ 1/C(σ,k)»).
-* `sorry`: M1 placeholders — proof targets `Proofs/CorD.lean` (M2, M3).
+* M1 carried `sorry` placeholders; M2/M3 replaced them, so Corollary D and all
+  three scaffolding lemmas are now PROVED in `Proofs/CorD.lean`
+  (statement-of-record) — see PROGRESS.md.
 -/
 import SubsetSumL25.Statements.Layers
 
@@ -59,41 +61,17 @@ namespace SubsetSumL25
 
 variable {n : ℕ}
 
-/-- Base Corollary D (averaged small layer): for integers `k, σ, v` with
-`2k ≤ σ`, `2σ ≤ v + 2k`, `v ≤ |M|` and `C(σ,k)C(v,k) ≤ 2^v`, averaging `a_k`
-over uniform σ-subsets `S` of `M` dominates `E_V 2^{−d(V)}/(v+1)` over uniform
-`v`-subsets `V` of `M`. -/
-theorem Base_cor_D (c : Fin n → ℤ) (M : Finset (Fin n)) {k σ v : ℕ}
-    (hk2 : 2 * k ≤ σ) (hσ2 : 2 * σ ≤ v + 2 * k) (hvM : v ≤ M.card)
-    (hch : Nat.choose σ k * Nat.choose v k ≤ 2 ^ v) :
-    (M.powersetCard v).expect (fun V => (2 : ℝ) ^ (-(deficiency c V)) / ((v : ℝ) + 1))
-      ≤ (M.powersetCard σ).expect (fun S => layerDensity c S k) := by
-  sorry
-
-/-! ### Formalization scaffolding (not paper lemmas) -/
-
--- `one_div_choose_le_layerDensity` (the `1/C(σ,k)` floor) is PROVED; its
--- statement-of-record lives in `Proofs/CorD.lean` (house convention: one
--- declaration per theorem).
-
-/-- Two-level uniform sampling (containment): averaging over `p`-subsets `V` of
-`M` and then over `q`-subsets `S ⊆ V` equals averaging over `q`-subsets of `M`.
-(Paper: «A uniform σ-subset of a uniform v-subset of M is a uniform σ-subset of
-M».) `p ≤ |M|` keeps both averaging spaces nonempty. -/
-theorem expect_powersetCard_powersetCard (M : Finset (Fin n)) {p q : ℕ}
-    (hp : p ≤ M.card) (hq : q ≤ p) (f : Finset (Fin n) → ℝ) :
-    (M.powersetCard p).expect (fun V => (V.powersetCard q).expect f)
-      = (M.powersetCard q).expect f := by
-  sorry
-
-/-- Two-level uniform sampling (disjoint): averaging over `p`-subsets `W` of `V`
-and then over `q`-subsets of the complement `V∖W` equals averaging over
-`q`-subsets of `V`. (Paper: «When W is uniform, S' is a uniform σ-subset of
-V».) `p + q ≤ |V|` keeps every averaging space nonempty. -/
-theorem expect_powersetCard_sdiff (V : Finset (Fin n)) {p q : ℕ}
-    (h : p + q ≤ V.card) (f : Finset (Fin n) → ℝ) :
-    (V.powersetCard p).expect (fun W => ((V \ W).powersetCard q).expect f)
-      = (V.powersetCard q).expect f := by
-  sorry
+-- M1 declared four statements here (Corollary D and the three scaffolding
+-- lemmas).  All of them are now PROVED, so their statements-of-record live in
+-- `Proofs/CorD.lean` (house convention: one declaration per theorem):
+--
+--   Base_cor_D                          (the corollary itself)
+--   Base_cor_D_case_ge / _case_lt       (its two branches)
+--   one_div_choose_le_layerDensity      (the 1/C(σ,k) floor, t < k branch)
+--   choose_le_choose_of_two_mul_le      (C(v,t) ≤ C(v,k), t < k branch)
+--   choose_mul_choose_swap              (disjoint-pair binomial identity)
+--   expect_powersetCard_powersetCard    («a uniform σ-subset of a uniform
+--                                        v-subset of M is uniform»)
+--   expect_powersetCard_sdiff           («when W is uniform, S' is uniform»)
 
 end SubsetSumL25

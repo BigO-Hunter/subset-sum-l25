@@ -138,3 +138,74 @@ pre-existing L2.5-cluster ones (`L2_3_halfVariance`, `L5_2_sparse_distinctions`)
    B2, one cell corrected there). Then **B3 = Base Lemma A5** (per-trial hit
    probability via the second prime `P′`, needs `L2_5_prime_collision` from this
    same package — already proved).
+
+---
+
+# B2 (Base Corollary D) — sub-campaign `base-core`, 2026-11-08
+
+Same worktree/branch (`base-core`), continuing the B1 rung. Source re-verified
+against the primary text (`PROOF_0.4877.tex` §3, lines 254–278,
+`maths-proofs@44c34961`): the corollary's hypotheses and conclusion match
+BRIDGE appendix row B2, including the correction recorded there — **`S` is a
+uniform σ-subset of `M`**, not a «half»; σ = m/2 holds only in-application.
+
+## Proved (axioms = [propext, Classical.choice, Quot.sound] — receipt-verified)
+
+| Theorem | Paper | Note |
+|---|---|---|
+| `Base_cor_D` | Corollary D | per-`V` claim + `expect_le_expect` + `expect_powersetCard_powersetCard` |
+| `Base_cor_D_case_ge` | case `t ≥ k` | `layerDensity_ge_of_card` + `L3_1_covering` + pointwise `L3_2_sampling` + `expect_powersetCard_sdiff` |
+| `Base_cor_D_case_lt` | case `t < k` | `choose_le_choose_of_two_mul_le` + `twoPow_neg_deficiency` + `one_div_choose_le_layerDensity`; the hypothesis `C(σ,k)C(v,k) ≤ 2^v` is used **only** here |
+| `one_div_choose_le_layerDensity` | inline («Σ_k(S) is not empty») | the `1/C(σ,k)` floor |
+| `choose_le_choose_of_two_mul_le` | inline («C(v,t) ≤ C(v,k)») | iterates `Nat.choose_le_succ_of_lt_half_left` over `k − t` |
+| `choose_mul_choose_swap` | — | `C(N,a)C(N−a,b) = C(N,b)C(N−b,a)`, two `Nat.choose_mul` + `Nat.choose_symm` |
+| `expect_powersetCard_powersetCard` | «a uniform σ-subset of a uniform v-subset of M is uniform» | `card_filter`/`sum_comm`/`card_filter_powersetCard_subset` + `Nat.choose_mul` |
+| `expect_powersetCard_sdiff` | «when W is uniform, S' is a uniform σ-subset of V» | same, with `{W : S ⊆ V∖W} = (V∖S).powersetCard p` and `choose_mul_choose_swap` |
+| `layerDensity_ge_of_card` (B1 refactor) | Lemma 3.3 «in particular» for a GIVEN `t` | lets both B2 branches dispatch on the *same* `t` |
+
+**Zero sorries in this lane's files.** Package-wide the two pre-existing L2.5
+sorries remain on `main`'s lane (integrated there as proved; this branch
+predates that integration and does not touch those files).
+
+## Nonemptiness accounting (the rung's known risk)
+
+`Finset.expect` of an empty finset is `0`, so a weakened size hypothesis would
+degenerate an average silently. Here: `M.powersetCard v` is nonempty by the
+paper's own `v ≤ |M|`; `M.powersetCard σ` by `σ ≤ v` (derived in-proof);
+`V.powersetCard σ` by `σ ≤ |V| = v`; and the two structural lemmas carry
+`p ≤ M.card` resp. `p + q ≤ V.card` as explicit hypotheses. `Base_cor_D_case_lt`
+also needs `(V.powersetCard σ).Nonempty` for `Finset.expect_const` — supplied
+explicitly.
+
+## Fork gotchas added here
+
+* `Finset.mem_sdiff` is **not** `And`-defeq in this pin (`Quot.lift` membership):
+  `⟨ha, hb⟩` fails where `a ∈ s \ t` is expected — use `Finset.mem_sdiff.mpr`.
+  Same for projections: `(h ha).1` fails, `(Finset.mem_sdiff.mp (h ha)).1` works.
+* `rw [Finset.card_powersetCard]` rewrites **one** occurrence per listing; with
+  two `#(powersetCard _ _)` in the goal, list it twice (or use `show`).
+* `div_eq_div_iff` matches the denominator *product order* syntactically —
+  `mul_comm` must run before it if your identity has the factors flipped.
+* `linear_combination` needs the sign that matches the goal's side orientation;
+  a correctly-proved identity can still need `-coeff * h`.
+* `Nat.le_induction` carries a dependent motive `P : (n) → m ≤ n → Prop`, which
+  is awkward for bounded monotonicity — plain induction on `k - t` is simpler.
+* `Nat.choose_le_choose` is monotonicity in the **bottom** argument; the
+  right-argument monotonicity must be assembled from
+  `Nat.choose_le_succ_of_lt_half_left`.
+
+## Commits
+
+1. `1161958` M1: statement verbatim + scaffolding stubs + STMTS.md B2 section
+2. `1598948` M2: the `t < k` floor (`1/C(σ,k)`) + branch assembly
+3. M3: nested averaging + case `t ≥ k` + Corollary D (this commit)
+
+## Next actions (B-core lane)
+
+1. **B3 = Base Lemma A5** — per-trial hit probability `≥ 2^{−g_M} n^{−6}` via
+   the second prime `P′`; its (F4) input is `L2_5_prime_collision`, already
+   proved in this same package (B1's `Proofs/PrimeCollision.lean`), so the
+   cross-lane dependency is satisfied without waiting on `main`.
+2. Then B4 (Bills' `Regions`/`RowMargins` template) and B5, per BRIDGE.
+3. Merge `base-core` when the L2.5 lane's `main` settles; conflicts limited to
+   the appended import lines in `SubsetSumL25.lean`.
