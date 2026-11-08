@@ -1,0 +1,20 @@
+name = "subsetsum-l25"
+defaultTargets = ["SubsetSumL25"]
+
+# Subset-sum sub-1/2 campaign: the cheap OpenAI-lemma cluster
+# {L2.1 Isolation, L2.2 Deficiency, L2.3 Random restrictions, L2.5 Random-prime
+# collisions, L5.2 Sparse distinctions}, per /Volumes/Substrate-1/bigo/subset-sum-bridge/BRIDGE.md.
+#
+# Pins match the subset-sum challenge (bigospeedrun/verifier
+# challenges/subset-sum/README.md): Lean v4.34.1, Mathlib d13f23b — the same pin
+# the DFT profile carries and the openai/math repo's own Lean library uses, so a
+# proof built here needs no port.
+
+[[require]]
+name = "Mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "d13f23b723b8a846827a245b89c10fc7d3f11612"
+
+[[lean_lib]]
+name = "SubsetSumL25"
+globs = ["SubsetSumL25", "SubsetSumL25.+"]
