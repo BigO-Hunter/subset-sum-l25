@@ -285,4 +285,300 @@ private theorem avg_bij_diff_le {α β : Type*} {s : Finset α} {t : Finset β}
   · rw [le_div_iff₀ hcard']; linarith
   · rw [div_le_iff₀ hcard']; linarith
 
+/-! ## M4d: the fiber / step-mean layer -/
+
+/-- Finite two-level law of total variance: the squared deviation from the
+global mean splits into within-fiber deviations from the fiber mean plus the
+fiber-mean deviations from the global mean (exact identity, counting measure). -/
+private theorem total_variance_finset {α β : Type*} [DecidableEq α] (s : Finset α)
+    (t : α → Finset β) (hne : ∀ a ∈ s, (t a).Nonempty) (z : α → β → ℝ) :
+    ∑ a ∈ s, ∑ b ∈ t a, (z a b - (∑ a' ∈ s, ∑ b' ∈ t a', z a' b') /
+        ((∑ a' ∈ s, (t a').card : ℕ) : ℝ)) ^ 2
+      = ∑ a ∈ s, ∑ b ∈ t a, (z a b - (∑ b' ∈ t a, z a b') / ((t a).card : ℝ)) ^ 2
+        + ∑ a ∈ s, ((t a).card : ℝ) *
+            ((∑ b' ∈ t a, z a b') / ((t a).card : ℝ) -
+              (∑ a' ∈ s, ∑ b' ∈ t a', z a' b') / ((∑ a' ∈ s, (t a').card : ℕ) : ℝ)) ^ 2 := by
+  rcases Finset.eq_empty_or_nonempty s with hE | hNE
+  · subst hE
+    simp
+  · set N : ℝ := (((∑ a ∈ s, (t a).card : ℕ)) : ℝ) with hNdef
+    set Z : ℝ := ∑ a ∈ s, ∑ b ∈ t a, z a b with hZdef
+    have hsumn : N = ∑ a ∈ s, ((t a).card : ℝ) := by
+      rw [hNdef]; exact Nat.cast_sum s (fun a => (t a).card)
+    have hNpos : 0 < N := by
+      rw [hsumn]
+      refine Finset.sum_pos' (fun a _ => by positivity) ⟨hNE.choose, hNE.choose_spec, ?_⟩
+      have hc := (hne hNE.choose hNE.choose_spec).card_pos
+      exact_mod_cast hc
+    have hNa : ∀ a ∈ s, (0 : ℝ) < ((t a).card : ℝ) := by
+      intro a ha
+      exact_mod_cast (hne a ha).card_pos
+    have e1 : ∑ a ∈ s, ∑ b ∈ t a, (z a b - Z / N) ^ 2
+        = (∑ a ∈ s, ∑ b ∈ t a, (z a b) ^ 2) - Z ^ 2 / N := by
+      have per : ∀ a ∈ s, ∑ b ∈ t a, (z a b - Z / N) ^ 2
+          = (∑ b ∈ t a, (z a b) ^ 2) - 2 * (Z / N) * (∑ b ∈ t a, z a b)
+            + ((t a).card : ℝ) * (Z / N) ^ 2 :=
+        fun a _ => sum_sq_sub_const_eq (t a) (fun b => z a b) (Z / N)
+      rw [Finset.sum_congr rfl per, Finset.sum_add_distrib, Finset.sum_sub_distrib,
+        ← Finset.mul_sum, ← Finset.sum_mul, hZdef.symm, ← hsumn]
+      have h2 : 2 * (Z / N) * Z = 2 * Z ^ 2 / N := by field_simp [hNpos.ne']
+      have h3 : N * (Z / N) ^ 2 = Z ^ 2 / N := by field_simp [hNpos.ne']
+      rw [h2, h3]
+      ring
+    have e2 : ∑ a ∈ s, ∑ b ∈ t a, (z a b - (∑ b' ∈ t a, z a b') / ((t a).card : ℝ)) ^ 2
+        = (∑ a ∈ s, ∑ b ∈ t a, (z a b) ^ 2)
+          - ∑ a ∈ s, ((∑ b' ∈ t a, z a b') ^ 2 / ((t a).card : ℝ)) := by
+      have per : ∀ a ∈ s, ∑ b ∈ t a, (z a b - (∑ b' ∈ t a, z a b') / ((t a).card : ℝ)) ^ 2
+          = (∑ b ∈ t a, (z a b) ^ 2) - ((∑ b' ∈ t a, z a b') ^ 2 / ((t a).card : ℝ)) := by
+        intro a ha
+        have h := sum_sq_sub_const_eq (t a) (fun b => z a b)
+          ((∑ b' ∈ t a, z a b') / ((t a).card : ℝ))
+        rw [h]
+        field_simp
+        ring
+      rw [Finset.sum_congr rfl per, Finset.sum_sub_distrib]
+    have e3 : ∑ a ∈ s, ((t a).card : ℝ) *
+        ((∑ b' ∈ t a, z a b') / ((t a).card : ℝ) - Z / N) ^ 2
+        = ∑ a ∈ s, ((∑ b' ∈ t a, z a b') ^ 2 / ((t a).card : ℝ)) - Z ^ 2 / N := by
+      have per : ∀ a ∈ s, ((t a).card : ℝ) *
+          ((∑ b' ∈ t a, z a b') / ((t a).card : ℝ) - Z / N) ^ 2
+          = ((∑ b' ∈ t a, z a b') ^ 2 / ((t a).card : ℝ))
+            - 2 * (Z / N) * (∑ b' ∈ t a, z a b') + ((t a).card : ℝ) * (Z / N) ^ 2 := by
+        intro a ha
+        have hc := hNa a ha
+        field_simp
+        ring
+      rw [Finset.sum_congr rfl per, Finset.sum_add_distrib, Finset.sum_sub_distrib,
+        ← Finset.mul_sum, ← Finset.sum_mul, hZdef.symm, ← hsumn]
+      have h2 : 2 * (Z / N) * Z = 2 * Z ^ 2 / N := by field_simp [hNpos.ne']
+      have h3 : N * (Z / N) ^ 2 = Z ^ 2 / N := by field_simp [hNpos.ne']
+      rw [h2, h3]
+      ring
+    rw [e1, e2, e3]
+    ring
+
+/-- One-step exposure mean: the average of `h (S ∪ {i})` over uniform `i ∉ S`. -/
+private noncomputable def stepMean {n : ℕ} (h : Finset (Fin n) → ℝ) (S : Finset (Fin n)) : ℝ :=
+  (Finset.univ \ S).expect (fun i => h (insert i S))
+
+private theorem stepMean_eq_div {n : ℕ} (h : Finset (Fin n) → ℝ) (S : Finset (Fin n)) :
+    stepMean h S = (∑ i ∈ Finset.univ \ S, h (insert i S)) / ((n - S.card : ℕ) : ℝ) := by
+  rw [stepMean, Finset.expect_eq_sum_div_card,
+    Finset.card_sdiff_of_subset (Finset.subset_univ S), Finset.card_univ, Fintype.card_fin]
+
+/-- Leave-one-out averaging bound: if each `a k` is within 1 of both `b k` and
+the extra value `c`, then the average of `a` and the augmented average of `b`
+with the extra term `c` differ by at most 1. -/
+private theorem avg_augment_le_one {β : Type*} {s : Finset β} (hs : 0 < s.card)
+    (a b : β → ℝ) (c : ℝ)
+    (h1 : ∀ k ∈ s, |a k - b k| ≤ 1) (h2 : ∀ k ∈ s, |a k - c| ≤ 1) :
+    |(∑ k ∈ s, a k) / s.card - (c + ∑ k ∈ s, b k) / ((s.card : ℝ) + 1)| ≤ 1 := by
+  have hn : (0 : ℝ) < s.card := by exact_mod_cast hs
+  have hkey : ((s.card : ℝ) * ((s.card : ℝ) + 1)) *
+      ((∑ k ∈ s, a k) / s.card - (c + ∑ k ∈ s, b k) / ((s.card : ℝ) + 1))
+      = (s.card : ℝ) * (∑ k ∈ s, (a k - b k)) + ∑ k ∈ s, (a k - c) := by
+    rw [Finset.sum_sub_distrib, Finset.sum_sub_distrib, Finset.sum_const, nsmul_eq_mul]
+    field_simp
+    ring
+  have hb1 : |∑ k ∈ s, (a k - b k)| ≤ (s.card : ℝ) := by
+    have hub : ∑ k ∈ s, (a k - b k) ≤ (s.card : ℝ) := by
+      calc ∑ k ∈ s, (a k - b k) ≤ ∑ k ∈ s, (1 : ℝ) :=
+            Finset.sum_le_sum fun k hk => (abs_le.mp (h1 k hk)).2
+        _ = (s.card : ℝ) := by rw [Finset.sum_const, nsmul_eq_mul, mul_one]
+    have hlb : -((s.card : ℝ)) ≤ ∑ k ∈ s, (a k - b k) := by
+      have hone : ∑ k ∈ s, (-1 : ℝ) = -((s.card : ℝ)) := by
+        rw [Finset.sum_const, nsmul_eq_mul]; ring
+      calc -((s.card : ℝ)) = ∑ k ∈ s, (-1 : ℝ) := hone.symm
+        _ ≤ ∑ k ∈ s, (a k - b k) :=
+            Finset.sum_le_sum fun k hk => (abs_le.mp (h1 k hk)).1
+    rw [abs_le]; exact ⟨hlb, hub⟩
+  have hb2 : |∑ k ∈ s, (a k - c)| ≤ (s.card : ℝ) := by
+    have hub : ∑ k ∈ s, (a k - c) ≤ (s.card : ℝ) := by
+      calc ∑ k ∈ s, (a k - c) ≤ ∑ k ∈ s, (1 : ℝ) :=
+            Finset.sum_le_sum fun k hk => (abs_le.mp (h2 k hk)).2
+        _ = (s.card : ℝ) := by rw [Finset.sum_const, nsmul_eq_mul, mul_one]
+    have hlb : -((s.card : ℝ)) ≤ ∑ k ∈ s, (a k - c) := by
+      have hone : ∑ k ∈ s, (-1 : ℝ) = -((s.card : ℝ)) := by
+        rw [Finset.sum_const, nsmul_eq_mul]; ring
+      calc -((s.card : ℝ)) = ∑ k ∈ s, (-1 : ℝ) := hone.symm
+        _ ≤ ∑ k ∈ s, (a k - c) :=
+            Finset.sum_le_sum fun k hk => (abs_le.mp (h2 k hk)).1
+    rw [abs_le]; exact ⟨hlb, hub⟩
+  have hpos : (0 : ℝ) < (s.card : ℝ) * ((s.card : ℝ) + 1) := by positivity
+  have hmul : |(∑ k ∈ s, a k) / s.card - (c + ∑ k ∈ s, b k) / ((s.card : ℝ) + 1)|
+      * ((s.card : ℝ) * ((s.card : ℝ) + 1)) ≤ 1 * ((s.card : ℝ) * ((s.card : ℝ) + 1)) := by
+    have habs : |((s.card : ℝ) * ((s.card : ℝ) + 1)) *
+        ((∑ k ∈ s, a k) / s.card - (c + ∑ k ∈ s, b k) / ((s.card : ℝ) + 1))|
+        = |(∑ k ∈ s, a k) / s.card - (c + ∑ k ∈ s, b k) / ((s.card : ℝ) + 1)|
+          * ((s.card : ℝ) * ((s.card : ℝ) + 1)) := by
+      rw [abs_mul, abs_of_pos hpos, mul_comm]
+    rw [← habs, hkey]
+    calc |(s.card : ℝ) * (∑ k ∈ s, (a k - b k)) + ∑ k ∈ s, (a k - c)|
+        ≤ |(s.card : ℝ) * (∑ k ∈ s, (a k - b k))| + |∑ k ∈ s, (a k - c)| := abs_add_le _ _
+      _ = (s.card : ℝ) * |∑ k ∈ s, (a k - b k)| + |∑ k ∈ s, (a k - c)| := by
+            rw [abs_mul, abs_of_pos hn]
+      _ ≤ (s.card : ℝ) * s.card + s.card :=
+            add_le_add (mul_le_mul_of_nonneg_left hb1 (le_of_lt hn)) hb2
+      _ = 1 * ((s.card : ℝ) * ((s.card : ℝ) + 1)) := by ring
+  exact le_of_mul_le_mul_right hmul hpos
+
+/-- The one-step mean inherits the exchange-Lipschitz property. -/
+private theorem stepMean_exchange_le {n : ℕ} (h : Finset (Fin n) → ℝ)
+    (hEL : ∀ S : Finset (Fin n), S.card + 2 ≤ n → ∀ i j : Fin n, i ∉ S → j ∉ S → i ≠ j →
+      |h (insert i S) - h (insert j S)| ≤ 1) :
+    ∀ S : Finset (Fin n), S.card + 2 ≤ n → ∀ i j : Fin n, i ∉ S → j ∉ S → i ≠ j →
+      |stepMean h (insert i S) - stepMean h (insert j S)| ≤ 1 := by
+  intro S hS i j hi hj hij
+  have hcard_i : (Finset.univ \ insert i S).card = n - (S.card + 1) := by
+    rw [Finset.card_sdiff_of_subset (Finset.subset_univ _), Finset.card_univ, Fintype.card_fin,
+      Finset.card_insert_of_notMem hi]
+  have hcard_j : (Finset.univ \ insert j S).card = n - (S.card + 1) := by
+    rw [Finset.card_sdiff_of_subset (Finset.subset_univ _), Finset.card_univ, Fintype.card_fin,
+      Finset.card_insert_of_notMem hj]
+  have hne_i : 0 < (Finset.univ \ insert i S).card := by
+    rw [hcard_i]; omega
+  have hden_i : ((n - (insert i S).card : ℕ) : ℝ) = (((Finset.univ \ insert i S).card : ℕ) : ℝ) := by
+    rw [Finset.card_insert_of_notMem hi]
+    exact congrArg _ hcard_i.symm
+  have hden_j : ((n - (insert j S).card : ℕ) : ℝ) = (((Finset.univ \ insert j S).card : ℕ) : ℝ) := by
+    rw [Finset.card_insert_of_notMem hj]
+    exact congrArg _ hcard_j.symm
+  rw [stepMean_eq_div, stepMean_eq_div, hden_i, hden_j]
+  refine avg_bij_diff_le hne_i (fun k => h (insert k (insert i S)))
+    (fun k' => h (insert k' (insert j S))) (fun k _ => if k = j then i else k) ?_ ?_ ?_ ?_
+  · intro k hk
+    obtain ⟨_, hknot⟩ := Finset.mem_sdiff.mp hk
+    rw [Finset.mem_insert] at hknot
+    have hkS : k ∉ S := fun h => hknot (Or.inr h)
+    by_cases hkj : k = j
+    · rw [if_pos hkj, Finset.mem_sdiff, Finset.mem_insert]
+      refine ⟨Finset.mem_univ _, ?_⟩
+      rintro (h | h)
+      · exact hij h
+      · exact hi h
+    · rw [if_neg hkj, Finset.mem_sdiff, Finset.mem_insert]
+      refine ⟨Finset.mem_univ _, ?_⟩
+      rintro (h | h)
+      · exact hkj h
+      · exact hkS h
+  · intro k₁ hk₁ k₂ hk₂ heq
+    have hk₁' : k₁ ∉ insert i S := (Finset.mem_sdiff.mp hk₁).2
+    have hk₂' : k₂ ∉ insert i S := (Finset.mem_sdiff.mp hk₂).2
+    by_cases h1 : k₁ = j
+    · by_cases h2 : k₂ = j
+      · rw [h1, h2]
+      · rw [if_pos h1, if_neg h2] at heq
+        exact absurd (heq.symm ▸ Finset.mem_insert_self i S) hk₂'
+    · by_cases h2 : k₂ = j
+      · rw [if_neg h1, if_pos h2] at heq
+        exact absurd (heq ▸ Finset.mem_insert_self i S) hk₁'
+      · rw [if_neg h1, if_neg h2] at heq
+        exact heq
+  · intro k' hk'
+    obtain ⟨_, hk'not⟩ := Finset.mem_sdiff.mp hk'
+    rw [Finset.mem_insert] at hk'not
+    have hk'S : k' ∉ S := fun h => hk'not (Or.inr h)
+    have hk'j : k' ≠ j := fun h => hk'not (Or.inl h)
+    by_cases hk'i : k' = i
+    · refine ⟨j, ?_, ?_⟩
+      · rw [Finset.mem_sdiff, Finset.mem_insert]
+        refine ⟨Finset.mem_univ _, ?_⟩
+        rintro (h | h)
+        · exact hij h.symm
+        · exact hj h
+      · rw [if_pos rfl]
+        exact hk'i.symm
+    · refine ⟨k', ?_, ?_⟩
+      · rw [Finset.mem_sdiff, Finset.mem_insert]
+        refine ⟨Finset.mem_univ _, ?_⟩
+        rintro (h | h)
+        · exact hk'i h
+        · exact hk'S h
+      · rw [if_neg hk'j]
+  · intro k hk
+    obtain ⟨_, hknot⟩ := Finset.mem_sdiff.mp hk
+    rw [Finset.mem_insert] at hknot
+    have hkS : k ∉ S := fun h => hknot (Or.inr h)
+    have hki : k ≠ i := fun h => hknot (Or.inl h)
+    by_cases hkj : k = j
+    · rw [if_pos hkj]
+      have heqset : insert k (insert i S) = insert i (insert j S) := by
+        rw [hkj]; exact Finset.insert_comm j i S
+      rw [heqset, sub_self, abs_zero]
+      norm_num
+    · rw [if_neg hkj]
+      have hkk : S.card + 3 ≤ n := by
+        by_contra hcon
+        have h2 : S.card + 2 = n := by omega
+        have hSset : (Finset.univ \ insert i S).card = 1 := by rw [hcard_i]; omega
+        have hjmem : j ∈ Finset.univ \ insert i S := by
+          rw [Finset.mem_sdiff, Finset.mem_insert]
+          refine ⟨Finset.mem_univ _, ?_⟩
+          rintro (h | h)
+          · exact hij h.symm
+          · exact hj h
+        exact hkj (Finset.card_le_one_iff.mp (le_of_eq hSset) hk hjmem)
+      have hkk' : (insert k S).card + 2 ≤ n := by
+        rw [Finset.card_insert_of_notMem hkS]; omega
+      have hEL' := hEL (insert k S) hkk' i j ?_ ?_ hij
+      · have h1 : insert k (insert i S) = insert i (insert k S) :=
+          (Finset.insert_comm i k S).symm
+        have h2 : insert k (insert j S) = insert j (insert k S) :=
+          (Finset.insert_comm j k S).symm
+        rwa [h1, h2]
+      · rw [Finset.mem_insert]
+        rintro (h | h)
+        · exact hki h.symm
+        · exact hi h
+      · rw [Finset.mem_insert]
+        rintro (h | h)
+        · exact hkj h.symm
+        · exact hj h
+
+/-- The one-step mean inherits the insert-Lipschitz property, with the depth
+`d` decremented by one (the exposure recursion consumes one level). -/
+private theorem stepMean_insert_le {n : ℕ} (h : Finset (Fin n) → ℝ) (d : ℕ) (hd : d ≤ n)
+    (hIL : ∀ S : Finset (Fin n), S.card + 1 ≤ d → ∀ i : Fin n, i ∉ S →
+      |h (insert i S) - h S| ≤ 1) :
+    ∀ S : Finset (Fin n), S.card + 1 ≤ d - 1 → ∀ i : Fin n, i ∉ S →
+      |stepMean h (insert i S) - stepMean h S| ≤ 1 := by
+  intro S hS i hi
+  have hcardA : (Finset.univ \ insert i S).card = n - (S.card + 1) := by
+    rw [Finset.card_sdiff_of_subset (Finset.subset_univ _), Finset.card_univ, Fintype.card_fin,
+      Finset.card_insert_of_notMem hi]
+  have hn1 : 0 < (Finset.univ \ insert i S).card := by rw [hcardA]; omega
+  have hia : i ∉ Finset.univ \ insert i S := fun h =>
+    (Finset.mem_sdiff.mp h).2 (Finset.mem_insert_self i S)
+  have hsplit : Finset.univ \ S = insert i (Finset.univ \ insert i S) :=
+    (Finset.sdiff_insert_insert_of_mem_of_notMem (Finset.mem_univ i) hi).symm
+  have hdeni : ((n - (insert i S).card : ℕ) : ℝ) = (((Finset.univ \ insert i S).card : ℕ) : ℝ) := by
+    rw [Finset.card_insert_of_notMem hi]
+    exact congrArg _ hcardA.symm
+  have hdenS : ((n - S.card : ℕ) : ℝ) = (((Finset.univ \ S).card : ℕ) : ℝ) := by
+    rw [Finset.card_sdiff_of_subset (Finset.subset_univ _), Finset.card_univ, Fintype.card_fin]
+  rw [stepMean_eq_div, stepMean_eq_div, hdeni, hdenS, hsplit,
+    Finset.sum_insert hia, Finset.card_insert_of_notMem hia, Nat.cast_add, Nat.cast_one]
+  refine avg_augment_le_one hn1 (fun k => h (insert k (insert i S))) (fun k => h (insert k S))
+    (h (insert i S)) ?_ ?_
+  · intro k hk
+    obtain ⟨_, hknot⟩ := Finset.mem_sdiff.mp hk
+    rw [Finset.mem_insert] at hknot
+    have hki : k ≠ i := fun h => hknot (Or.inl h)
+    have hkS : k ∉ S := fun h => hknot (Or.inr h)
+    have hci : (insert k S).card + 1 ≤ d := by
+      rw [Finset.card_insert_of_notMem hkS]; omega
+    have hh := hIL (insert k S) hci i ?_
+    · have h1 : insert k (insert i S) = insert i (insert k S) :=
+        (Finset.insert_comm i k S).symm
+      rwa [h1]
+    · rw [Finset.mem_insert]
+      rintro (h | h)
+      · exact hki h.symm
+      · exact hi h
+  · intro k hk
+    have hkk : k ∉ insert i S := (Finset.mem_sdiff.mp hk).2
+    have hci : (insert i S).card + 1 ≤ d := by
+      rw [Finset.card_insert_of_notMem hi]; omega
+    exact hIL (insert i S) hci k hkk
+
 end SubsetSumL25
