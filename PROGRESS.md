@@ -354,3 +354,35 @@ HIGH-but-mechanical given interval balls, with the 10 regions ρ₀..ρ₉ at
 Γ-relative breakpoints 1, 1.25, 1.6, 2, 2.6, 3.5, 5, 8, 15, ∞ and 430
 certificate rows). B5 (preliminary search + cost accounting) is the other
 remaining B rung; O8 (word-RAM accounting) is the parallel "our home turf" rung.
+
+---
+
+# B4 (Base Theorem B region analysis: §6.1 regions + §6.3 Lemma B2) — COMPLETE 2026-11-08
+
+Entry decision (STMTS.md §B4): option (ii) — re-express Bills' region machinery locally, do not import. Pin mismatch (their v4.24.0 + external `subset_sum_bound` git dep vs our v4.34.1/d13f23b), their concrete kernel-decide certificate layer is orthogonal to our data-as-hypotheses contract, their `firstBoundary` filter-3 refinement is not in Base §6.1, and the template is 64+99 lines. Credit chain: Base → Bills (template) → this package.
+
+## Proved (10 declarations; all `#print axioms` = [propext, Classical.choice, Quot.sound])
+
+| Theorem | Content |
+|---|---|
+| `bandUpper_step` / `bandUpper_mono` | §6.1's band order (1 < 1.25 < 1.6 < 2 < 2.6 < 3.5 < 5 < 8 < 15) |
+| `region_existence` / `region_disjoint` / `region_unique` | Bills' trio, re-derived for Base's ρ₀ = {W ≤ Γ} (no lower bound — partition total without a `0 < W` side condition) |
+| `row_errors_le_six_eps` | the a_Γ ≤ 3/4 per-row guard: six errors 3ε,4ε,6ε,(4a_Γ+3)ε,4ε,4ε all ≤ 6ε |
+| `z_dot_Gbar_ge` | Lemma B2's display `z·Ḡ ≥ z₀G^π₀ − 6εΣ_t z_t` (abstract indexed form) |
+| `lem_B2_region_zero` / `lem_B2_region_band` | the two region dispatch cases, hypotheses verbatim |
+| `lem_B2_domination` | the verbatim conclusion `−α_πU_{v,π} ≤ −Δ + z·Ḡ + 6εΣ_t z_t` |
+
+Zero sorries in the B4 lane. Prop B's 430 integral bounds: separately certified, not restated (data). Theorem B itself: algorithm statement, out of package scope (same boundary as A5's `D_s`), documented in STMTS.md §B4.
+
+## Fork gotchas added
+
+* `mul_lt_mul_left` in this pin is the **right-multiplication** form (`b*a < c*a`, `MulRightStrictMono`) — the left-multiplication version is `mul_lt_mul_of_pos_left`, and its target type must be spelled out (a bare unification picks `a := α` and rescales wrongly). For a strict positivity split, `by_contra; push_neg; mul_le_mul_of_nonneg_left hc (le_of_lt hαpos)` is robust.
+* `mul_le_mul_of_nonneg_left`/`_right` want the nonnegativity argument positionally `(0 ≤ c)`; `le_of_lt` bridges, but `le_of_mul_le_mul_right` needs `MulPosReflectLE` — for `α ≤ z₀` from `α*b ≤ z₀*b` with `b > 0`, go via `Γ ≤ z₀*W` (`div_le_div_iff₀` + `mul_div_assoc` + `div_self`).
+* `Finset.sum_erase_add` takes `(s := …) (f := …)` named args and its equation is `∑ erase + f a = ∑ full` — close with `linarith`, not `rw`.
+* Python-driven statement deletion from a Statements file can eat preceding definitions when a theorem's nearest preceding docstring belongs to the previous def (the B4 file lost `bandUpper`/`inRegion` this way; restored from the writer's head). Prefer explicit end-markers over rindex when scripting.
+* `Finset.mul_sum` does not rewrite inside a negated product-of-sum; do `mul_add` first, then `← Finset.mul_sum`, then `ring`.
+* `exact_mod_cast` does not normalize `1 * W` → `W`; use `show` + `rw [one_mul]`.
+
+## Next action
+
+**B5 — preliminary search + cost accounting** (Prop P: cap `2^{⌈τ₀n⌉}`, Chebyshev `4/(ζ²n)` → (LD); Thm A part 2 op bound; Lemma A7 expected work) — then O8 (word-RAM accounting, our home turf) per BRIDGE attack order; O4 and O5+O7 remain.

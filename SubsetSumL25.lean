@@ -9,6 +9,7 @@ import SubsetSumL25.Statements.Layers
 import SubsetSumL25.Statements.CorD
 import SubsetSumL25.Statements.A5
 import SubsetSumL25.Statements.ThmB
+import SubsetSumL25.Proofs.ThmB
 import SubsetSumL25.Proofs.PrimeCollision
 import SubsetSumL25.Proofs.Isolation
 import SubsetSumL25.Proofs.Deficiency
