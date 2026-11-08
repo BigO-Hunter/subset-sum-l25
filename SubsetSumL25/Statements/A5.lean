@@ -73,15 +73,7 @@ noncomputable def gM (c : Fin n → ℤ) (M : Finset (Fin n)) (v : ℕ) : ℝ :=
 
 -- `middle_choose_div_two_pow_ge_inv` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
-/-- Step 1 identity (verbatim: «Conditional on this event, S is a uniform
-σ-subset of M»): averaging over uniform subsets and conditioning on the
-cardinality `σ` is the same as averaging over uniform `σ`-subsets, scaled by
-`C(m,σ)2^{−m}`. -/
-theorem powerset_expect_ite_card (M : Finset (Fin n)) {σ : ℕ}
-    (g : Finset (Fin n) → ℝ) :
-    ((Nat.choose M.card σ : ℝ) / 2 ^ M.card) * (M.powersetCard σ).expect g
-      = (M.powerset).expect (fun F => if F.card = σ then g F else 0) := by
-  sorry
+-- `powerset_expect_ite_card` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
 -- `expect_bad_indicator_ge` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
@@ -122,28 +114,7 @@ theorem hit_prob_eq_occupied (W : Finset ℤ) {p : ℕ} (hp : 0 < p) :
       = ((W.image (fun x => x % (p : ℤ))).card : ℝ) / p := by
   sorry
 
-/-- Step 3 assembly: with Corollary D's bound (`hcorD`), the good sets dominating
-`a_k` (`hgood`, Step 2), `B_S ≤ C(σ,k)` and the A4 bad fraction (`hbad`,
-`hδ`), the good-hit average keeps half of `2^{−g_M}/(v+1)`:
-
-    E_S[1_good B_S/C(σ,k)] ≥ 2^{−g_M}/(v+1) − 2^{−δn} ≥ 2^{−g_M}/(2(v+1)).
-
-`B` is the paper's `B_S` and `Csk` its `C(σ,k)`. -/
-theorem good_hit_expect_ge (c : Fin n → ℤ) {M : Finset (Fin n)} {k σ v δn : ℕ}
-    (B : Finset (Fin n) → ℕ) (good : Finset (Fin n) → Prop) [DecidablePred good]
-    (hCpos : (0 : ℝ) < (Nat.choose σ k : ℝ))
-    (hBle : ∀ S, B S ≤ Nat.choose σ k)
-    (hgood : ∀ S ∈ M.powersetCard σ, good S →
-      layerDensity c S k ≤ (B S : ℝ) / (Nat.choose σ k : ℝ))
-    (hcorD : (2 : ℝ) ^ (-(gM c M v)) / ((v : ℝ) + 1)
-      ≤ (M.powersetCard σ).expect (fun S => layerDensity c S k))
-    (hδ : (2 : ℝ) ^ (-(δn : ℝ)) ≤ (2 : ℝ) ^ (-(gM c M v)) / (2 * ((v : ℝ) + 1)))
-    (hbad : ((M.powersetCard σ).filter (fun S => ¬ good S)).card
-      ≤ (2 : ℝ) ^ (-(δn : ℝ)) * (M.powersetCard σ).card) :
-    (2 : ℝ) ^ (-(gM c M v)) / (2 * ((v : ℝ) + 1))
-      ≤ (M.powersetCard σ).expect
-          (fun S => if good S then (B S : ℝ) / (Nat.choose σ k : ℝ) else 0) := by
-  sorry
+-- `good_hit_expect_ge` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
 -- `lem_A5_product` is PROVED; statement-of-record in `Proofs/A5.lean`.
 

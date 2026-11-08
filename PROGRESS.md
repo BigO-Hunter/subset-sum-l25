@@ -209,3 +209,82 @@ explicitly.
 2. Then B4 (Bills' `Regions`/`RowMargins` template) and B5, per BRIDGE.
 3. Merge `base-core` when the L2.5 lane's `main` settles; conflicts limited to
    the appended import lines in `SubsetSumL25.lean`.
+
+---
+
+# B3 (Base Lemma A5 + Corollary A6) — sub-campaign `base-core`, 2026-11-08
+
+Same worktree/branch. Source re-read in full: `PROOF_0.4877.tex` §5.4–§5.6
+(lines 380–545), matching BRIDGE appendix row B3 («matches»).
+
+**Scope decision (documented, not hidden):** Lemma A5 quantifies over the
+*algorithm* (`D_s`, keys, classes, records, the trial procedure, `F`, `P′`,
+`j′`); this package has no algorithm. As on every rung of this ladder, the
+deterministic algorithm facts (Step 2 sign identity, Step 5 «a hit is
+recovered») are **named hypotheses**, and the mathematical content is proved.
+
+## Proved (11 declarations; axioms = [propext, Classical.choice, Quot.sound])
+
+| Theorem | Paper step |
+|---|---|
+| `two_pow_neg_gM` | §5.4 `2^{−g_M} = E_V 2^{−d(V)}` (needs `v ≤ |M|`: empty expect = 0) |
+| `middle_choose_div_two_pow_ge_inv` | Step 1 arithmetic (see correction below) |
+| `powerset_expect_ite_card` | Step 1 identity (conditioning on `|F| = σ`) |
+| `expect_bad_indicator_ge` | Step 3 (deleting bad sets costs ≤ their probability) |
+| `good_hit_expect_ge` | Step 3 assembly — **the Corollary D consumer** |
+| `expect_dvd_eq_badPrimes` | «Pr[P′ ∣ D]» = `badPrimes`/`#primesInterval` |
+| `pair_collision_le` | Step 4's (F4) instance — **the `L2_5_prime_collision` consumer** |
+| `lem_A5_product` | Step 6 multiplicative chain |
+| `lem_A5_threshold` | Step 6 explicit threshold («does not depend on I,s,P,M») |
+| `cor_A6_per_alias` | Cor A6 per alias: `(1−p)^T ≤ e^{−1}` for `Tp ≥ 1` |
+
+## Sorries (3, all Step-4 residue machinery)
+
+| Theorem | Missing obligation |
+|---|---|
+| `collisionPairs_expect_le` | expand `collisionPairs` as a sum of `#pairs · indicator` over `W.product W` and swap the two finite sums (`Finset.sum_comm`), then apply the per-pair hypothesis; mine the `|W|²` factor from `Finset.sum_const` |
+| `occupied_ge_card_sub_collisions` | representative argument: for each `y ∈ W.image (x % p)` pick a representative via `Finset.choose`; the non-representatives (`|W| − #image` of them) inject into the colliding ordered pairs |
+| `hit_prob_eq_occupied` | bijection `{j ∈ range p : ∃ x ∈ W, x % p = ↑j}` ↔ `W.image (x % p)`, using `Int.emod_nonneg`/`Int.emod_lt_of_pos` to keep residues in `[0,p)` |
+
+## Two statement defects found while proving (both corrected)
+
+1. **«C(m,σ)2^{−m} ≥ 1/(m+1)» is false for arbitrary σ** (m=4, σ=0 gives
+   1/16 < 1/5). It holds at a *maximising* layer, and the paper's σ is the
+   middle one by (S1)–(S3); the lemma is therefore stated at `m/2`, where
+   `Nat.choose_le_middle` + pigeonhole give it.
+2. **`good_hit_expect_ge` needed `σ ≤ |M|`.** Without it `M.powersetCard σ` is
+   empty, `expect` is `0`, and the statement is *false* (its RHS would be `0`
+   while `2^{−g_M}/(2(v+1)) > 0`). This is exactly the
+   empty-expect-degenerates trap; the hypothesis is now explicit.
+   Same audit run on the others: `collisionPairs_expect_le` is still true when
+   `primesInterval L = ∅` (RHS ≥ 0), `powerset_expect_ite_card` holds for every
+   σ (both sides 0 when σ > |M|, proved as a case split).
+
+## Fork gotchas added
+
+* `fun p => (p : ℤ) ∣ D` is a **binder ascription**, not a cast: it makes the
+  lambda's variable `ℤ` and coerces the Finset (`do let a ← …; pure ↑a`).
+  Write `fun (p : ℕ) => (↑p : ℤ) ∣ D`.
+* `field_simp` can leave `↑(2^m)` vs `2^m`; follow with `push_cast; ring`.
+* `linarith` will not relate `G/(2*(v+1))` to `G/(v+1)` — supply the `field_simp;
+  ring` identity as a hypothesis.
+* `linarith` with `Finset.expect …` atoms is brittle; `le_trans` chains of
+  separately-proved inequalities are more robust.
+* `pow_le_pow_left` does not exist in this pin: `pow_le_pow_left₀`.
+
+## Commits
+
+1. `8555acd` M1: A5/A6 statements verbatim + STMTS.md B3 section
+2. `ef2f5ba` M2: 8 spine lemmas proved
+3. M3 (partial): Step 1 identity + Step 3 assembly (Cor-D consumer) proved;
+   3 Step-4 residue sorries remain, obligations named above
+
+## Next actions (B-core lane)
+
+1. Finish the 3 Step-4 sorries (each is a self-contained Finset counting
+   argument; `occupied_ge_card_sub_collisions` is the hardest, needing
+   `Finset.choose` representatives).
+2. Then assemble the headline conditional `Base_lem_A5` (good-hit probability
+   ≥ `2^{−g_M}n^{−6}` via `good_hit_expect_ge` → `lem_A5_product` →
+   `lem_A5_threshold`) with Step 5 as the transfer hypothesis.
+3. Then B4 (Bills' `Regions`/`RowMargins` template) and B5, per BRIDGE.

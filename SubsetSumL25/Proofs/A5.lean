@@ -182,4 +182,123 @@ theorem cor_A6_per_alias {p : ℝ} {T : ℕ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1)
     linarith
   linarith [h2, h3.le, h3.ge, h4]
 
+/-- Step 1 identity: conditioning a uniform subset on `|F| = σ` gives the uniform
+`σ`-subset average, scaled by `C(m,σ)2^{−m}`.  Holds for every `σ` (both sides
+are `0` when `σ > |M|`), which is why no size hypothesis is needed. -/
+theorem powerset_expect_ite_card (M : Finset (Fin n)) {σ : ℕ} (g : Finset (Fin n) → ℝ) :
+    ((Nat.choose M.card σ : ℝ) / 2 ^ M.card) * (M.powersetCard σ).expect g
+      = (M.powerset).expect (fun F => if F.card = σ then g F else 0) := by
+  classical
+  rw [Finset.expect_eq_sum_div_card, Finset.expect_eq_sum_div_card, Finset.card_powerset,
+    Finset.card_powersetCard]
+  by_cases hσ : σ ≤ M.card
+  · have hC : (0 : ℝ) < (Nat.choose M.card σ : ℝ) := by exact_mod_cast Nat.choose_pos hσ
+    have hsum : ∑ F ∈ M.powerset, (if F.card = σ then g F else 0)
+        = ∑ S ∈ M.powersetCard σ, g S := by
+      rw [Finset.powersetCard_eq_filter, ← Finset.sum_filter]
+    rw [hsum]
+    field_simp
+    push_cast
+    ring
+  · have hlt : M.card < σ := by omega
+    have hC0 : Nat.choose M.card σ = 0 := Nat.choose_eq_zero_of_lt hlt
+    have hP : M.powersetCard σ = ∅ := by
+      rw [Finset.powersetCard_eq_empty]
+      omega
+    have hfil : M.powerset.filter (fun F => F.card = σ) = ∅ := by
+      rw [Finset.filter_eq_empty_iff]
+      intro F hF
+      rw [Finset.mem_powerset] at hF
+      have := Finset.card_le_card hF
+      omega
+    rw [← Finset.sum_filter, hfil]
+    simp [hC0, hP]
+
+/-- Step 3 assembly — the rung's Corollary D consumer: Corollary D's bound
+(`hcorD`), the good sets dominating `a_k` (`hgood`, Step 2) and the A4 bad
+fraction (`hbad`, `hδ`) give the good-hit average at half strength,
+`E_S[1_good B_S/C(σ,k)] ≥ 2^{−g_M}/(2(v+1))`. -/
+theorem good_hit_expect_ge (c : Fin n → ℤ) {M : Finset (Fin n)} {k σ v δn : ℕ}
+    (B : Finset (Fin n) → ℕ) (good : Finset (Fin n) → Prop) [DecidablePred good]
+    (hσ : σ ≤ M.card)
+    (hCpos : (0 : ℝ) < (Nat.choose σ k : ℝ))
+    (hBle : ∀ S, B S ≤ Nat.choose σ k)
+    (hgood : ∀ S ∈ M.powersetCard σ, good S →
+      layerDensity c S k ≤ (B S : ℝ) / (Nat.choose σ k : ℝ))
+    (hcorD : (2 : ℝ) ^ (-(gM c M v)) / ((v : ℝ) + 1)
+      ≤ (M.powersetCard σ).expect (fun S => layerDensity c S k))
+    (hδ : (2 : ℝ) ^ (-(δn : ℝ)) ≤ (2 : ℝ) ^ (-(gM c M v)) / (2 * ((v : ℝ) + 1)))
+    (hbad : ((M.powersetCard σ).filter (fun S => ¬ good S)).card
+      ≤ (2 : ℝ) ^ (-(δn : ℝ)) * (M.powersetCard σ).card) :
+    (2 : ℝ) ^ (-(gM c M v)) / (2 * ((v : ℝ) + 1))
+      ≤ (M.powersetCard σ).expect
+          (fun S => if good S then (B S : ℝ) / (Nat.choose σ k : ℝ) else 0) := by
+  classical
+  have hne : (M.powersetCard σ).Nonempty := Finset.powersetCard_nonempty.mpr hσ
+  have hcardpos : (0 : ℝ) < ((M.powersetCard σ).card : ℝ) := by
+    have : 0 < (M.powersetCard σ).card := Finset.card_pos.mpr hne
+    exact_mod_cast this
+  -- `0 ≤ a_k ≤ 1`
+  have hak0 : ∀ S ∈ M.powersetCard σ, 0 ≤ layerDensity c S k := by
+    intro S _
+    unfold layerDensity
+    positivity
+  have hak1 : ∀ S ∈ M.powersetCard σ, layerDensity c S k ≤ 1 := by
+    intro S hS
+    have hSc : S.card = σ := (Finset.mem_powersetCard.mp hS).2
+    unfold layerDensity
+    rw [hSc, div_le_one hCpos]
+    have h1 : (layerSupport c S k).card ≤ Nat.choose σ k := by
+      calc (layerSupport c S k).card ≤ (S.powersetCard k).card := Finset.card_image_le
+        _ = Nat.choose S.card k := Finset.card_powersetCard k S
+        _ = Nat.choose σ k := by rw [hSc]
+    exact_mod_cast h1
+  -- step C first: the bad fraction is at most `2^{−δn}`
+  have hbadR : ((M.powersetCard σ).filter (fun S => ¬ good S)).card
+      / ((M.powersetCard σ).card : ℝ) ≤ (2 : ℝ) ^ (-(δn : ℝ)) := by
+    calc ((M.powersetCard σ).filter (fun S => ¬ good S)).card
+          / ((M.powersetCard σ).card : ℝ)
+        ≤ ((2 : ℝ) ^ (-(δn : ℝ)) * ((M.powersetCard σ).card : ℝ))
+            / ((M.powersetCard σ).card : ℝ) := by
+          apply div_le_div_of_nonneg_right _ (le_of_lt hcardpos)
+          exact_mod_cast hbad
+      _ = (2 : ℝ) ^ (-(δn : ℝ)) := by field_simp
+  -- step A: deleting the bad sets costs at most their probability
+  have hA0 := expect_bad_indicator_ge (M.powersetCard σ) (fun S => ¬ good S)
+    (fun S => layerDensity c S k) hak0 hak1
+  have hAeq : (M.powersetCard σ).expect (fun S => if ¬ good S then 0 else layerDensity c S k)
+      = (M.powersetCard σ).expect (fun S => if good S then layerDensity c S k else 0) := by
+    refine Finset.expect_congr rfl ?_
+    intro S
+    by_cases hg : good S <;> simp [hg]
+  have hA : (M.powersetCard σ).expect (fun S => layerDensity c S k) - (2 : ℝ) ^ (-(δn : ℝ))
+      ≤ (M.powersetCard σ).expect (fun S => if good S then layerDensity c S k else 0) := by
+    rw [← hAeq]
+    linarith [hA0, hbadR]
+  -- step B: on good sets, `a_k ≤ B/C`
+  have hB : (M.powersetCard σ).expect (fun S => if good S then layerDensity c S k else 0)
+      ≤ (M.powersetCard σ).expect
+          (fun S => if good S then (B S : ℝ) / (Nat.choose σ k : ℝ) else 0) := by
+    refine Finset.expect_le_expect fun S hS => ?_
+    by_cases hg : good S
+    · rw [if_pos hg, if_pos hg]; exact hgood S hS hg
+    · rw [if_neg hg, if_neg hg]
+  have hchain : (2 : ℝ) ^ (-(gM c M v)) / ((v : ℝ) + 1) - (2 : ℝ) ^ (-(δn : ℝ))
+      ≤ (M.powersetCard σ).expect
+          (fun S => if good S then (B S : ℝ) / (Nat.choose σ k : ℝ) else 0) := by
+    have h1 : (2 : ℝ) ^ (-(gM c M v)) / ((v : ℝ) + 1) - (2 : ℝ) ^ (-(δn : ℝ))
+        ≤ (M.powersetCard σ).expect (fun S => layerDensity c S k) - (2 : ℝ) ^ (-(δn : ℝ)) := by
+      linarith [hcorD]
+    exact le_trans h1 (le_trans hA hB)
+  have hv1 : (0 : ℝ) < (v : ℝ) + 1 := by positivity
+  have h2 : (2 : ℝ) ^ (-(gM c M v)) / ((v : ℝ) + 1)
+        - (2 : ℝ) ^ (-(gM c M v)) / (2 * ((v : ℝ) + 1))
+      = (2 : ℝ) ^ (-(gM c M v)) / (2 * ((v : ℝ) + 1)) := by
+    field_simp
+    ring
+  have hfin : (2 : ℝ) ^ (-(gM c M v)) / (2 * ((v : ℝ) + 1))
+      ≤ (2 : ℝ) ^ (-(gM c M v)) / ((v : ℝ) + 1) - (2 : ℝ) ^ (-(δn : ℝ)) := by
+    linarith [hδ, h2]
+  exact le_trans hfin hchain
+
 end SubsetSumL25
