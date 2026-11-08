@@ -42,27 +42,7 @@ variable {n : ℕ}
 -- L3.1 (covering) is PROVED; statement-of-record lives in `Proofs/Layers.lean`
 -- (house convention: one declaration per theorem).
 
-/-- Base Lemma 3.2 (sampling): for `k ≤ s ≤ |V|` and a uniform `s`-subset `S`
-of `V`, one has `E_S a_k(S) ≥ a_k(V)`. -/
-theorem L3_2_sampling (c : Fin n → ℤ) {V : Finset (Fin n)} {k s : ℕ}
-    (hks : k ≤ s) (hsv : s ≤ V.card) :
-    layerDensity c V k ≤
-      (V.powersetCard s).expect (fun S => layerDensity c S k) := by
-  sorry
-
-/-- Base Lemma 3.3 (a good layer), existence half: some layer index `t` with
-`2t ≤ |V|` carries at least a `1/(|V|+1)` fraction of the whole support,
-`|Σ(V)| ≤ (|V|+1) |Σ_t(V)|`. -/
-theorem L3_3_good_layer (c : Fin n → ℤ) (V : Finset (Fin n)) :
-    ∃ t, 2 * t ≤ V.card ∧
-      (support c V).card ≤ (V.card + 1) * (layerSupport c V t).card := by
-  sorry
-
-/-- Base Lemma 3.3 (a good layer), density half («in particular»):
-some `t` with `2t ≤ |V|` has `a_t(V) ≥ 2^{−d(V)}/(|V|+1)`. -/
-theorem L3_3_good_layer_density (c : Fin n → ℤ) (V : Finset (Fin n)) :
-    ∃ t, 2 * t ≤ V.card ∧
-      (2 : ℝ) ^ (-(deficiency c V)) / ((V.card : ℝ) + 1) ≤ layerDensity c V t := by
-  sorry
+-- L3.2 (sampling) and L3.3 (a good layer) are PROVED; statements-of-record
+-- live in `Proofs/Layers.lean` (house convention: one declaration per theorem).
 
 end SubsetSumL25

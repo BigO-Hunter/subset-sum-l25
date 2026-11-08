@@ -209,7 +209,11 @@ Lean: `SubsetSumL25.L3_3_good_layer` (existence half) and
 6. **Paper premise convention** (unchanged from the L2.5 cluster): paper
    premises are named hypotheses in Lean, never `axiom`s. Nothing here claims
    a board row; per BRIDGE.md the staged ladder is hypotheses-in-statements.
-7. **M1 statements carry `sorry`** (placeholder proofs, reported in
-   PROGRESS.md); M2/M3 replace them in `Proofs/Layers.lean`. All proved
-   theorems must satisfy `#print axioms` = `[propext, Classical.choice,
-   Quot.sound]`, no `native_decide`.
+7. **Status (M1–M3 complete, 2026-11-08):** all six B1 declarations are
+   proved — `L3_1_covering`, `L3_2_sampling`, `L3_3_good_layer`,
+   `L3_3_good_layer_density` plus the counted forms `L3_1_covering_card`,
+   `L3_2_sampling_card` and the helpers `layerSupport_compl`,
+   `twoPow_neg_deficiency`. `#print axioms` = `[propext, Classical.choice,
+   Quot.sound]` for every one; no `native_decide`, no new axioms. Proofs live
+   in `Proofs/Layers.lean` (statement-of-record; the `Statements` module keeps
+   only the quotes and pointers).

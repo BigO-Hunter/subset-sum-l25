@@ -70,3 +70,71 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
    embeddings, (b) restate over an explicit Finset parameter `S` with
    `#S ≤ sparseCount n m`, or (c) prove `badSparsePrimes ⊆ ⋃` over a
    filtered powerset. Then per-vector `badPrimes_le` + union bound.
+
+---
+
+# B1 (Base L3.1–3.3) — sub-campaign `base-core`, 2026-11-08
+
+Branch `base-core`, worktree `/Volumes/Substrate-1/bigo/l25-base-core` (own branch;
+main is owned by the parallel L2.5 workers — this lane adds files only and does not
+edit shared statement modules beyond appending one import line).
+
+Source: Base (a-kapila), `PROOF_0.4877.tex` §3, `maths-proofs@44c34961`
+(sha256 `b397531c…`). Lemma table row B1 in `../subset-sum-bridge/BRIDGE.md`
+(verdict «matches»). Credit: the lemmas are Base's; this package formalizes them.
+
+## Definitions added (`Statements/LayerDefs.lean`)
+
+`layerSupport c V j = (V.powersetCard j).image (subsum c)` (paper `Σ_j(V)`) and
+`layerDensity c V j = |Σ_j(V)| / C(|V|,j)` in `ℝ` (paper `a_j(V)`). `Σ(V)`, `d(V)`
+reuse `support`/`deficiency` from `Statements/Defs.lean`.
+
+## Proved (axioms = [propext, Classical.choice, Quot.sound] — receipt-verified)
+
+| Theorem | Paper | Note |
+|---|---|---|
+| `L3_1_covering_card` | L3.1 counted form | `T_x = Classical.choose`; per-`W` injection `x ↦ w(T_x∖W)`; pair count by `card_filter` + `sum_comm` |
+| `L3_1_covering` | L3.1 | density assembly; `Nat.choose_mul` for `C(|V|,t)C(t,k) = C(|V|,t−k)C(|V|−t+k,k)` |
+| `L3_2_sampling_card` | L3.2 counted form | per-`S` identity injection into `Σ_k(S)`; `card_filter_powersetCard_subset` for `C(|V|−k,s−k)` |
+| `L3_2_sampling` | L3.2 | density assembly; `C(s,k)C(|V|,s) = C(|V|,k)C(|V|−k,s−k)` |
+| `layerSupport_compl` | «Σ_{|V|−j}(V) = w(V) − Σ_j(V)» | both inclusions; `Finset.sum_sdiff` |
+| `L3_3_good_layer` | L3.3 existence | layers cover `Σ(V)` (`card_biUnion_le`), pigeonhole (`exists_max_image`), complement to `t = min j (|V|−j)` |
+| `twoPow_neg_deficiency` | — | `2^{−d(V)} = |Σ(V)|/2^{|V|}` via `Real.rpow_sub` + `rpow_logb` + `rpow_natCast` |
+| `L3_3_good_layer_density` | L3.3 «in particular» | `Nat.choose_le_two_pow` + two `div_le_div_of_nonneg_*` steps |
+
+**Zero sorries in this lane's files.** The two remaining package sorries are the
+pre-existing L2.5-cluster ones (`L2_3_halfVariance`, `L5_2_sparse_distinctions`).
+
+## Fork gotchas hit here (add to the list above)
+
+* `Finset.card_filter (p) (s) : (s.filter p).card = ∑ i ∈ s, if p i then 1 else 0`
+  — the clean way to move between a filter cardinality and a double sum.
+* `Finset.sum_const` then `nsmul_eq_mul` then `Nat.cast_id` — the last step is
+  required when the sum lives in `ℕ` (the `↑n * a` display is not closed by
+  `simp`), e.g. `∑ x, C = |s| * C`.
+* `Finset.card_filter_powersetCard_subset` gives `C(|t|−|s|, n−|s|)` directly —
+  no need to build the "containing" filter by hand for L3.2.
+* `div_le_div_iff` does not exist; it is `div_le_div_iff₀` (needs both
+  denominators positive).
+* `push_cast` silently does nothing on some `↑(n+1) * ↑m` shapes — use
+  `Nat.cast_add, Nat.cast_one` explicitly (bit twice).
+* `dif_pos` is deprecated in favour of `dite_eq_left`, but still works for the
+  representative-choice idiom `simp only [rep]; rw [dif_pos hex]`.
+* `le_or_lt` / `le_of_not_le` are absent; use `by_cases` + `omega`.
+
+## Commits
+
+1. `b7a6192` M1: verbatim statements + layer defs, STMTS.md B1 section
+2. `47d9cc1` M2: L3.1 (covering) proved
+3. M3: L3.2 + L3.3 proved (this commit)
+
+## Next actions (B-core lane)
+
+1. Merge `base-core` into `main` once the L2.5 workers land (additive, no
+   conflicting edits beyond the two import lines in `SubsetSumL25.lean`).
+2. Next BRIDGE rung after B1–B3: **B2 = Base Corollary D** (averaged small
+   layer) — it consumes L3.1 + L3.2 + L3.3 directly, with the hypotheses
+   `2k ≤ σ`, `2σ ≤ v+2k`, `v ≤ |M|`, `C(σ,k)C(v,k) ≤ 2^v` (BRIDGE appendix row
+   B2, one cell corrected there). Then **B3 = Base Lemma A5** (per-trial hit
+   probability via the second prime `P′`, needs `L2_5_prime_collision` from this
+   same package — already proved).
