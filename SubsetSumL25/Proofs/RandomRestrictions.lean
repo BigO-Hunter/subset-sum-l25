@@ -581,4 +581,311 @@ private theorem stepMean_insert_le {n : ℕ} (h : Finset (Fin n) → ℝ) (d : �
       rw [Finset.card_insert_of_notMem hi]; omega
     exact hIL (insert i S) hci k hkk
 
+/-! ## M4d: the erase-fibration transport and the variance recursion -/
+
+/-- Pair-level transport `(W, i ∈ W) ↔ (V, i ∉ V)` with `V = W ∖ {i}`. -/
+private theorem sum_erase_pair {n : ℕ} (F : Finset (Fin n) → Fin n → ℝ) (r : ℕ) :
+    ∑ W ∈ uniformQSubsets n (r + 1), ∑ i ∈ W, F W i
+      = ∑ V ∈ uniformQSubsets n r, ∑ i ∈ Finset.univ \ V, F (insert i V) i := by
+  have hswap1 : ∑ W ∈ uniformQSubsets n (r + 1), ∑ i ∈ W, F W i
+      = ∑ i ∈ Finset.univ,
+          ∑ W ∈ (uniformQSubsets n (r + 1)).filter (fun W => i ∈ W), F W i :=
+    Finset.sum_comm' fun W i => by
+      constructor
+      · intro h
+        exact ⟨Finset.mem_filter.mpr h, Finset.mem_univ _⟩
+      · intro h
+        exact Finset.mem_filter.mp h.1
+  have hswap2 : ∑ i ∈ Finset.univ,
+        ∑ V ∈ (uniformQSubsets n r).filter (fun V => i ∉ V), F (insert i V) i
+      = ∑ V ∈ uniformQSubsets n r, ∑ i ∈ Finset.univ \ V, F (insert i V) i :=
+    Finset.sum_comm' fun i V => by
+      constructor
+      · intro h
+        exact ⟨Finset.mem_sdiff.mpr ⟨h.1, (Finset.mem_filter.mp h.2).2⟩,
+          (Finset.mem_filter.mp h.2).1⟩
+      · intro h
+        exact ⟨(Finset.mem_sdiff.mp h.1).1,
+          Finset.mem_filter.mpr ⟨h.2, (Finset.mem_sdiff.mp h.1).2⟩⟩
+  rw [hswap1, ← hswap2]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  refine Finset.sum_bij (fun W _ => W.erase i) ?_ ?_ ?_ ?_
+  · intro W hW
+    obtain ⟨hW1, hin⟩ := Finset.mem_filter.mp hW
+    obtain ⟨_, hWq⟩ := Finset.mem_filter.mp hW1
+    refine Finset.mem_filter.mpr
+      ⟨Finset.mem_filter.mpr ⟨Finset.mem_univ _, ?_⟩, Finset.notMem_erase i W⟩
+    rw [Finset.card_erase_of_mem hin, hWq]
+    omega
+  · intro W₁ hW₁ W₂ hW₂ heq
+    have hin : i ∈ W₁ := (Finset.mem_filter.mp hW₁).2
+    have hin2 : i ∈ W₂ := (Finset.mem_filter.mp hW₂).2
+    have h5 : insert i (W₁.erase i) = insert i (W₂.erase i) := by rw [heq]
+    rwa [Finset.insert_erase hin, Finset.insert_erase hin2] at h5
+  · intro V hV
+    obtain ⟨hV1, hjV⟩ := Finset.mem_filter.mp hV
+    obtain ⟨_, hVq⟩ := Finset.mem_filter.mp hV1
+    refine ⟨insert i V, ?_, ?_⟩
+    · exact Finset.mem_filter.mpr
+        ⟨Finset.mem_filter.mpr ⟨Finset.mem_univ _,
+          by rw [Finset.card_insert_of_notMem hjV, hVq]⟩, Finset.mem_insert_self i V⟩
+    · exact Finset.erase_insert hjV
+  · intro W hW
+    show F W i = F (insert i (W.erase i)) i
+    rw [Finset.insert_erase (Finset.mem_filter.mp hW).2]
+
+/-- One exhaustion step of the exposure recursion: the variance at level
+`r + 1` is at most 1 plus the variance of the one-step mean at level `r`. -/
+private theorem var_step {n : ℕ} (h : Finset (Fin n) → ℝ) (r : ℕ) (hr : r + 2 ≤ n)
+    (hEL : ∀ S : Finset (Fin n), S.card + 2 ≤ n → ∀ i j : Fin n, i ∉ S → j ∉ S → i ≠ j →
+      |h (insert i S) - h (insert j S)| ≤ 1)
+    (hIL : ∀ S : Finset (Fin n), S.card + 1 ≤ r + 1 → ∀ i : Fin n, i ∉ S →
+      |h (insert i S) - h S| ≤ 1)
+    (hind : (uniformQSubsets n r).expect
+        (fun V => (stepMean h V - (uniformQSubsets n r).expect (stepMean h)) ^ 2) ≤ (r : ℝ)) :
+    (uniformQSubsets n (r + 1)).expect
+        (fun W => (h W - (uniformQSubsets n (r + 1)).expect h) ^ 2) ≤ ((r + 1 : ℕ) : ℝ) := by
+  classical
+  set U1 := uniformQSubsets n (r + 1) with hU1
+  set U0 := uniformQSubsets n r with hU0
+  have hc1 : U1.card = Nat.choose n (r + 1) := card_uniformQSubsets n (r + 1)
+  have hc0 : U0.card = Nat.choose n r := card_uniformQSubsets n r
+  have hc1r : (0 : ℝ) < (U1.card : ℝ) := by
+    rw [hc1]; exact_mod_cast Nat.choose_pos (by omega)
+  have hc0r : (0 : ℝ) < (U0.card : ℝ) := by
+    rw [hc0]; exact_mod_cast Nat.choose_pos (by omega)
+  have hne : ∀ V ∈ U0, (Finset.univ \ V).Nonempty := by
+    intro V hV
+    refine Finset.card_pos.mp ?_
+    rw [Finset.card_sdiff_of_subset (Finset.subset_univ _), Finset.card_univ, Fintype.card_fin,
+      (Finset.mem_filter.mp hV).2]
+    omega
+  have hcardV : ∀ V ∈ U0, (Finset.univ \ V).card = n - r := by
+    intro V hV
+    rw [Finset.card_sdiff_of_subset (Finset.subset_univ _), Finset.card_univ, Fintype.card_fin,
+      (Finset.mem_filter.mp hV).2]
+  -- the counting identity ∑_V #(univ∖V) = (r+1)·#U1 = (n−r)·#U0
+  set Ntot : ℝ := ((∑ V ∈ U0, (Finset.univ \ V).card : ℕ) : ℝ) with hNtotdef
+  have hNtot2 : Ntot = ((n - r : ℕ) : ℝ) * ((U0.card : ℕ) : ℝ) := by
+    rw [hNtotdef]
+    rw [Finset.sum_congr rfl (fun V hV => hcardV V hV), Finset.sum_const, nsmul_eq_mul]
+    push_cast
+    ring
+  have hchr : ((Nat.choose n (r + 1) : ℕ) : ℝ) * ((r + 1 : ℕ) : ℝ)
+      = ((Nat.choose n r : ℕ) : ℝ) * ((n - r : ℕ) : ℝ) := by
+    exact_mod_cast Nat.choose_succ_right_eq n r
+  have hNtot1 : Ntot = ((r + 1 : ℕ) : ℝ) * ((U1.card : ℕ) : ℝ) := by
+    rw [hNtot2, hc0, hc1]
+    nlinarith [hchr]
+  have hNtotpos : 0 < Ntot := by
+    rw [hNtot1]
+    exact mul_pos (by positivity) hc1r
+  set μ : ℝ := (∑ W ∈ U1, h W) / ((U1.card : ℕ) : ℝ) with hμdef
+  set zbar : ℝ := (∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, h (insert i V))
+    / ((∑ V ∈ U0, (Finset.univ \ V).card : ℕ) : ℝ) with hzdef
+  -- T2: level-(r+1) sum against the pair sum
+  have hT2gen : ∀ x : Finset (Fin n) → ℝ,
+      ∑ W ∈ U1, ∑ i ∈ W, x W = ((r + 1 : ℕ) : ℝ) * ∑ W ∈ U1, x W := by
+    intro x
+    have per : ∀ W ∈ U1, ∑ i ∈ W, x W = ((W.card : ℕ) : ℝ) * x W := by
+      intro W _
+      rw [Finset.sum_const, nsmul_eq_mul]
+    rw [Finset.sum_congr rfl per]
+    have hcard : ∀ W ∈ U1, W.card = r + 1 := fun W hW => (Finset.mem_filter.mp hW).2
+    rw [Finset.sum_congr rfl (fun W hW => by rw [hcard W hW]), ← Finset.mul_sum]
+  have hnum : ∀ c : ℝ, ∑ W ∈ U1, (h W - c) ^ 2
+      = (1 / ((r + 1 : ℕ) : ℝ)) *
+          ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, (h (insert i V) - c) ^ 2 := by
+    intro c
+    have h2 := hT2gen (fun W => (h W - c) ^ 2)
+    have h3 := sum_erase_pair (fun W _ => (h W - c) ^ 2) r
+    rw [h3] at h2
+    rw [h2]
+    field_simp
+  -- variance in transport form
+  have hVar : U1.expect (fun W => (h W - U1.expect h) ^ 2)
+      = (∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, (h (insert i V) - μ) ^ 2) / Ntot := by
+    rw [Finset.expect_eq_sum_div_card, Finset.expect_eq_sum_div_card]
+    rw [hnum μ, hNtot1]
+    have hr1 : ((r + 1 : ℕ) : ℝ) ≠ 0 := by positivity
+    field_simp [hc1r.ne', hr1]
+  -- the fiber mean is stepMean
+  have hfiber : ∀ V ∈ U0, (∑ i ∈ Finset.univ \ V, h (insert i V))
+      / ((Finset.univ \ V).card : ℝ) = stepMean h V := by
+    intro V hV
+    rw [stepMean, Finset.expect_eq_sum_div_card]
+  -- zbar = μ, and μ is the U0-mean of the fiber means
+  have hzbar_μ : zbar = μ := by
+    have hnum2 : ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, h (insert i V)
+        = ((r + 1 : ℕ) : ℝ) * ∑ W ∈ U1, h W := by
+      rw [← sum_erase_pair (fun W _ => h W) r, hT2gen h]
+    rw [hzdef, hμdef, hnum2, ← hNtotdef, hNtot1]
+    have hr1 : ((r + 1 : ℕ) : ℝ) ≠ 0 := by positivity
+    field_simp [hc1r.ne', hr1]
+  have hphi_mean : μ = (∑ V ∈ U0, stepMean h V) / ((U0.card : ℕ) : ℝ) := by
+    have hsum_phi : ∑ V ∈ U0, stepMean h V
+        = (∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, h (insert i V)) / ((n - r : ℕ) : ℝ) := by
+      rw [Finset.sum_div]
+      refine Finset.sum_congr rfl fun V hV => ?_
+      rw [stepMean, Finset.expect_eq_sum_div_card, hcardV V hV]
+    have hnum2 : ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, h (insert i V)
+        = ((r + 1 : ℕ) : ℝ) * ∑ W ∈ U1, h W := by
+      rw [← sum_erase_pair (fun W _ => h W) r, hT2gen h]
+    have hnr : ((n - r : ℕ) : ℝ) ≠ 0 := by
+      have : 0 < n - r := by omega
+      exact_mod_cast this.ne'
+    have hrel : ((r + 1 : ℕ) : ℝ) * ((U1.card : ℕ) : ℝ)
+        = ((n - r : ℕ) : ℝ) * ((U0.card : ℕ) : ℝ) := by
+      rw [← hNtot1, ← hNtot2]
+    rw [hsum_phi, hnum2, hμdef, div_div]
+    refine (div_eq_div_iff hc1r.ne' (mul_ne_zero hnr hc0r.ne')).mpr ?_
+    calc (∑ W ∈ U1, h W) * (((n - r : ℕ) : ℝ) * ((U0.card : ℕ) : ℝ))
+        = (∑ W ∈ U1, h W) * (((r + 1 : ℕ) : ℝ) * ((U1.card : ℕ) : ℝ)) := by rw [hrel]
+      _ = ((r + 1 : ℕ) : ℝ) * (∑ W ∈ U1, h W) * ((U1.card : ℕ) : ℝ) := by ring
+  -- total-variance identity with the two pieces
+  have hG2 := total_variance_finset U0 (fun V => Finset.univ \ V) hne
+    (fun V i => h (insert i V))
+  have hconv : ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V,
+        (h (insert i V) - (∑ i' ∈ Finset.univ \ V, h (insert i' V))
+          / ((Finset.univ \ V).card : ℝ)) ^ 2
+      = ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, (h (insert i V) - stepMean h V) ^ 2 := by
+    refine Finset.sum_congr rfl fun V hV => Finset.sum_congr rfl fun i _ => ?_
+    rw [hfiber V hV]
+  rw [hconv] at hG2
+  have hconv2 : ∑ a ∈ U0, ((Finset.univ \ a).card : ℝ) *
+        ((∑ b' ∈ Finset.univ \ a, h (insert b' a)) / ((Finset.univ \ a).card : ℝ) - zbar) ^ 2
+      = ∑ a ∈ U0, ((Finset.univ \ a).card : ℝ) * (stepMean h a - zbar) ^ 2 := by
+    refine Finset.sum_congr rfl fun a ha => ?_
+    rw [hfiber a ha]
+  rw [hconv2] at hG2
+  -- inner bound
+  have hInner : ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, (h (insert i V) - stepMean h V) ^ 2
+      ≤ Ntot := by
+    have per : ∀ V ∈ U0, ∑ i ∈ Finset.univ \ V, (h (insert i V) - stepMean h V) ^ 2
+        ≤ ((Finset.univ \ V).card : ℝ) := by
+      intro V hV
+      have hneV : 0 < (Finset.univ \ V).card := Finset.card_pos.mpr (hne V hV)
+      have h1 := sum_sq_mean_le hneV (fun i => h (insert i V)) (h V)
+      rw [hfiber V hV] at h1
+      have h2 : ∑ i ∈ Finset.univ \ V, (h (insert i V) - h V) ^ 2
+          ≤ ((Finset.univ \ V).card : ℝ) := by
+        calc ∑ i ∈ Finset.univ \ V, (h (insert i V) - h V) ^ 2
+            ≤ ∑ i ∈ Finset.univ \ V, (1 : ℝ) := by
+              refine Finset.sum_le_sum fun i hi => ?_
+              have hb := hIL V (by rw [(Finset.mem_filter.mp hV).2]) i
+                (Finset.mem_sdiff.mp hi).2
+              nlinarith [abs_le.mp hb]
+          _ = ((Finset.univ \ V).card : ℝ) := by
+              rw [Finset.sum_const, nsmul_eq_mul, mul_one]
+      exact le_trans h1 h2
+    calc ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, (h (insert i V) - stepMean h V) ^ 2
+        ≤ ∑ V ∈ U0, ((Finset.univ \ V).card : ℝ) := Finset.sum_le_sum per
+      _ = Ntot := by rw [hNtotdef, ← Nat.cast_sum]
+  -- outer bound
+  have hOuter : ∑ V ∈ U0, ((Finset.univ \ V).card : ℝ) * (stepMean h V - zbar) ^ 2
+      ≤ (r : ℝ) * Ntot := by
+    have hzbar_mean : zbar = (∑ V ∈ U0, stepMean h V) / ((U0.card : ℕ) : ℝ) :=
+      hzbar_μ.trans hphi_mean
+    have hvard : ∑ V ∈ U0, (stepMean h V - zbar) ^ 2 ≤ (r : ℝ) * ((U0.card : ℕ) : ℝ) := by
+      rw [hzbar_mean]
+      have hv := hind
+      rw [Finset.expect_eq_sum_div_card, Finset.expect_eq_sum_div_card,
+        div_le_iff₀ hc0r] at hv
+      exact hv
+    have huniform : ∀ V ∈ U0, ((Finset.univ \ V).card : ℝ) = ((n - r : ℕ) : ℝ) :=
+      fun V hV => by rw [hcardV V hV]
+    rw [Finset.sum_congr rfl (fun V hV => by rw [huniform V hV]), ← Finset.mul_sum]
+    calc ((n - r : ℕ) : ℝ) * ∑ V ∈ U0, (stepMean h V - zbar) ^ 2
+        ≤ ((n - r : ℕ) : ℝ) * ((r : ℝ) * ((U0.card : ℕ) : ℝ)) :=
+          mul_le_mul_of_nonneg_left hvard (by positivity)
+      _ = (r : ℝ) * Ntot := by
+          rw [hNtot2]
+          ring
+  -- assemble
+  have hnum_bound : ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, (h (insert i V) - μ) ^ 2
+      ≤ ((r + 1 : ℕ) : ℝ) * Ntot := by
+    have hZ : ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, (h (insert i V) - μ) ^ 2
+        = ∑ V ∈ U0, ∑ i ∈ Finset.univ \ V, (h (insert i V) - zbar) ^ 2 := by
+      rw [hzbar_μ]
+    rw [hZ, hG2]
+    have hcast : ((r + 1 : ℕ) : ℝ) = (r : ℝ) + 1 := by push_cast; ring
+    nlinarith [hInner, hOuter, hcast]
+  rw [hVar, div_le_iff₀ hNtotpos]
+  exact hnum_bound
+
+/-- OpenAI L2.3 exposure recursion: if `h` is exchange-Lipschitz and
+insert-Lipschitz to depth `d`, then the variance of `h` over uniform
+`r`-subsets is at most `r`, for every `r ≤ n, r ≤ d`. -/
+private theorem martingale_var {n : ℕ} (h : Finset (Fin n) → ℝ) (d : ℕ)
+    (hEL : ∀ S : Finset (Fin n), S.card + 2 ≤ n → ∀ i j : Fin n, i ∉ S → j ∉ S → i ≠ j →
+      |h (insert i S) - h (insert j S)| ≤ 1)
+    (hIL : ∀ S : Finset (Fin n), S.card + 1 ≤ d → ∀ i : Fin n, i ∉ S →
+      |h (insert i S) - h S| ≤ 1) :
+    ∀ r : ℕ, r ≤ n → r ≤ d →
+      (uniformQSubsets n r).expect
+        (fun V => (h V - (uniformQSubsets n r).expect h) ^ 2) ≤ (r : ℝ) := by
+  have key : ∀ r : ℕ, r ≤ n → ∀ (g : Finset (Fin n) → ℝ) (e : ℕ), r ≤ e →
+      (∀ S : Finset (Fin n), S.card + 2 ≤ n → ∀ i j : Fin n, i ∉ S → j ∉ S → i ≠ j →
+        |g (insert i S) - g (insert j S)| ≤ 1) →
+      (∀ S : Finset (Fin n), S.card + 1 ≤ e → ∀ i : Fin n, i ∉ S →
+        |g (insert i S) - g S| ≤ 1) →
+      (uniformQSubsets n r).expect
+        (fun V => (g V - (uniformQSubsets n r).expect g) ^ 2) ≤ (r : ℝ) := by
+    intro r
+    induction r with
+    | zero =>
+      intro _ g _ _ _ _
+      have hzero : uniformQSubsets n 0 = {∅} := by
+        unfold uniformQSubsets
+        ext V
+        simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_singleton]
+        exact ⟨fun h => Finset.card_eq_zero.mp h, fun h => by rw [h]; simp⟩
+      rw [hzero, Finset.expect_singleton, Finset.expect_singleton]
+      simp
+    | succ r ih =>
+      intro hrn g e hre hELg hILg
+      rcases Nat.lt_or_ge (r + 1) n with hlt | hge
+      · apply var_step g r (by omega) hELg
+        · intro S hS i hi
+          exact hILg S (by omega) i hi
+        · exact ih (by omega) (stepMean g) r (le_refl r)
+            (stepMean_exchange_le g hELg)
+            (stepMean_insert_le g (r + 1) (by omega) (fun S hS i hi => hILg S (by omega) i hi))
+      · have heq : r + 1 = n := by omega
+        have hsing : uniformQSubsets n (r + 1) = {Finset.univ} := by
+          unfold uniformQSubsets
+          ext V
+          simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_singleton]
+          constructor
+          · intro h
+            exact Finset.eq_univ_of_card V (by rw [h, Fintype.card_fin]; omega)
+          · intro h
+            rw [h, Finset.card_univ, Fintype.card_fin]
+            omega
+        rw [hsing, Finset.expect_singleton, Finset.expect_singleton, sub_self,
+          zero_pow (by norm_num : (2 : ℕ) ≠ 0)]
+        positivity
+  intro r hrn hrd
+  exact key r hrn h d hrd hEL hIL
+
+/-! ## M4d: OpenAI Lemma 2.3, the variance bound -/
+
+/-- OpenAI L2.3 (`lem:half-variance`): `Var d(V_q) ≤ q` for the uniform
+`q`-element random subset.  Provenance: OpenAI preprint «Subset-Sum in Time
+O(2^0.49n)»; the proof here is the one-step conditional-mean recursion. -/
+theorem L2_3_halfVariance {n : ℕ} (c : Fin n → ℤ) (q : ℕ) (hq : q ≤ n) :
+    (uniformQSubsets n q).expect
+        (fun V => (deficiency c V - expectedDeficiency c q) ^ 2) ≤ (q : ℝ) := by
+  have hEL : ∀ S : Finset (Fin n), S.card + 2 ≤ n → ∀ i j : Fin n, i ∉ S → j ∉ S → i ≠ j →
+      |deficiency c (insert i S) - deficiency c (insert j S)| ≤ 1 :=
+    fun S _ i j hi hj hij => L2_2_deficiency_exchange c S i j hi hj hij
+  have hIL : ∀ S : Finset (Fin n), S.card + 1 ≤ q → ∀ i : Fin n, i ∉ S →
+      |deficiency c (insert i S) - deficiency c S| ≤ 1 := by
+    intro S _ i hi
+    have h := L2_2_deficiency_insert c S i hi
+    rw [abs_le]
+    constructor <;> linarith [h.1, h.2]
+  rw [expectedDeficiency]
+  exact martingale_var (deficiency c) q hEL hIL q hq (le_refl q)
+
 end SubsetSumL25
