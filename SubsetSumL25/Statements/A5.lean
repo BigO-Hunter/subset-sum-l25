@@ -69,19 +69,9 @@ all paper logarithms are base 2). -/
 noncomputable def gM (c : Fin n → ℤ) (M : Finset (Fin n)) (v : ℕ) : ℝ :=
   - Real.logb 2 ((M.powersetCard v).expect (fun V => (2 : ℝ) ^ (-(deficiency c V))))
 
-/-- The identity BRIDGE's B3 row uses to name the constant:
-`2^{−g_M} = E_V 2^{−d(V)}`.  Needs the average to be nonempty (`v ≤ |M|`) —
-`Finset.expect` over an empty finset is `0`, which would make `gM` junk. -/
-theorem two_pow_neg_gM (c : Fin n → ℤ) {M : Finset (Fin n)} {v : ℕ} (hv : v ≤ M.card) :
-    (2 : ℝ) ^ (-(gM c M v))
-      = (M.powersetCard v).expect (fun V => (2 : ℝ) ^ (-(deficiency c V))) := by
-  sorry
+-- `two_pow_neg_gM` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
-/-- Step 1 arithmetic (verbatim: «|S| = σ with probability C(m,σ)2^{−m} ≥
-1/(m+1)»). -/
-theorem choose_div_two_pow_ge_inv {m σ : ℕ} (hσ : σ ≤ m) :
-    1 / ((m : ℝ) + 1) ≤ (Nat.choose m σ : ℝ) / 2 ^ m := by
-  sorry
+-- `middle_choose_div_two_pow_ge_inv` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
 /-- Step 1 identity (verbatim: «Conditional on this event, S is a uniform
 σ-subset of M»): averaging over uniform subsets and conditioning on the
@@ -93,15 +83,7 @@ theorem powerset_expect_ite_card (M : Finset (Fin n)) {σ : ℕ}
       = (M.powerset).expect (fun F => if F.card = σ then g F else 0) := by
   sorry
 
-/-- Step 3 (verbatim: «Bad sets have probability at most 2^{−δn}. … Since
-a_k ≤ 1, E_S[1_{S good} B_S/C(σ,k)] ≥ 2^{−g_M}/(v+1) − 2^{−δn}»): deleting the
-bad part of a `[0,1]`-valued average costs at most the bad probability. -/
-theorem expect_bad_indicator_ge {α : Type*} (s : Finset α) (bad : α → Prop)
-    [DecidablePred bad] (f : α → ℝ) (hf0 : ∀ a ∈ s, 0 ≤ f a)
-    (hf1 : ∀ a ∈ s, f a ≤ 1) :
-    s.expect f - ((s.filter (fun a => ¬ bad a)).card : ℝ) / s.card
-      ≤ s.expect (fun a => if bad a then 0 else f a) := by
-  sorry
+-- `expect_bad_indicator_ge` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
 /-- Ordered colliding pairs of `W` modulo `p`: the count whose expectation Step 4
 bounds with (F4).  The paper's second moment is `Σ_y z_y² = |W| +
@@ -109,29 +91,16 @@ collisionPairs W p`. -/
 def collisionPairs (W : Finset ℤ) (p : ℕ) : ℕ :=
   ((W.product W).filter (fun q => q.1 ≠ q.2 ∧ (p : ℤ) ∣ (q.1 - q.2))).card
 
-/-- `badPrimes` is exactly the probability that a uniform `P′` divides `D`
-(«Pr[P′ | x − x′]»): the indicator average over `primesInterval L`. -/
-theorem expect_dvd_eq_badPrimes {L : ℕ} {D : ℤ} :
-    (primesInterval L).expect (fun p => if (p : ℤ) ∣ D then (1 : ℝ) else 0)
-      = (badPrimes L D : ℝ) / (primesInterval L).card := by
-  sorry
+-- `expect_dvd_eq_badPrimes` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
-/-- Step 4's (F4) instance (verbatim: «For distinct x, x′ ∈ W_S, (F4) with
-L′ = ⌊γm⌋ gives Pr[P′ | x − x′] ≤ K₀n²2^{−γm}»), in the form (F4) itself
-delivers it — OpenAI Lemma 2.5's conclusion, which `L2_5_prime_collision`
-proves.  `K` and `Lstar` are the absolute constants of (F4). -/
-theorem pair_collision_le {L : ℕ} {K : ℝ} {hK : 0 < K} {Lstar : ℕ} {D : ℤ} (hD : D ≠ 0)
-    {B : ℕ} (hB : 1 ≤ B) (habs : ((D.natAbs : ℝ) < (2 : ℝ) ^ B)) :
-    (primesInterval L).expect (fun p => if (p : ℤ) ∣ D then (1 : ℝ) else 0)
-      ≤ K * (B : ℝ) * (L : ℝ) / (2 : ℝ) ^ L := by
-  sorry
+-- `pair_collision_le` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
 /-- Step 4 second moment (verbatim: «Then E_{P′} Σ_y z_y² ≤ B_S +
 K₀n²B_S²2^{−γm}»), in the collision form: each of the at most `|W|²` ordered
 pairs contributes at most the (F4) per-pair bound. -/
 theorem collisionPairs_expect_le (W : Finset ℤ) {L : ℕ} {K₀ : ℝ}
     (hpair : ∀ x ∈ W, ∀ x' ∈ W, x ≠ x' →
-      (primesInterval L).expect (fun p => if (p : ℤ) ∣ (x - x') then (1 : ℝ) else 0)
+      (primesInterval L).expect (fun (p : ℕ) => if (↑p : ℤ) ∣ (x - x') then (1 : ℝ) else 0)
         ≤ K₀ / (2 : ℝ) ^ L) :
     (primesInterval L).expect (fun p => (collisionPairs W p : ℝ))
       ≤ (W.card : ℝ) ^ 2 * (K₀ / (2 : ℝ) ^ L) := by
@@ -176,31 +145,10 @@ theorem good_hit_expect_ge (c : Fin n → ℤ) {M : Finset (Fin n)} {k σ v δn 
           (fun S => if good S then (B S : ℝ) / (Nat.choose σ k : ℝ) else 0) := by
   sorry
 
-/-- Step 6 product (verbatim: «(1/(m+1))·E_S[1_good·(1/2)·B_S/(8K₀n²C(σ,k))] ≥
-2^{−g_M}/(32K₀n²(m+1)(v+1))»): the paper's multiplicative chain, for the
-good-hit probability. -/
-theorem lem_A5_product {G K₀ Q : ℝ} {m v : ℕ} (hG : 0 < G) (hK₀ : 1 ≤ K₀)
-    (hQ : G / (2 * ((v : ℝ) + 1)) ≤ Q) :
-    G / (32 * K₀ * ((m : ℝ) + 1) * ((v : ℝ) + 1))
-      ≤ (1 / ((m : ℝ) + 1)) * (1 / 2) * Q / (8 * K₀) := by
-  sorry
+-- `lem_A5_product` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
-/-- Step 6 threshold (verbatim: «… ≥ 2^{−g_M}n^{−6} for all large n.  The
-threshold for n does not depend on I, s, P or M.») — the explicit threshold,
-which is what makes that remark checkable: with `m, v ≤ N` and `N² ≥ 128K₀`,
-the product bound already beats `n^{−6}`. -/
-theorem lem_A5_threshold {G K₀ : ℝ} (hG : 0 < G) (hK₀ : 1 ≤ K₀) {m v N : ℕ}
-    (hN1 : 1 ≤ N) (hm : m ≤ N) (hv : v ≤ N) (hN : 128 * K₀ ≤ (N : ℝ) ^ 2) :
-    G / (32 * K₀ * ((N : ℝ)) ^ 2 * ((m : ℝ) + 1) * ((v : ℝ) + 1))
-      ≥ G / (N : ℝ) ^ 6 := by
-  sorry
+-- `lem_A5_threshold` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
-/-- Corollary A6, per alias (verbatim: «By Lemma A5, all of them miss a fixed
-alias with carry q with probability at most (1 − 2^{−g_M}n^{−6})^T ≤ e^{−n}»):
-with per-trial hit probability `p ∈ [0,1]` and `T` trials, `Tp ≥ 1` gives
-`(1−p)^T ≤ e^{−1}`.  (The paper's `Tp ≥ n` gives `e^{−n}` by the same chain.) -/
-theorem cor_A6_per_alias {p : ℝ} {T : ℕ} (hp0 : 0 ≤ p) (hTp : 1 ≤ (T : ℝ) * p) :
-    (1 - p) ^ T ≤ Real.exp (-(1 : ℝ)) := by
-  sorry
+-- `cor_A6_per_alias` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
 end SubsetSumL25
