@@ -1,7 +1,28 @@
-/-
+/- 
 M4c: OpenAI Lemma 2.3 — monotone step. STATUS: clean build.
 card_uniformQSubsets + sum_eq_sum_ite_univ + erase_sum_le + hbij +
 sum_erase_bij + L2_3_expectation_mono all PROVED (no sorries).
+
+M4d: OpenAI Lemma 2.3 — variance bound Var d(V_q) ≤ q (this file, below).
+Provenance: the lemma is OpenAI's («Subset-Sum in Time O(2^0.49n)», setup.tex
+lem:half-variance); this file only formalizes it.  Proof architecture — a
+one-step conditional-mean recursion that avoids any measure theory:
+
+  Var_{r+1}(h) = E_Ω[(h(W) − φ(W∖i))²] + E_Ω[(φ(W∖i) − z̄)²]
+
+where Ω = {(W, i) : W ∈ U_{r+1}, i ∈ W} (the erase-fibration, transports in
+`sum_erase_pair`) and φ(V) = 𝔼[h(S ∪ {i}) : i ∉ V] is the one-step exposure
+mean (`stepMean`).  The inner term is ≤ 1 because φ is the per-fiber mean
+(minimization, `sum_sq_mean_le`) and |h(W) − h(W∖i)| ≤ 1 is the insert lemma
+L2_2_deficiency_insert.  The outer term is Var of φ over U_r (uniform marginal,
+`Nat.choose_succ_right_eq`), and φ inherits the exchange- and insert-Lipschitz
+properties from h (`stepMean_exchange_le` via an index-swap coupling,
+`stepMean_insert_le` via an all-pairs averaging bound), so induction closes:
+
+  Var d(V_q) ≤ q.
+
+The exposure chain of the paper's proof is implicit in the recursion — no
+permutation space and no conditional expectations are needed, only Finset sums.
 -/
 import Mathlib
 import SubsetSumL25.Statements.RandomRestrictions
@@ -158,5 +179,110 @@ theorem L2_3_expectation_mono (c : Fin n → ℤ) (q : ℕ) (hq : q < n) :
   rw [expectedDeficiency, expectedDeficiency, Finset.expect_eq_sum_div_card,
     Finset.expect_eq_sum_div_card, hUq, hUq1, div_le_div_iff₀ hCq hCq1]
   exact key
+
+/-! ## M4d: generic finite-sum variance lemmas -/
+
+/-- Expansion of a sum of squared deviations from a constant. -/
+private theorem sum_sq_sub_const_eq {β : Type*} (s : Finset β) (f : β → ℝ) (c : ℝ) :
+    ∑ x ∈ s, (f x - c) ^ 2
+      = (∑ x ∈ s, f x ^ 2) - 2 * c * (∑ x ∈ s, f x) + (s.card : ℝ) * c ^ 2 := by
+  have hpt : ∀ x ∈ s, (f x - c) ^ 2 = f x ^ 2 + (-2 * c * f x) + c ^ 2 := fun x _ => by ring
+  rw [Finset.sum_congr rfl fun x hx => hpt x hx, Finset.sum_add_distrib, Finset.sum_add_distrib,
+    ← Finset.mul_sum]
+  simp only [Finset.sum_const, nsmul_eq_mul]
+  ring
+
+/-- The per-fiber mean minimizes the sum of squared deviations (any center `c`). -/
+private theorem sum_sq_mean_le {β : Type*} {s : Finset β} (hs : 0 < s.card) (f : β → ℝ) (c : ℝ) :
+    ∑ x ∈ s, (f x - (∑ y ∈ s, f y) / s.card) ^ 2 ≤ ∑ x ∈ s, (f x - c) ^ 2 := by
+  have h1 := sum_sq_sub_const_eq s f ((∑ y ∈ s, f y) / s.card)
+  have h2 := sum_sq_sub_const_eq s f c
+  rw [h1, h2]
+  have hcard : (0 : ℝ) < s.card := by exact_mod_cast hs
+  field_simp
+  nlinarith [sq_nonneg ((∑ y ∈ s, f y) - s.card * c)]
+
+/-- Average of `x` over `s` vs average of `y` over `t`: within 1 if *all* cross pairs are. -/
+private theorem avg_allpairs_diff_le {α β : Type*} {s : Finset α} {t : Finset β}
+    (hs : 0 < s.card) (ht : 0 < t.card) (x : α → ℝ) (y : β → ℝ)
+    (h : ∀ a ∈ s, ∀ b ∈ t, |x a - y b| ≤ 1) :
+    |(∑ a ∈ s, x a) / s.card - (∑ b ∈ t, y b) / t.card| ≤ 1 := by
+  have hcard : (0 : ℝ) < (s.card : ℝ) * t.card := by positivity
+  have hsplit : ∑ a ∈ s, ∑ b ∈ t, (x a - y b)
+      = (∑ a ∈ s, x a) * (t.card : ℝ) - (s.card : ℝ) * (∑ b ∈ t, y b) := by
+    have hinner : ∀ a ∈ s, ∑ b ∈ t, (x a - y b) = (t.card : ℝ) * x a - (∑ b ∈ t, y b) := by
+      intro a _
+      rw [Finset.sum_sub_distrib, Finset.sum_const, nsmul_eq_mul]
+    rw [Finset.sum_congr rfl hinner, Finset.sum_sub_distrib, ← Finset.mul_sum,
+      Finset.sum_const, nsmul_eq_mul]
+    ring
+  have hlo : ∀ a ∈ s, ∀ b ∈ t, -1 ≤ x a - y b := by
+    intro a ha b hb
+    exact (abs_le.mp (h a ha b hb)).1
+  have hbound : ∑ a ∈ s, ∑ b ∈ t, (x a - y b) ≤ (s.card : ℝ) * t.card := by
+    calc ∑ a ∈ s, ∑ b ∈ t, (x a - y b)
+        ≤ ∑ a ∈ s, ∑ b ∈ t, (1 : ℝ) :=
+          Finset.sum_le_sum fun a ha => Finset.sum_le_sum fun b hb => le_of_abs_le (h a ha b hb)
+      _ = (s.card : ℝ) * t.card := by
+          rw [Finset.sum_const, Finset.sum_const, nsmul_eq_mul, nsmul_eq_mul]; ring
+  have hbound' : -((s.card : ℝ) * t.card) ≤ ∑ a ∈ s, ∑ b ∈ t, (x a - y b) := by
+    have h1 : ∑ a ∈ s, ∑ b ∈ t, (-1 : ℝ) = -((s.card : ℝ) * t.card) := by
+      rw [Finset.sum_const, Finset.sum_const, nsmul_eq_mul, nsmul_eq_mul]; ring
+    calc -((s.card : ℝ) * t.card) = ∑ a ∈ s, ∑ b ∈ t, (-1 : ℝ) := h1.symm
+      _ ≤ ∑ a ∈ s, ∑ b ∈ t, (x a - y b) :=
+          Finset.sum_le_sum fun a ha => Finset.sum_le_sum fun b hb => hlo a ha b hb
+  have hdiv : (∑ a ∈ s, x a) / s.card - (∑ b ∈ t, y b) / t.card
+      = (∑ a ∈ s, ∑ b ∈ t, (x a - y b)) / ((s.card : ℝ) * t.card) := by
+    rw [div_sub_div _ _ (by exact_mod_cast hs.ne') (by exact_mod_cast ht.ne'), hsplit.symm]
+  rw [abs_le, hdiv]
+  constructor
+  · rw [le_div_iff₀ hcard]; linarith
+  · rw [div_le_iff₀ hcard]; linarith
+
+/-- Averaging along a bijection: if coupled pairs are within 1, the averages are. -/
+private theorem avg_bij_diff_le {α β : Type*} {s : Finset α} {t : Finset β}
+    (hs : 0 < s.card) (x : α → ℝ) (y : β → ℝ)
+    (i : (a : α) → a ∈ s → β)
+    (hmem : ∀ a ha, i a ha ∈ t)
+    (hinj : ∀ a₁ ha₁ a₂ ha₂, i a₁ ha₁ = i a₂ ha₂ → a₁ = a₂)
+    (hsurj : ∀ b ∈ t, ∃ a ha, i a ha = b)
+    (hpt : ∀ a ha, |x a - y (i a ha)| ≤ 1) :
+    |(∑ a ∈ s, x a) / s.card - (∑ b ∈ t, y b) / t.card| ≤ 1 := by
+  classical
+  have hcard' : (0 : ℝ) < s.card := by exact_mod_cast hs
+  have hcard'' : s.card ≠ 0 := hs.ne'
+  obtain ⟨a0, ha0⟩ := Finset.card_pos.mp hs
+  have hb0 : (i a0 ha0) ∈ t := hmem a0 ha0
+  set ψ : α → β := fun a => if ha : a ∈ s then i a ha else i a0 ha0 with hψ
+  have hcardn : t.card = s.card := (Finset.card_bij i hmem hinj hsurj).symm
+  have hys : (∑ b ∈ t, y b) = ∑ a ∈ s, y (ψ a) := by
+    refine (Finset.sum_bij (fun a ha => i a ha) hmem hinj hsurj ?_).symm
+    intro a ha
+    simp only [hψ]
+    simp only [dif_pos ha]
+  have hpt2 : ∀ a ∈ s, -1 ≤ x a - y (ψ a) ∧ x a - y (ψ a) ≤ 1 := by
+    intro a ha
+    have h1 : x a - y (ψ a) = x a - y (i a ha) := by
+      rw [hψ]
+      simp only [dif_pos ha]
+    rw [h1]
+    exact abs_le.mp (hpt a ha)
+  have hsplit : (∑ a ∈ s, x a) / s.card - (∑ b ∈ t, y b) / t.card
+      = (∑ a ∈ s, (x a - y (ψ a))) / s.card := by
+    rw [hys, hcardn, ← sub_div, ← Finset.sum_sub_distrib]
+  rw [abs_le, hsplit]
+  have hub : ∑ a ∈ s, (x a - y (ψ a)) ≤ (s.card : ℝ) := by
+    calc ∑ a ∈ s, (x a - y (ψ a)) ≤ ∑ a ∈ s, (1 : ℝ) :=
+          Finset.sum_le_sum fun a ha => (hpt2 a ha).2
+      _ = (s.card : ℝ) := by rw [Finset.sum_const, nsmul_eq_mul, mul_one]
+  have hlo : -((s.card : ℝ)) ≤ ∑ a ∈ s, (x a - y (ψ a)) := by
+    have h1 : ∑ a ∈ s, (-1 : ℝ) = -((s.card : ℝ)) := by
+      rw [Finset.sum_const, nsmul_eq_mul]; ring
+    calc -((s.card : ℝ)) = ∑ a ∈ s, (-1 : ℝ) := h1.symm
+      _ ≤ ∑ a ∈ s, (x a - y (ψ a)) :=
+          Finset.sum_le_sum fun a ha => (hpt2 a ha).1
+  constructor
+  · rw [le_div_iff₀ hcard']; linarith
+  · rw [div_le_iff₀ hcard']; linarith
 
 end SubsetSumL25
