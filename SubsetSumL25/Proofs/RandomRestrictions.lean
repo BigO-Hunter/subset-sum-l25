@@ -1,8 +1,7 @@
 /-
 M4c: OpenAI Lemma 2.3 — monotone step. STATUS: clean build.
-card_uniformQSubsets + sum_eq_sum_ite_univ + erase_sum_le + hbij PROVED.
-sum_erase_bij + L2_3_expectation_mono sorried (the remaining work, precisely
-scoped in PROGRESS.md).
+card_uniformQSubsets + sum_eq_sum_ite_univ + erase_sum_le + hbij +
+sum_erase_bij + L2_3_expectation_mono all PROVED (no sorries).
 -/
 import Mathlib
 import SubsetSumL25.Statements.RandomRestrictions
@@ -85,11 +84,79 @@ fine for sum_comm'). -/
 theorem sum_erase_bij (c : Fin n → ℤ) (q : ℕ) :
     ∑ W ∈ uniformQSubsets n (q + 1), ∑ i ∈ W, deficiency c (W.erase i)
       = ∑ V ∈ uniformQSubsets n q, ∑ i ∈ Finset.univ \ V, deficiency c V := by
-  sorry
+  have hswap1 :
+      ∑ W ∈ uniformQSubsets n (q + 1), ∑ i ∈ W, deficiency c (W.erase i)
+        = ∑ i ∈ Finset.univ,
+            ∑ W ∈ (uniformQSubsets n (q + 1)).filter (fun W => i ∈ W),
+              deficiency c (W.erase i) :=
+    Finset.sum_comm' fun W i => by
+      constructor
+      · intro h
+        exact ⟨Finset.mem_filter.mpr h, Finset.mem_univ _⟩
+      · intro h
+        exact Finset.mem_filter.mp h.1
+  have hswap2 :
+      ∑ i ∈ Finset.univ,
+          ∑ V ∈ (uniformQSubsets n q).filter (fun V => i ∉ V), deficiency c V
+        = ∑ V ∈ uniformQSubsets n q, ∑ i ∈ Finset.univ \ V, deficiency c V :=
+    Finset.sum_comm' fun i V => by
+      constructor
+      · intro h
+        exact ⟨Finset.mem_sdiff.mpr ⟨h.1, (Finset.mem_filter.mp h.2).2⟩,
+          (Finset.mem_filter.mp h.2).1⟩
+      · intro h
+        exact ⟨(Finset.mem_sdiff.mp h.1).1,
+          Finset.mem_filter.mpr ⟨h.2, (Finset.mem_sdiff.mp h.1).2⟩⟩
+  rw [hswap1, ← hswap2]
+  exact Finset.sum_congr rfl fun i _ => hbij c q i
 
-/-- (D): monotone step. -/
+/-- (D): monotone step. Chain: `(n-q)·Σ_q = ∑_{V∈U_q}∑_{i∈univ∖V} d V
+= ∑_{W∈U_{q+1}}∑_{i∈W} d(W.erase i) ≤ (q+1)·Σ_{q+1}` (sum_erase_bij +
+erase_sum_le); with `Nat.choose_succ_right_eq` this is exactly the
+expectation ratio after `div_le_div_iff₀`. -/
 theorem L2_3_expectation_mono (c : Fin n → ℤ) (q : ℕ) (hq : q < n) :
     expectedDeficiency c q ≤ expectedDeficiency c (q + 1) := by
-  sorry
+  have hq1 : q + 1 ≤ n := Nat.succ_le_of_lt hq
+  have hUq : (uniformQSubsets n q).card = Nat.choose n q := card_uniformQSubsets n q
+  have hUq1 : (uniformQSubsets n (q + 1)).card = Nat.choose n (q + 1) :=
+    card_uniformQSubsets n (q + 1)
+  have hCq : (0 : ℝ) < (Nat.choose n q : ℝ) := by
+    exact_mod_cast (Nat.choose_pos (Nat.le_of_lt hq))
+  have hCq1 : (0 : ℝ) < (Nat.choose n (q + 1) : ℝ) := by
+    exact_mod_cast (Nat.choose_pos hq1)
+  have hqpos : (0 : ℝ) < ((q + 1 : ℕ) : ℝ) := by exact_mod_cast (Nat.succ_pos q)
+  have hsum : ((n - q : ℕ) : ℝ) * ∑ V ∈ uniformQSubsets n q, deficiency c V
+      ≤ ((q + 1 : ℕ) : ℝ) * ∑ W ∈ uniformQSubsets n (q + 1), deficiency c W := by
+    have hinner : ∀ V ∈ uniformQSubsets n q,
+        ∑ i ∈ Finset.univ \ V, deficiency c V = ((n - q : ℕ) : ℝ) * deficiency c V := by
+      intro V hV
+      have hVq : V.card = q := (Finset.mem_filter.mp hV).2
+      have hsub : V ⊆ Finset.univ := Finset.subset_univ V
+      rw [Finset.sum_const, Finset.card_sdiff_of_subset hsub, Finset.card_univ,
+        Fintype.card_fin, hVq, nsmul_eq_mul]
+    calc ((n - q : ℕ) : ℝ) * ∑ V ∈ uniformQSubsets n q, deficiency c V
+        = ∑ V ∈ uniformQSubsets n q, ((n - q : ℕ) : ℝ) * deficiency c V := by
+          rw [← Finset.mul_sum]
+      _ = ∑ V ∈ uniformQSubsets n q, ∑ i ∈ Finset.univ \ V, deficiency c V :=
+          Finset.sum_congr rfl fun V hV => (hinner V hV).symm
+      _ = ∑ W ∈ uniformQSubsets n (q + 1), ∑ i ∈ W, deficiency c (W.erase i) :=
+          (sum_erase_bij c q).symm
+      _ ≤ ((q + 1 : ℕ) : ℝ) * ∑ W ∈ uniformQSubsets n (q + 1), deficiency c W :=
+          erase_sum_le c q
+  have key : (∑ V ∈ uniformQSubsets n q, deficiency c V) * (Nat.choose n (q + 1) : ℝ)
+      ≤ (∑ W ∈ uniformQSubsets n (q + 1), deficiency c W) * (Nat.choose n q : ℝ) := by
+    have hchoose : (Nat.choose n (q + 1) : ℝ) * ((q + 1 : ℕ) : ℝ)
+        = (Nat.choose n q : ℝ) * ((n - q : ℕ) : ℝ) := by
+      exact_mod_cast (Nat.choose_succ_right_eq n q)
+    refine le_of_mul_le_mul_right ?_ hqpos
+    have hmul := mul_le_mul_of_nonneg_right hsum (le_of_lt hCq)
+    have hchoose_x : (∑ V ∈ uniformQSubsets n q, deficiency c V)
+        * ((Nat.choose n (q + 1) : ℝ) * ((q + 1 : ℕ) : ℝ))
+        = (∑ V ∈ uniformQSubsets n q, deficiency c V)
+        * ((Nat.choose n q : ℝ) * ((n - q : ℕ) : ℝ)) := by rw [hchoose]
+    nlinarith [hmul, hchoose_x]
+  rw [expectedDeficiency, expectedDeficiency, Finset.expect_eq_sum_div_card,
+    Finset.expect_eq_sum_div_card, hUq, hUq1, div_le_div_iff₀ hCq hCq1]
+  exact key
 
 end SubsetSumL25
