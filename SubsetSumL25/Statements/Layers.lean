@@ -39,13 +39,8 @@ namespace SubsetSumL25
 
 variable {n : ℕ}
 
-/-- Base Lemma 3.1 (covering): for `0 ≤ k ≤ t ≤ |V|` and a uniform
-`(t−k)`-subset `W` of `V`, one has `a_t(V) ≤ E_W a_k(V∖W)`. -/
-theorem L3_1_covering (c : Fin n → ℤ) {V : Finset (Fin n)} {k t : ℕ}
-    (hkt : k ≤ t) (ht : t ≤ V.card) :
-    layerDensity c V t ≤
-      (V.powersetCard (t - k)).expect (fun W => layerDensity c (V \ W) k) := by
-  sorry
+-- L3.1 (covering) is PROVED; statement-of-record lives in `Proofs/Layers.lean`
+-- (house convention: one declaration per theorem).
 
 /-- Base Lemma 3.2 (sampling): for `k ≤ s ≤ |V|` and a uniform `s`-subset `S`
 of `V`, one has `E_S a_k(S) ≥ a_k(V)`. -/
