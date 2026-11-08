@@ -1,9 +1,8 @@
 /-
-M4c: OpenAI Lemma 2.3 — monotone step. STATUS: clean build; card_uniformQSubsets
-and sum_eq_sum_ite_univ PROVED; sum_erase_bij and L2_3_expectation_mono have
-`sorry` (the remaining work). The sum_erase_bij is the pair-bijection lemma —
-the `rw [Finset.sdiff_eq_filter]` fails inside the file context (works in
-standalone tests); use `Finset.sum_comm'` directly on the univ∖V inner.
+M4c: OpenAI Lemma 2.3 — monotone step. STATUS: clean build.
+card_uniformQSubsets + sum_eq_sum_ite_univ + erase_sum_le + hbij PROVED.
+sum_erase_bij + L2_3_expectation_mono sorried (the remaining work, precisely
+scoped in PROGRESS.md).
 -/
 import Mathlib
 import SubsetSumL25.Statements.RandomRestrictions
@@ -79,17 +78,16 @@ theorem hbij (c : Fin n → ℤ) (q : ℕ) : ∀ i : Fin n,
   · intro W _
     rfl
 
-/-- (C): the pair-sum bijection, via `Finset.sum_comm'` on the `univ ∖ V` inner
-(the `rw [Finset.sdiff_eq_filter]` fails inside the file context; works in
-standalone — see /tmp/test_sdiff.lean for the standalone version). -/
-private theorem sum_erase_bij (c : Fin n → ℤ) (q : ℕ) :
+/-- (C): the pair-sum bijection. The `rw [Finset.sdiff_eq_filter]` fails inside
+the file context (works standalone — see /tmp/test_sdiff.lean); the workaround
+is `Finset.sum_comm'` on the `univ \ V` inner (the dependent inner index is
+fine for sum_comm'). -/
+theorem sum_erase_bij (c : Fin n → ℤ) (q : ℕ) :
     ∑ W ∈ uniformQSubsets n (q + 1), ∑ i ∈ W, deficiency c (W.erase i)
       = ∑ V ∈ uniformQSubsets n q, ∑ i ∈ Finset.univ \ V, deficiency c V := by
   sorry
 
-/-- (D): monotone step of the expected deficiency. Uses erase_sum_le (A),
-hbij (B), sum_erase_bij (C), the per-V compl-card, and the binom identity
-(Nat.choose_succ_right_eq). -/
+/-- (D): monotone step. -/
 theorem L2_3_expectation_mono (c : Fin n → ℤ) (q : ℕ) (hq : q < n) :
     expectedDeficiency c q ≤ expectedDeficiency c (q + 1) := by
   sorry
