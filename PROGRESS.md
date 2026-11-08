@@ -14,13 +14,16 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
 | `L2_1_isolation` (first sentence) | Proofs/Isolation.lean | deterministic equivalence |
 | `L2_2_deficiency_empty` / `_nonneg` | Proofs/Deficiency.lean | 1 ≤ |Σ(V)| ≤ 2^|V| |
 | `L5_2_sparse_distinctions` | Proofs/SparseDistinctions.lean | union bound of L2.5 over `sparseAll`; K = 1/c₀ explicit, L* = max(L₀, 1); counting proved (`sparseAll_card_le`) |
+| `L2_3_halfVariance` | Proofs/RandomRestrictions.lean | Var d(V_q) ≤ q — one-step conditional-mean recursion, no measure theory |
+| `martingale_var` / `var_step` / `total_variance_finset` / `stepMean*` / `sum_erase_pair` | Proofs/RandomRestrictions.lean | private support lemmas of the above |
 
-## Sorries (2, exactly)
+## Sorries (0) — cluster complete (2026-11-08)
 
-| Theorem | File:line | Missing obligation |
-|---|---|---|
-| `L2_1_isolation_prob` | Statements/Isolation.lean:43 | MVV minimum-tie argument: per-index tie prob ≤ 1/N₀, union bound ≤ n/N₀ ≤ 1/12 |
-| `L2_3_halfVariance` | Statements/RandomRestrictions.lean:34 | martingale/exposure argument (hardest of M4) |
+All three formerly-open obligations are PROVED (statements of record live in
+Proofs/ per the one-declaration convention):
+`L2_1_isolation_prob` — MVV minimum-tie union bound (main, 0b85da2);
+`L5_2_sparse_distinctions` — union bound over sparseAll, count bound proved (1f894cd);
+`L2_3_halfVariance` — one-step conditional-mean recursion (e1bb50c).
 
 ## Key facts for the next mind
 
@@ -53,6 +56,19 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
   Proofs/SparseDistinctions.lean).
 * Proved theorem bodies live in `Proofs/` and are REMOVED from `Statements/`
   (one declaration per theorem; statement-of-record = the proved one).
+* **M4d gotchas (variance proof)**: (1) `set X := e` REWRITES the local
+  context — hypotheses stated before the `set` keep `e`, hypotheses after it
+  mention `X`; mixing the two directions (`rw [hX]` vs the explicit term)
+  produces "pattern N not found" on goals that display unfolded. State the
+  counting identities (hNtot1/hNtot2) AFTER `set` so they speak about `X`.
+  (2) `field_simp` alone often closes `a/b = c/d`-style goals — a trailing
+  `ring` then errors "No goals to be solved".
+  (3) A ratio identity needing hrel : A*C1 = B*C0 inside products is NOT
+  provable by nlinarith (degree-3): use `div_div` + `div_eq_div_iff h1 h2`
+  (as an iff, via `refine (…).mpr`) + a two-step `calc` with `rw [hrel]`.
+  (4) Host-level `ENFILE` ("Too many open files in system") appears under
+  parallel campaign load — retry the build in a bounded loop; `ulimit -n
+  10240` alone does not clear it (it is a kernel table limit).
 
 ## Commits
 
@@ -64,14 +80,9 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
    encoding) counting + L2.5 union bound; statement fixed to probability form
    (STMTS.md note 7); axioms [propext, Classical.choice, Quot.sound]
 
-## Next actions (in order) — after M4b (2026-11-07)
+## Next actions (in order) — after M4d (2026-11-08)
 
-1. **M4c** `L2_3_halfVariance` / `L2_3_expectation_mono`: exposure/coupling
-   over `uniformQSubsets n q`. No uniform-permutation API assumed available —
-   consider transporting along a fixed bijection or direct two-point variance
-   telescoping. Mono is the easier of the two (superadditivity of L2.2 now
-   proved gives the monotone step).
-2. **M3b** `L2_1_isolation_prob`: min-tie argument. Slice the space
+1. **M3b** `L2_1_isolation_prob`: min-tie argument. Slice the space
    `(Fin n → Fin N₀)` by the coordinates off `i`; per slice ≤ 1 bad value of
    `u i` (the tie equation `u i + k_A = k_B`); injective-slice counting gives
    #{bad} ≤ n·N₀^{n−1}, then 11/12. Beware: ℕ-vs-ℝ cast facts must be stated

@@ -11,7 +11,8 @@ Translation notes (details in STMTS.md):
 * `V_q` uniform over the finset of q-element subsets, modeled as the average
   (`Finset.expect`) over `uniformQSubsets n q`; nonempty for `q ≤ n`.
 * variance stated in the elementary form 𝔼[(d − 𝔼d)²] ≤ q.
-* `sorry`: M1 placeholder — proof target Proofs/RandomRestrictions.lean (M4).
+* `L2_3_halfVariance` proved in Proofs/RandomRestrictions.lean (M4d): the
+  statement of record is the proved declaration there.
 -/
 import SubsetSumL25.Statements.Defs
 
@@ -26,11 +27,5 @@ def uniformQSubsets (n q : ℕ) : Finset (Finset (Fin n)) :=
 /-- 𝔼 d(V_q), the average deficiency over uniform q-element subsets. -/
 noncomputable def expectedDeficiency (c : Fin n → ℤ) (q : ℕ) : ℝ :=
   (uniformQSubsets n q).expect (deficiency c)
-
-/-- OpenAI L2.3, variance bound. -/
-theorem L2_3_halfVariance (c : Fin n → ℤ) (q : ℕ) (hq : q ≤ n) :
-    (uniformQSubsets n q).expect
-        (fun V => (deficiency c V - expectedDeficiency c q) ^ 2) ≤ (q : ℝ) := by
-  sorry
 
 end SubsetSumL25
