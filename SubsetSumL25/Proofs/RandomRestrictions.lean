@@ -37,7 +37,7 @@ theorem card_uniformQSubsets (n k : ℕ) :
   simp
 
 /-- Restricting a finite sum to the index set itself: the indicator form. -/
-private theorem sum_eq_sum_ite_univ {α : Type*} [DecidableEq α] [Fintype α] (W : Finset α)
+theorem sum_eq_sum_ite_univ {α : Type*} [DecidableEq α] [Fintype α] (W : Finset α)
     (f : α → ℝ) : (∑ i ∈ W, f i) = ∑ i ∈ Finset.univ, if i ∈ W then f i else 0 := by
   classical
   rw [← Finset.sum_filter (p := fun i => i ∈ W) (f := f)]
@@ -48,7 +48,7 @@ private theorem sum_eq_sum_ite_univ {α : Type*} [DecidableEq α] [Fintype α] (
 /-- (B): per-fixed-i bijection: (W ∋ i, |W| = q+1) ↔ (V ∌ i, |V| = q), W ↦ W ∖ {i}.
 The mem_filter's And-destructuring via obtain (the Quot-membership resists the
 projection chains). -/
-private theorem hbij (c : Fin n → ℤ) (q : ℕ) : ∀ i : Fin n,
+theorem hbij (c : Fin n → ℤ) (q : ℕ) : ∀ i : Fin n,
     ∑ W ∈ (uniformQSubsets n (q + 1)).filter (fun W => i ∈ W), deficiency c (W.erase i)
       = ∑ V ∈ (uniformQSubsets n q).filter (fun V => i ∉ V), deficiency c V := by
   intro i
