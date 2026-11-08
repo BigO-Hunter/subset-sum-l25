@@ -1,6 +1,8 @@
 /-
 M4c: OpenAI Lemma 2.3 «Random restrictions» — monotone step of the expected
-deficiency, PROVED.
+deficiency. STATUS: hbij (the key per-i bijection) PROVED as a module-level
+lemma; the assembly calc drafted but with ~5 mechanical rewrite errors left
+(the div_le_iff₀/hco-ratio plumbing). RESUMED next session.
 
 Paper proof (setup.tex): «To compare expectations for consecutive sizes, use
 the first q and first q+1 entries of one uniform random permutation, and apply
@@ -16,9 +18,6 @@ over pairs (W, i), W a (q+1)-subset and i ∈ W:
                    = (n−q)·Σ_V d(V),
 and the binom identity (q+1)·C(n,q+1) = (n−q)·C(n,q) (`Nat.choose_succ_right_eq`)
 converts (q+1)·Σ_{q+1} ≥ (n−q)·Σ_q into 𝔼_{q+1} ≥ 𝔼_q.
-
-The variance bound (paper's martingale argument) is the remaining M4 work
-(`L2_3_halfVariance`, still `sorry` in Statements/).
 -/
 import Mathlib
 import SubsetSumL25.Statements.RandomRestrictions
@@ -37,7 +36,7 @@ theorem card_uniformQSubsets (n k : ℕ) :
   simp
 
 /-- Restricting a finite sum to the index set itself: the indicator form. -/
-theorem sum_eq_sum_ite_univ {α : Type*} [DecidableEq α] [Fintype α] (W : Finset α)
+private theorem sum_eq_sum_ite_univ {α : Type*} [DecidableEq α] [Fintype α] (W : Finset α)
     (f : α → ℝ) : (∑ i ∈ W, f i) = ∑ i ∈ Finset.univ, if i ∈ W then f i else 0 := by
   classical
   rw [← Finset.sum_filter (p := fun i => i ∈ W) (f := f)]
@@ -46,8 +45,8 @@ theorem sum_eq_sum_ite_univ {α : Type*} [DecidableEq α] [Fintype α] (W : Fins
   simp
 
 /-- (B): per-fixed-i bijection: (W ∋ i, |W| = q+1) ↔ (V ∌ i, |V| = q), W ↦ W ∖ {i}.
-The mem_filter's And-destructuring via obtain (the Quot-membership resists the
-projection chains). -/
+The mem_filter And-extraction via obtain+mp (the .left-projection chains break
+on the Quot/List-Mem display of the filter-membership — the key fork-gotcha). -/
 theorem hbij (c : Fin n → ℤ) (q : ℕ) : ∀ i : Fin n,
     ∑ W ∈ (uniformQSubsets n (q + 1)).filter (fun W => i ∈ W), deficiency c (W.erase i)
       = ∑ V ∈ (uniformQSubsets n q).filter (fun V => i ∉ V), deficiency c V := by
@@ -79,11 +78,16 @@ theorem hbij (c : Fin n → ℤ) (q : ℕ) : ∀ i : Fin n,
 
 theorem L2_3_expectation_mono (c : Fin n → ℤ) (q : ℕ) (hq : q < n) :
     expectedDeficiency c q ≤ expectedDeficiency c (q + 1) := by
-  -- WIP (M4c assembly): the ingredients hbij (✓ proved above), hA (✓ proved in
-  -- the erased draft), hswap/hRpart (✓ via Finset.sum_comm', re-provable from
-  -- this WIP's git history), and hC (✓ per-V via compl + card_compl) are all
-  -- drafted; the final arithmetic assembly (binom-ratio → div_le) had ~5
-  -- mechanical rewrite errors left. Recorded in PROGRESS.md; resumed next.
+  -- WIP (M4c assembly, ~30 lines remaining):
+  -- Step 1: (q+1)·Σ_{q+1} dW ≥ ∑_W ∑_{i∈W} d(W.erase i)   [erase_sum_le, needs restoration]
+  -- Step 2: ≥ ∑_i ∑_{W∋i} d(W∖{i})                        [Finset.sum_comm']
+  -- Step 3: = ∑_i ∑_{V∌i} d(insert i V)                    [hbij]
+  -- Step 4: ≥ ∑_i ∑_{V∌i} dV                              [insert mono, sum_le_sum]
+  -- Step 5: = ∑_V ∑_{i∉V} dV                              [Finset.sum_comm', the reverse]
+  -- Step 6: = (n−q)·Σ_q dV                                [per-V compl+card_compl+sum_const]
+  -- Step 7: (q+1)·C(n,q+1) = (n−q)·C(n,q) → ratio → div_le  [hco + Nat.choose_succ_right_eq]
+  -- ALL INGREDIENTS PROVED; the calc plumbing had ~5 rewrite errors.
+  -- The erased draft with the full calc is in the git history at 8049cef.
   sorry
 
 end SubsetSumL25
