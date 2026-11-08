@@ -301,4 +301,220 @@ theorem good_hit_expect_ge (c : Fin n → ℤ) {M : Finset (Fin n)} {k σ v δn 
     linarith [hδ, h2]
   exact le_trans hfin hchain
 
+/-- Step 4 end: the residue bijection behind «a uniform j′ hits an occupied
+residue with probability `#occupied/P′`». -/
+theorem hit_prob_eq_occupied (W : Finset ℤ) {p : ℕ} (hp : 0 < p) :
+    (Finset.range p).expect
+        (fun (j : ℕ) => if ∃ x ∈ W, x % (p : ℤ) = (↑j : ℤ) then (1 : ℝ) else 0)
+      = ((W.image (fun x => x % (p : ℤ))).card : ℝ) / p := by
+  classical
+  have hpz : (0 : ℤ) < (p : ℤ) := by exact_mod_cast hp
+  have hpne : (p : ℤ) ≠ 0 := ne_of_gt hpz
+  have hcard : ((Finset.range p).filter
+      (fun (j : ℕ) => ∃ x ∈ W, x % (p : ℤ) = (↑j : ℤ))).card
+      = (W.image (fun x => x % (p : ℤ))).card := by
+    refine Finset.card_bij (fun (j : ℕ) (_ : j ∈ _) => (j : ℤ)) ?_ ?_ ?_
+    · intro j hj
+      obtain ⟨-, x, hx, hxj⟩ := Finset.mem_filter.mp hj
+      exact Finset.mem_image.mpr ⟨x, hx, hxj⟩
+    · intro j₁ _ j₂ _ heq
+      exact_mod_cast heq
+    · intro y hy
+      obtain ⟨x, hx, rfl⟩ := Finset.mem_image.mp hy
+      have h1 : 0 ≤ x % (p : ℤ) := Int.emod_nonneg x hpne
+      have h2 : x % (p : ℤ) < (p : ℤ) := Int.emod_lt_of_pos x hpz
+      refine ⟨(x % (p : ℤ)).toNat, ?_, Int.toNat_of_nonneg h1⟩
+      rw [Finset.mem_filter]
+      exact ⟨Finset.mem_range.mpr (by omega), x, hx, (Int.toNat_of_nonneg h1).symm⟩
+  rw [Finset.expect_eq_sum_div_card, Finset.sum_boole, hcard, Finset.card_range]
+
+/-- Step 4 occupancy: colliding pairs are the only thing that reduces the number
+of occupied residue classes (`#occupied ≥ |W| − #collisions`), via one chosen
+representative per class. -/
+theorem occupied_ge_card_sub_collisions (W : Finset ℤ) {p : ℕ} (hp : 0 < p) :
+    W.card ≤ (W.image (fun x => x % (p : ℤ))).card + collisionPairs W p := by
+  classical
+  have hpz : (0 : ℤ) < (p : ℤ) := by exact_mod_cast hp
+  set f : ℤ → ℤ := fun x => x % (p : ℤ) with hf
+  set fib : ℤ → Finset ℤ := fun y => W.filter (fun x => f x = y) with hfib
+  have hfib_ne : ∀ y ∈ W.image f, (fib y).Nonempty := by
+    intro y hy
+    obtain ⟨x, hx, rfl⟩ := Finset.mem_image.mp hy
+    exact ⟨x, by rw [hfib]; exact Finset.mem_filter.mpr ⟨hx, rfl⟩⟩
+  set r : ℤ → ℤ := fun y => if h : (fib y).Nonempty then h.choose else 0 with hr
+  have hr_spec : ∀ y ∈ W.image f, r y ∈ W ∧ f (r y) = y := by
+    intro y hy
+    have h := hfib_ne y hy
+    have h1 : r y = h.choose := by rw [hr]; exact dif_pos h
+    rw [h1]
+    have h2 : h.choose ∈ W.filter (fun x => f x = y) := h.choose_spec
+    exact Finset.mem_filter.mp h2
+  have hr_mem : ∀ y ∈ W.image f, r y ∈ W := fun y hy => (hr_spec y hy).1
+  have hr_res : ∀ y ∈ W.image f, f (r y) = y := fun y hy => (hr_spec y hy).2
+  set T : Finset ℤ := W.filter (fun x => x ≠ r (f x)) with hT
+  -- each non-representative collides with its class representative
+  have h2 : T.card ≤ collisionPairs W p := by
+    have hmaps : Set.MapsTo (fun x => (x, r (f x))) ↑T
+        ↑((W.product W).filter (fun q => q.1 ≠ q.2 ∧ (p : ℤ) ∣ (q.1 - q.2))) := by
+      intro x hx
+      obtain ⟨hxW, hxne⟩ := Finset.mem_filter.mp hx
+      have hfx : f x ∈ W.image f := Finset.mem_image.mpr ⟨x, hxW, rfl⟩
+      refine Finset.mem_filter.mpr ⟨Finset.mem_product.mpr ⟨hxW, ?_⟩, hxne, ?_⟩
+      · exact hr_mem _ (Finset.mem_image.mpr ⟨x, hxW, rfl⟩)
+      · have heq : f x = f (r (f x)) := (hr_res _ (Finset.mem_image.mpr ⟨x, hxW, rfl⟩)).symm
+        exact Int.dvd_iff_emod_eq_zero.mpr (Int.emod_eq_emod_iff_emod_sub_eq_zero.mp heq)
+    have hinj : Set.InjOn (fun x => (x, r (f x))) ↑T := by
+      intro x _ x' _ h
+      exact congrArg Prod.fst h
+    exact Finset.card_le_card_of_injOn _ hmaps hinj
+  -- the representatives are exactly one per occupied class
+  have h1 : W.card = T.card + (W.image f).card := by
+    have hsplit := Finset.card_filter_add_card_filter_not (s := W)
+      (p := fun x => x = r (f x))
+    have hcomp : W.filter (fun x => ¬ (x = r (f x))) = T := by
+      rw [hT]
+    have hS : (W.filter (fun x => x = r (f x))).card = (W.image f).card := by
+      refine Finset.card_bij (fun (x : ℤ) (_ : x ∈ _) => f x) ?_ ?_ ?_
+      · intro x hx
+        exact Finset.mem_image.mpr ⟨x, (Finset.mem_filter.mp hx).1, rfl⟩
+      · intro x₁ hx₁ x₂ hx₂ heq
+        have hx1 : x₁ = r (f x₁) := (Finset.mem_filter.mp hx₁).2
+        have hx2 : x₂ = r (f x₂) := (Finset.mem_filter.mp hx₂).2
+        rw [hx1, hx2, heq]
+      · intro y hy
+        obtain ⟨x, hx, rfl⟩ := Finset.mem_image.mp hy
+        have hfx : f x ∈ W.image f := Finset.mem_image.mpr ⟨x, hx, rfl⟩
+        refine ⟨r (f x), ?_, hr_res (f x) hfx⟩
+        rw [Finset.mem_filter]
+        exact ⟨hr_mem (f x) hfx, by rw [hr_res (f x) hfx]⟩
+    rw [hcomp] at hsplit
+    omega
+  omega
+
+/-- Step 4 second moment: `E_{P′} Σ_y z_y² ≤ |W| + K₀n²|W|²2^{−γm}`, in the
+collision form — each of the at most `|W|²` ordered pairs contributes at most the
+(F4) per-pair bound.  Needs `0 ≤ K₀` (the paper has `K₀ ≥ 1`) so that the
+diagonal pairs' zero contribution is bounded. -/
+theorem collisionPairs_expect_le (W : Finset ℤ) {L : ℕ} {K₀ : ℝ} (hK₀ : 0 ≤ K₀)
+    (hpair : ∀ x ∈ W, ∀ x' ∈ W, x ≠ x' →
+      (primesInterval L).expect (fun (p : ℕ) => if (↑p : ℤ) ∣ (x - x') then (1 : ℝ) else 0)
+        ≤ K₀ / (2 : ℝ) ^ L) :
+    (primesInterval L).expect (fun p => (collisionPairs W p : ℝ))
+      ≤ (W.card : ℝ) ^ 2 * (K₀ / (2 : ℝ) ^ L) := by
+  classical
+  set P : Finset ℕ := primesInterval L with hP
+  have hK : (0 : ℝ) ≤ K₀ / (2 : ℝ) ^ L := by positivity
+  -- `collisionPairs` as a sum of indicators over the ordered pairs
+  have hcp : ∀ p : ℕ, (collisionPairs W p : ℝ)
+      = ∑ q ∈ W.product W,
+          (if q.1 ≠ q.2 ∧ (↑p : ℤ) ∣ (q.1 - q.2) then (1 : ℝ) else 0) := by
+    intro p
+    have h := Finset.card_filter
+      (fun q : ℤ × ℤ => q.1 ≠ q.2 ∧ (↑p : ℤ) ∣ (q.1 - q.2)) (W.product W)
+    rw [collisionPairs, h]
+    push_cast
+    rfl
+  -- per-pair expectation bound
+  have hterm : ∀ q ∈ W.product W,
+      P.expect (fun p => (if q.1 ≠ q.2 ∧ (↑p : ℤ) ∣ (q.1 - q.2) then (1 : ℝ) else 0))
+        ≤ K₀ / (2 : ℝ) ^ L := by
+    intro q hq
+    obtain ⟨h1, h2⟩ := Finset.mem_product.mp hq
+    by_cases hne : q.1 = q.2
+    · have hzero : (fun p : ℕ => (if q.1 ≠ q.2 ∧ (↑p : ℤ) ∣ (q.1 - q.2) then (1 : ℝ) else 0))
+          = fun _ => 0 := by
+        funext p
+        rw [if_neg]
+        exact fun h => h.1 hne
+      rw [hzero, Finset.expect_eq_sum_div_card]
+      simp only [Finset.sum_const_zero, zero_div]
+      exact hK
+    · have heq : ∀ p : ℕ, (if q.1 ≠ q.2 ∧ (↑p : ℤ) ∣ (q.1 - q.2) then (1 : ℝ) else 0)
+          = (if (↑p : ℤ) ∣ (q.1 - q.2) then (1 : ℝ) else 0) := by
+        intro p
+        by_cases hX : (↑p : ℤ) ∣ (q.1 - q.2) <;> simp [hne, hX]
+      simp only [heq]
+      exact hpair q.1 h1 q.2 h2 hne
+  -- inner sum bound
+  have hinner : ∀ q ∈ W.product W,
+      ∑ p ∈ P, (if q.1 ≠ q.2 ∧ (↑p : ℤ) ∣ (q.1 - q.2) then (1 : ℝ) else 0)
+        ≤ (P.card : ℝ) * (K₀ / (2 : ℝ) ^ L) := by
+    intro q hq
+    rcases Finset.eq_empty_or_nonempty P with hem | hne
+    · rw [hem]
+      simp
+    · have hpos : 0 < P.card := Finset.card_pos.mpr hne
+      have hcard : (0 : ℝ) < (P.card : ℝ) := by exact_mod_cast hpos
+      have h := hterm q hq
+      rw [Finset.expect_eq_sum_div_card, div_le_iff₀ hcard] at h
+      calc ∑ p ∈ P, (if q.1 ≠ q.2 ∧ (↑p : ℤ) ∣ (q.1 - q.2) then (1 : ℝ) else 0)
+          ≤ (K₀ / (2 : ℝ) ^ L) * (P.card : ℝ) := h
+        _ = (P.card : ℝ) * (K₀ / (2 : ℝ) ^ L) := by ring
+  rw [Finset.expect_eq_sum_div_card]
+  have hrew : ∑ p ∈ P, (collisionPairs W p : ℝ)
+      = ∑ p ∈ P, ∑ q ∈ W.product W,
+          (if q.1 ≠ q.2 ∧ (↑p : ℤ) ∣ (q.1 - q.2) then (1 : ℝ) else 0) :=
+    Finset.sum_congr rfl fun p _ => hcp p
+  rw [hrew, Finset.sum_comm]
+  rcases Finset.eq_empty_or_nonempty P with hem | hne
+  · rw [hem]
+    simp only [Finset.sum_empty, Finset.card_empty, Nat.cast_zero, div_zero]
+    positivity
+  · have hpos : 0 < P.card := Finset.card_pos.mpr hne
+    have hcard : (0 : ℝ) < (P.card : ℝ) := by exact_mod_cast hpos
+    rw [div_le_iff₀ hcard]
+    calc ∑ q ∈ W.product W,
+          ∑ p ∈ P, (if q.1 ≠ q.2 ∧ (↑p : ℤ) ∣ (q.1 - q.2) then (1 : ℝ) else 0)
+        ≤ ∑ _q ∈ W.product W, ((P.card : ℝ) * (K₀ / (2 : ℝ) ^ L)) :=
+          Finset.sum_le_sum hinner
+      _ = ((W.product W).card : ℝ) * ((P.card : ℝ) * (K₀ / (2 : ℝ) ^ L)) := by
+          rw [Finset.sum_const, nsmul_eq_mul]
+      _ = (W.card : ℝ) ^ 2 * (K₀ / (2 : ℝ) ^ L) * (P.card : ℝ) := by
+          have hc : ((W.product W).card : ℝ) = (W.card : ℝ) * (W.card : ℝ) := by
+            have hnat : (W.product W).card = W.card * W.card := Finset.card_product W W
+            rw [hnat]
+            push_cast
+            ring
+          rw [hc]
+          ring
+
+/-- **Base Lemma A5 (one trial), conditional form.** Verbatim conclusion:
+«After the trial, D_s contains the key of the class of I with probability at
+least 2^{−g_M}n^{−6}.»
+
+The three probabilistic stages are supplied as the two proved inequalities they
+amount to:
+
+* `hQ` — Steps 1–3: `Q = E_S[1_good B_S/C(σ,k)] ≥ 2^{−g_M}/(2(v+1))`
+  (`good_hit_expect_ge`, the Corollary D consumer), with `G = 2^{−g_M}`;
+* `hstep5` — Steps 4–6: the hit probability multiplied by the `1/2` (Markov over
+  `P′`), the `1/(m+1)` (Step 1) and the `1/(8K₀n²)` (uniform `j′`) factors, and
+  transferred to the trial's success probability (Step 5: «a hit is recovered»,
+  plus the independence of the `F`, `P′`, `j′` draws).
+
+The conclusion is the paper's numeric bound with `n` written as `N`; the
+threshold `128K₀ ≤ N²` is explicit, which is what «the threshold for n does not
+depend on I, s, P or M» asserts. -/
+theorem Base_lem_A5 {G K₀ Q Pr : ℝ} {m v N : ℕ} (hG : 0 < G) (hK₀ : 1 ≤ K₀)
+    (hN1 : 1 ≤ N) (hm : m ≤ N) (hv : v ≤ N) (hN : 128 * K₀ ≤ (N : ℝ) ^ 2)
+    (hQ : G / (2 * ((v : ℝ) + 1)) ≤ Q)
+    (hstep5 : (1 / ((m : ℝ) + 1)) * (1 / 2) * Q / (8 * K₀ * (N : ℝ) ^ 2) ≤ Pr) :
+    G / (N : ℝ) ^ 6 ≤ Pr := by
+  have hprod := lem_A5_product (G := G) (K₀ := K₀) (Q := Q) (m := m) (v := v) hG hK₀ hQ
+  have hthr := lem_A5_threshold (G := G) (K₀ := K₀) hG hK₀ hN1 hm hv hN
+  have hN2 : (0 : ℝ) < (N : ℝ) ^ 2 := by positivity
+  have h2 : G / (32 * K₀ * ((m : ℝ) + 1) * ((v : ℝ) + 1)) / (N : ℝ) ^ 2
+      ≤ ((1 / ((m : ℝ) + 1)) * (1 / 2) * Q / (8 * K₀)) / (N : ℝ) ^ 2 :=
+    div_le_div_of_nonneg_right hprod (le_of_lt hN2)
+  calc G / (N : ℝ) ^ 6
+      ≤ G / (32 * K₀ * (N : ℝ) ^ 2 * ((m : ℝ) + 1) * ((v : ℝ) + 1)) := hthr
+    _ = G / (32 * K₀ * ((m : ℝ) + 1) * ((v : ℝ) + 1)) / (N : ℝ) ^ 2 := by
+        field_simp
+        try ring
+    _ ≤ ((1 / ((m : ℝ) + 1)) * (1 / 2) * Q / (8 * K₀)) / (N : ℝ) ^ 2 := h2
+    _ = (1 / ((m : ℝ) + 1)) * (1 / 2) * Q / (8 * K₀ * (N : ℝ) ^ 2) := by
+        field_simp
+        try ring
+    _ ≤ Pr := hstep5
+
 end SubsetSumL25

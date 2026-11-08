@@ -87,32 +87,11 @@ def collisionPairs (W : Finset ℤ) (p : ℕ) : ℕ :=
 
 -- `pair_collision_le` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
-/-- Step 4 second moment (verbatim: «Then E_{P′} Σ_y z_y² ≤ B_S +
-K₀n²B_S²2^{−γm}»), in the collision form: each of the at most `|W|²` ordered
-pairs contributes at most the (F4) per-pair bound. -/
-theorem collisionPairs_expect_le (W : Finset ℤ) {L : ℕ} {K₀ : ℝ}
-    (hpair : ∀ x ∈ W, ∀ x' ∈ W, x ≠ x' →
-      (primesInterval L).expect (fun (p : ℕ) => if (↑p : ℤ) ∣ (x - x') then (1 : ℝ) else 0)
-        ≤ K₀ / (2 : ℝ) ^ L) :
-    (primesInterval L).expect (fun p => (collisionPairs W p : ℝ))
-      ≤ (W.card : ℝ) ^ 2 * (K₀ / (2 : ℝ) ^ L) := by
-  sorry
+-- `collisionPairs_expect_le` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
-/-- Step 4 occupancy (the combinatorial core of «at least
-min(B_S, 2^{γm})/(4K₀n²) residues are occupied»): colliding pairs are the only
-thing that reduces the number of occupied residue classes. -/
-theorem occupied_ge_card_sub_collisions (W : Finset ℤ) {p : ℕ} (hp : 0 < p) :
-    W.card ≤ (W.image (fun x => x % (p : ℤ))).card + collisionPairs W p := by
-  sorry
+-- `occupied_ge_card_sub_collisions` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
-/-- Step 4 end (verbatim: «a uniform j′ hits an occupied residue with
-probability at least min(B_S2^{−γm},1)/(8K₀n²)»): a uniform `j′ ∈ [0,P′)`
-hits an occupied class with probability `#occupied / P′`. -/
-theorem hit_prob_eq_occupied (W : Finset ℤ) {p : ℕ} (hp : 0 < p) :
-    (Finset.range p).expect
-        (fun j => if ∃ x ∈ W, x % (p : ℤ) = (j : ℤ) then (1 : ℝ) else 0)
-      = ((W.image (fun x => x % (p : ℤ))).card : ℝ) / p := by
-  sorry
+-- `hit_prob_eq_occupied` is PROVED; statement-of-record in `Proofs/A5.lean`.
 
 -- `good_hit_expect_ge` is PROVED; statement-of-record in `Proofs/A5.lean`.
 

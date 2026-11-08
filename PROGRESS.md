@@ -288,3 +288,69 @@ recovered») are **named hypotheses**, and the mathematical content is proved.
    ≥ `2^{−g_M}n^{−6}` via `good_hit_expect_ge` → `lem_A5_product` →
    `lem_A5_threshold`) with Step 5 as the transfer hypothesis.
 3. Then B4 (Bills' `Regions`/`RowMargins` template) and B5, per BRIDGE.
+
+---
+
+# B3 COMPLETE (Base Lemma A5 + Corollary A6) — 2026-11-08
+
+All 14 declarations of the B3 lane are proved; `Statements/A5.lean` now holds no
+`sorry` (it is a pointer file). Build green (8943 jobs).
+
+## The three Step-4 residue lemmas (closed in this milestone)
+
+| Theorem | How |
+|---|---|
+| `hit_prob_eq_occupied` | `card_bij` between `{j ∈ range p : ∃ x ∈ W, x % p = ↑j}` and `W.image (x % p)`, with `Int.emod_nonneg` / `Int.emod_lt_of_pos` keeping residues in `[0,p)` and `Int.toNat_of_nonneg` giving the inverse |
+| `occupied_ge_card_sub_collisions` | one representative per class via `Finset.Nonempty.choose` (**not** `Finset.choose` — classes are not singletons, so `∃!` fails); `card_filter_add_card_filter_not` splits `W` into representatives (bijective to the image) and non-representatives, and the latter inject into the colliding ordered pairs via `x ↦ (x, r (f x))` with `Int.emod_eq_emod_iff_emod_sub_eq_zero` + `Int.dvd_iff_emod_eq_zero` |
+| `collisionPairs_expect_le` | `card_filter` turns `collisionPairs` into a sum of indicators over `W.product W`, `sum_comm` swaps the two sums, each inner sum is bounded by the per-pair (F4) hypothesis, `sum_const`+`nsmul_eq_mul`+`card_product` give `\|W\|²`; needs the new hypothesis `0 ≤ K₀` (the paper has `K₀ ≥ 1`) so the diagonal pairs' zero contribution is bounded |
+
+## The headline chain
+
+`Base_lem_A5` (in `Proofs/A5.lean`): `2^{−g_M}n^{−6} ≤ Pr` from
+`hQ` (Steps 1–3 via `good_hit_expect_ge`, the Cor D consumer), the product chain
+(`lem_A5_product`), the explicit threshold (`lem_A5_threshold`), and `hstep5`
+(Steps 4–6: the hit probability times the `1/2` / `1/(m+1)` / `1/(8K₀n²)`
+factors, transferred to the trial's success probability — the paper's
+«a hit is recovered» plus the independence of the `F`, `P′`, `j′` draws).
+
+## Receipts (freshly measured, all 14)
+
+Every one: `#print axioms` = `[propext, Classical.choice, Quot.sound]` — including
+`Base_lem_A5`, `collisionPairs_expect_le`, `occupied_ge_card_sub_collisions`,
+`hit_prob_eq_occupied`. No `native_decide`, no new axioms.
+
+## B3 statement ledger (what the conditional form means)
+
+Proved outright: Steps 1, 3, 4, 6 and Corollary A6. Named hypotheses (never
+`axiom`s): Step 2 (`hgood`: on a good `S`, `B_S ≥ a_k(S;c^I)·C(σ,k)`) and Step 5
+(`hstep5`). The algorithm (`D_s`, keys, classes, records) is not formalized
+anywhere in this package; that is the honest boundary of the rung and is
+recorded in `STMTS.md` §B3.
+
+## Fork gotchas added
+
+* `(j : ℤ)` / `(p : ℤ)` in a *lambda binder* is a type ascription, not a cast —
+  it silently retypes the Finset's element type (three occurrences burned here;
+  the fix is `fun (j : ℕ) => ... (↑j : ℤ)`).
+* `Finset.card_bij`'s index function is dependent: write
+  `fun (a : α) (_ : a ∈ _) => ...`; the `_` must NOT be ascription-typed to the
+  wrong finset.
+* `Finset.choose` needs `∃!`; for one-representative-per-class use
+  `Finset.Nonempty.choose` / `.choose_spec`.
+* `Finset.mem_product` / `Finset.card_product` do not `rw` cleanly against a
+  goal written with `Finset.product`; use them as explicit applications
+  (`Finset.mem_product.mpr`, `Finset.card_product W W`).
+* `field_simp` often closes the goal by itself — a following `ring` then errors
+  with "no goals"; use `try ring`.
+* `convert … using n <;> field_simp <;> ring` is fragile for denominator
+  reshuffles; a `calc` with the reshuffles as separate `field_simp` steps is
+  robust.
+
+## Next action
+
+**B4 — Base Theorem B region analysis** (BRIDGE attack order item 4, "B4 via
+Bills' `Regions`/`RowMargins` template"; the same rung the lemma table calls
+HIGH-but-mechanical given interval balls, with the 10 regions ρ₀..ρ₉ at
+Γ-relative breakpoints 1, 1.25, 1.6, 2, 2.6, 3.5, 5, 8, 15, ∞ and 430
+certificate rows). B5 (preliminary search + cost accounting) is the other
+remaining B rung; O8 (word-RAM accounting) is the parallel "our home turf" rung.

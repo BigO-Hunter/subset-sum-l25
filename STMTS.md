@@ -383,3 +383,13 @@ become named hypotheses and the mathematics is proved**:
    quantifier over `I, s, P, M` appears, which is the content of that remark.
 7. **Paper premise convention** unchanged: named hypotheses, never `axiom`s;
    nothing here claims a board row.
+
+## B3 status (2026-11-08, complete)
+
+All 14 declarations of the B3 lane are PROVED (`Proofs/A5.lean` is the
+statement-of-record for every one; `Statements/A5.lean` is a pointer file).
+Receipts: `#print axioms` = `[propext, Classical.choice, Quot.sound]` for all 14,
+freshly measured. The two statement corrections recorded above (the
+middle-layer binomial bound, and `σ ≤ |M|` for `good_hit_expect_ge`) stand as
+corrected statements of the paper's intent; `collisionPairs_expect_le` gained
+`0 ≤ K₀` for the same reason (the diagonal pairs' zero must be bounded).
