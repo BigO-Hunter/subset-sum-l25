@@ -30,26 +30,10 @@ namespace SubsetSumL25
 def badPrimes (L : ℕ) (D : ℤ) : ℕ :=
   ((primesInterval L).filter (fun p => p ∣ D.natAbs)).card
 
-/-- OpenAI L2.5: random-prime collision bound.  `hcount` is the PNT/Rosser–
-Schoenfeld interval-prime-count premise; `hpos` is well-formedness of the
-uniform distribution on the interval primes. -/
-theorem L2_5_prime_collision (c₀ : ℝ) (hc₀ : 0 < c₀) (L₀ : ℕ)
-    (hcount : ∀ L, L₀ ≤ L → c₀ * (2 : ℝ) ^ L / L ≤ (primesInterval L).card)
-    (hpos : ∀ L, L₀ ≤ L → 0 < (primesInterval L).card) :
-    ∃ (K : ℝ) (Lstar : ℕ), 0 < K ∧ ∀ L, Lstar ≤ L → ∀ (D : ℤ) (B : ℕ),
-      D ≠ 0 → 1 ≤ B → ((D.natAbs : ℝ) < (2 : ℝ) ^ B) →
-      (badPrimes L D : ℝ) / (primesInterval L).card
-        ≤ K * (B : ℝ) * (L : ℝ) / (2 : ℝ) ^ L := by
-  sorry
-
-/-- OpenAI L2.5, last sentence: the two-integer collision variant. -/
-theorem L2_5_prime_collision_two (c₀ : ℝ) (hc₀ : 0 < c₀) (L₀ : ℕ)
-    (hcount : ∀ L, L₀ ≤ L → c₀ * (2 : ℝ) ^ L / L ≤ (primesInterval L).card)
-    (hpos : ∀ L, L₀ ≤ L → 0 < (primesInterval L).card) :
-    ∃ (K : ℝ) (Lstar : ℕ), 0 < K ∧ ∀ L, Lstar ≤ L → ∀ (x y : ℤ) (B : ℕ),
-      x ≠ y → 1 ≤ B → ((x - y).natAbs : ℝ) < (2 : ℝ) ^ B →
-      (badPrimes L (x - y) : ℝ) / (primesInterval L).card
-        ≤ K * (B : ℝ) * (L : ℝ) / (2 : ℝ) ^ L := by
-  sorry
+/-
+The two collision theorems (`L2_5_prime_collision`,
+`L2_5_prime_collision_two`) are PROVED in `SubsetSumL25.Proofs.PrimeCollision`;
+they lived here with `sorry` placeholders at M1 and moved to Proofs/ at M2.
+-/
 
 end SubsetSumL25

@@ -30,19 +30,6 @@ variable {n : ℕ}
 `t_s = C·t + s` for `0 ≤ s ≤ nN₀`. -/
 def transformedC (n N₀ : ℕ) : ℤ := 1 + n * N₀
 
-/-- OpenAI L2.1, first sentence: the transformed equivalence holds for **every**
-choice of the tie weights. -/
-theorem L2_1_isolation (a : Fin n → ℤ) (t : ℤ) (N₀ : ℕ)
-    (u : Fin n → Fin N₀) :
-    ((∃ I : Finset (Fin n), subsum a I = t) ↔
-      (∃ s : ℕ, s ≤ n * N₀ ∧ ∃ I : Finset (Fin n),
-        subsum (fun i => transformedC n N₀ * a i + ((u i : ℕ) : ℤ)) I
-          = transformedC n N₀ * t + s)) := by
-  sorry
-
-/-- OpenAI L2.1, second sentence: if the original instance has a solution, then
-with probability ≥ 11/12 some transformed target has exactly one representing
-subset.  Probability is the uniform fraction over `(Fin n → Fin N₀)`. -/
 theorem L2_1_isolation_prob (a : Fin n → ℤ) (t : ℤ) (N₀ : ℕ)
     (hN₀ : 12 * n ≤ N₀)
     (hsol : ∃ I : Finset (Fin n), subsum a I = t) :
