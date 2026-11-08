@@ -54,7 +54,6 @@ Translation notes (details in STMTS.md):
 * `sorry`: M1 placeholders — proof targets `Proofs/CorD.lean` (M2, M3).
 -/
 import SubsetSumL25.Statements.Layers
-import SubsetSumL25.Proofs.Layers
 
 namespace SubsetSumL25
 
@@ -73,14 +72,9 @@ theorem Base_cor_D (c : Fin n → ℤ) (M : Finset (Fin n)) {k σ v : ℕ}
 
 /-! ### Formalization scaffolding (not paper lemmas) -/
 
-/-- Every `σ`-set `S` with `k ≤ σ` has `a_k(S) ≥ 1/C(σ,k)`: `Σ_k(S)` is
-nonempty (it contains the weight of any `k`-subset of `S`), so
-`|Σ_k(S)| ≥ 1`. (Paper: «Every σ-set S has a_k(S) ≥ 1/C(σ,k), because Σ_k(S)
-is not empty».) -/
-theorem one_div_choose_le_layerDensity (c : Fin n → ℤ) {S : Finset (Fin n)} {k σ : ℕ}
-    (hkσ : k ≤ σ) (hS : S.card = σ) :
-    1 / (Nat.choose σ k : ℝ) ≤ layerDensity c S k := by
-  sorry
+-- `one_div_choose_le_layerDensity` (the `1/C(σ,k)` floor) is PROVED; its
+-- statement-of-record lives in `Proofs/CorD.lean` (house convention: one
+-- declaration per theorem).
 
 /-- Two-level uniform sampling (containment): averaging over `p`-subsets `V` of
 `M` and then over `q`-subsets `S ⊆ V` equals averaging over `q`-subsets of `M`.

@@ -12,3 +12,4 @@ import SubsetSumL25.Proofs.Isolation
 import SubsetSumL25.Proofs.Deficiency
 import SubsetSumL25.Proofs.RandomRestrictions
 import SubsetSumL25.Proofs.Layers
+import SubsetSumL25.Proofs.CorD

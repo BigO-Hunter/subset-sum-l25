@@ -438,13 +438,18 @@ theorem twoPow_neg_deficiency (c : Fin n → ℤ) (V : Finset (Fin n)) :
     Real.rpow_logb (by norm_num : (0 : ℝ) < 2) (by norm_num : (2 : ℝ) ≠ 1) hN,
     Real.rpow_natCast]
 
-/-- Base Lemma 3.3 (a good layer), density half («in particular»): some `t`
-with `2t ≤ |V|` has `a_t(V) ≥ 2^{−d(V)}/(|V|+1)`. -/
-theorem L3_3_good_layer_density (c : Fin n → ℤ) (V : Finset (Fin n)) :
-    ∃ t, 2 * t ≤ V.card ∧
-      (2 : ℝ) ^ (-(deficiency c V)) / ((V.card : ℝ) + 1) ≤ layerDensity c V t := by
+/-- The «in particular» step of Lemma 3.3 for a **given** layer `t`: if layer `t`
+carries a `1/(|V|+1)` share of `Σ(V)`, then `a_t(V) ≥ 2^{−d(V)}/(|V|+1)`.
+Stated separately from the existential so that a caller (e.g. Corollary D, whose
+case split on `t ≥ k` / `t < k` must use the *same* `t` in both clauses) can pin
+`t` once.  Proof: `2^{−d(V)} = |Σ(V)|/2^{|V|}` exactly
+(`twoPow_neg_deficiency`), `a_t(V) = |Σ_t(V)|/C(|V|,t)`, and
+`C(|V|,t) ≤ 2^{|V|}` (`Nat.choose_le_two_pow`). -/
+theorem layerDensity_ge_of_card (c : Fin n → ℤ) (V : Finset (Fin n)) {t : ℕ}
+    (ht2 : 2 * t ≤ V.card)
+    (htcard : (support c V).card ≤ (V.card + 1) * (layerSupport c V t).card) :
+    (2 : ℝ) ^ (-(deficiency c V)) / ((V.card : ℝ) + 1) ≤ layerDensity c V t := by
   classical
-  obtain ⟨t, ht2, htcard⟩ := L3_3_good_layer c V
   have htle : t ≤ V.card := by omega
   have htcardR : ((support c V).card : ℝ)
       ≤ ((V.card : ℝ) + 1) * ((layerSupport c V t).card : ℝ) := by
@@ -473,9 +478,16 @@ theorem L3_3_good_layer_density (c : Fin n → ℤ) (V : Finset (Fin n)) :
   have step3 : ((layerSupport c V t).card : ℝ) / (2 : ℝ) ^ V.card
       ≤ ((layerSupport c V t).card : ℝ) / (Nat.choose V.card t : ℝ) :=
     div_le_div_of_nonneg_left hTnonneg hCpos hCle
-  refine ⟨t, ht2, ?_⟩
   rw [twoPow_neg_deficiency, div_div,
     mul_comm ((2 : ℝ) ^ V.card) ((V.card : ℝ) + 1)]
   exact le_trans step2 step3
+
+/-- Base Lemma 3.3 (a good layer), density half («in particular»): some `t`
+with `2t ≤ |V|` has `a_t(V) ≥ 2^{−d(V)}/(|V|+1)`. -/
+theorem L3_3_good_layer_density (c : Fin n → ℤ) (V : Finset (Fin n)) :
+    ∃ t, 2 * t ≤ V.card ∧
+      (2 : ℝ) ^ (-(deficiency c V)) / ((V.card : ℝ) + 1) ≤ layerDensity c V t := by
+  obtain ⟨t, ht2, hcard⟩ := L3_3_good_layer c V
+  exact ⟨t, ht2, layerDensity_ge_of_card c V ht2 hcard⟩
 
 end SubsetSumL25
