@@ -310,3 +310,76 @@ two-level averaging `expect_powersetCard_sdiff`. The cardinal inequality
   `expect_powersetCard_powersetCard` and `expect_powersetCard_sdiff` are not
   paper lemmas — the paper does those counts inline. They are stated separately
   (M1) and proved (M2/M3) so each count is auditable on its own.
+
+# Base (a-kapila) Lemma A5 «one trial» + Corollary A6 (B3)
+
+Source of every quote: `a-kapila/maths-proofs` @ `44c34961`,
+`subset-sum/PROOF_0.4877.tex` §5.4–§5.6 (sha256
+`b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298`). Cross-checked
+against `subset-sum-bridge/BRIDGE.md` appendix row B3 (verdict «matches»: the
+bound `≥ 2^{−g_M}·n^{−6}` under (LD)+E_3+A4 via the second prime `P′` + (F4),
+with `2^{−g_M} := E_V 2^{−d(V)}` and Corollary A6 requiring `T ≥ n⁷2^{g_M}`).
+**Credit: the lemma is Base's; this package formalizes it.**
+
+## Lemma A5 — verbatim (§5.6)
+
+> **Lemma A5 (one trial).** Assume (LD), E_3, and the event of Lemma A4. Fix s,
+> an alias I ∈ A_s(P) with carry q, and one trial for (s, q). After the trial,
+> D_s contains the key of the class of I with probability at least 2^{−g_M}n^{−6}.
+> The threshold for n does not depend on I, s, P or M.
+
+## Corollary A6 — verbatim (§5.6)
+
+> **Corollary A6.** Assume (LD), E_3, and the event of Lemma A4. Then, except
+> with probability o(1), every alias class of every target is in its dictionary
+> at the end of Step 4.
+
+## What A5 quantifies over, and what that forces
+
+A5's subject is the *algorithm*: `D_s` (a dictionary), keys, classes
+`C(κ_L,κ_R,Z)`, records, the trial procedure, `F`, `P′`, `j′`. None of that is
+in this package, and inventing it would be a different (much larger) job than a
+lemma rung. So, as with every rung of this ladder, **the algorithmic steps
+become named hypotheses and the mathematics is proved**:
+
+| Paper step | Lean | Kind |
+|---|---|---|
+| Step 1 (`F` uniform ⟹ `S` uniform; `|S|=σ` w.p. `C(m,σ)2^{−m} ≥ 1/(m+1)`) | `choose_div_two_pow_ge_inv`, `powerset_expect_ite_card` | PROVED |
+| Step 2 (`c^F_i = ±c_i` on `S`, so `B_S ≥ a_k(S;c^I)C(σ,k)` on good `S`) | hypothesis `hgood` of `good_hit_expect_ge` | deterministic, named |
+| Step 3 (bad fraction `2^{−δn}`; `E_S[1_good B_S/C(σ,k)] ≥ 2^{−g_M}/(v+1) − 2^{−δn}`) | `expect_bad_indicator_ge` + `good_hit_expect_ge` | PROVED |
+| Step 4 ((F4) per pair; `E Σz² ≤ B + K₀n²B²2^{−γm}`; C–S occupancy; `j′` hit) | `expect_dvd_eq_badPrimes`, `pair_collision_le`, `collisionPairs_expect_le`, `occupied_ge_card_sub_collisions`, `hit_prob_eq_occupied` | PROVED (consumes `L2_5_prime_collision`) |
+| Step 5 («a hit is recovered»: hit residue ⟹ key inserted) | hypothesis `hstep5` of `Base_lem_A5` | deterministic, named |
+| Step 6 (product chain; `≥ 2^{−g_M}n^{−6}` for large `n`) | `lem_A5_product`, `lem_A5_threshold` | PROVED |
+| Cor A6 (`(1−p)^T ≤ e^{−pT}`; union bound) | `cor_A6_per_alias` | PROVED |
+
+## Translation choices (B3)
+
+1. **`g_M` is a definition, not a numeral.** §5.4 verbatim: «g_M = −log E_V
+   2^{−d(V)}», all paper logs base 2, so `gM c M v = −Real.logb 2 (E_V
+   2^{−d(V)})`. The BRIDGE row's `2^{−g_M} := E_V 2^{−d(V)}` is then the
+   theorem `two_pow_neg_gM`, not a definitional coincidence — and it carries the
+   hypothesis `v ≤ |M|`, because `Finset.expect` of an empty finset is `0` and
+   `logb 2 0` would make `gM` junk. **Nonemptiness is stated, never assumed.**
+2. **The second-prime quantifiers stay where the paper puts them.** `P′` is
+   uniform on `primesInterval ⌊γm⌋` (`primesInterval L` is the paper's
+   `[2^L, 2^{L+1})` filtered to primes), and `j′` is uniform on `[0,P′)`
+   (`Finset.range p`). The (F4) input is consumed once, in
+   `pair_collision_le`, as `L2_5_prime_collision`'s conclusion — that is the
+   exact place the paper writes «(F4) with L′ = ⌊γm⌋».
+3. **(LD), E_3, A4 enter as the numeric bounds they are used for**, never as
+   opaque events: Step 3 needs A3(4)'s `2^{−δn} ≤ 2^{−g_M}/(2(v+1))` (hypothesis
+   `hδ`) and the A4 bad fraction (hypothesis `hbad`, stated as a count bound
+   over `M.powersetCard σ`); Cor A6 needs A3(1)'s `2^{ĥF} ≥ 2^{g_M}`, which
+   appears as `Tp ≥ 1` after multiplying `T ≥ n⁷2^{g_M}` by `p = 2^{−g_M}n^{−6}`.
+4. **The second moment is stated in collision form.** The paper's `Σ_y z_y²`
+   equals `|W_S| + #{ordered colliding pairs}`; `collisionPairs W p` is that
+   count, so `collisionPairs_expect_le` is literally the paper's inequality
+   without introducing residue-class sums over an infinite range.
+5. **`B_S` is a function `ℕ`-valued on subsets** (`B : Finset (Fin n) → ℕ`), not
+   a set `W_S`: only its cardinality is used, and Step 2 supplies the lower
+   bound while `B_S ≤ C(σ,k)` is the trivial upper bound the paper also uses.
+6. **«The threshold for n does not depend on I, s, P or M»** is formalized as
+   `lem_A5_threshold`: an *explicit* `N` with `m, v ≤ N` and `128K₀ ≤ N²` — no
+   quantifier over `I, s, P, M` appears, which is the content of that remark.
+7. **Paper premise convention** unchanged: named hypotheses, never `axiom`s;
+   nothing here claims a board row.
