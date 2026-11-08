@@ -239,7 +239,11 @@ only in the application (§2.2, sizes S1), never in the corollary.
 >   E_S a_k(S) ≥ (E_V 2^{−d(V)})/(v+1).
 
 Lean: `SubsetSumL25.Base_cor_D` (Proofs/CorD.lean), written
-`E_V 2^{−d(V)}/(v+1) ≤ E_S a_k(S)` (same inequality, paper read right-to-left).
+`E_V (2^{−d(V)}/(v+1)) ≤ E_S a_k(S)`. Two mechanical differences from the
+displayed formula, both exact: the paper reads right-to-left (its `≥`), and its
+`\frac{E_V 2^{−d(V)}}{v+1}` divides *after* the expectation while the Lean form
+divides *inside* it — equal because `v+1` is constant (linearity of
+`Finset.expect`). No inequality is weakened.
 
 ## Verbatim proof, and how each step maps
 
