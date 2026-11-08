@@ -393,3 +393,77 @@ freshly measured. The two statement corrections recorded above (the
 middle-layer binomial bound, and `σ ≤ |M|` for `good_hit_expect_ge`) stand as
 corrected statements of the paper's intent; `collisionPairs_expect_le` gained
 `0 ≤ K₀` for the same reason (the diagonal pairs' zero must be bounded).
+
+# B4 — Base Theorem B region analysis: entry decision + statements
+
+Source of every quote: `a-kapila/maths-proofs` @ `44c34961`, §6.1 (regions,
+certificate data, Prop B) and §6.3 (Lemma B2).  Cross-checked against
+`subset-sum-bridge/BRIDGE.md` row B4 («matches»).  **Credit chain: Base
+(regions, certificates, Lemma B2) → Bills (region-predicate template,
+`yannouli-ss/verification/lean/Verification/Regions.lean`) → this package
+(formalization).**
+
+## ENTRY DECISION — re-express locally (option ii), do not import Bills' modules
+
+Examined at `subset-sum-subclassic/yannouli-ss/verification/lean/`:
+`Verification/Regions.lean` (64 lines), `Verification/RowMargins.lean` (99
+lines).  Reasons for (ii):
+
+1. **Pin mismatch.** Bills' `lean-toolchain` is `v4.24.0`; our lane pins
+   `v4.34.1` + Mathlib `d13f23b` (the subset-sum challenge profile).  Their
+   `lakefile.toml` also requires an external git dep
+   (`subset_sum_bound` @ bed8e18f) whose `SubsetSum.Asymptotics` defines their
+   constants (`tau`, `eta`, `gammaB`, …).  Importing = vendoring two projects +
+   toolchain reconciliation + porting: a dependency-management job, not a proof
+   obligation, and it would put a foreign dep in the lane's lakefile.
+2. **Their certificate layer is concrete, ours is abstract by contract.**
+   Bills' `RowMargins.lean` runs `decide +kernel` over their own 43-filter
+   `certificates : List RawCertificate` (their `DataBridge`/`Concrete` modules).
+   BRIDGE's B4 scope here is «structure + domination with the certificate rows
+   as data»; the 430 rows are separately certified (Appendix C), so a
+   kernel-decide layer would re-verify what we are told not to re-verify.
+3. **Their `firstBoundary v` is a Bills-specific refinement.** Bills sets the
+   first boundary to `budget` (not `gammaB`) for filter 3; Base §6.1 has the
+   uniform `b₀ = 1` for every filter.  We formalize Base's statement; the
+   deviation is noted so a future port can add it as a one-line variant.
+4. **The template is small.** 64 lines carry the whole reusable shape: the
+   10-band list, the `by_cases` existence ladder, the `fin_cases`-disjointness.
+   Re-expression in house style is cheaper than vendoring and keeps the credit
+   chain explicit.  What was *taken from* the template: the band list as a
+   literal table, the existence-by-ladder structure, and the
+   existence/disjoint/uniqueness trio of lemmas.
+
+## Statements and their sources
+
+* `bandUpper` — §6.1's b₀..b₈ as a literal table (identical to Bills' list).
+* `inRegion` — §6.1 verbatim: ρ₀ is `W ≤ Γ` (no lower bound — Base's own
+  definition, so the partition is total without a `0 < W` side condition, and
+  *unlike* the natural-but-wrong `(0,Γ]` reading); ρᵢ (1 ≤ i ≤ 9) is
+  `Γb_{i−1} < W ≤ Γbᵢ` with ρ₉'s upper bound absent (b₉ = ∞).  `inRegion` is
+  defined for all `ℕ`, but only `i ≤ 9` are regions — the lemmas carry `i ≤ 9`.
+* `region_existence` / `region_disjoint` / `region_unique` — Bills' trio,
+  re-derived for Base's predicate (needs `Γ > 0` so the bounds order correctly).
+* `row_errors_le_six_eps` — the a_Γ ≤ 3/4 guard (BRIDGE row B4's «referee-
+  extracted»): §6.3's six row errors 3ε, 4ε, 6ε, (4a_Γ+3)ε, 4ε, 4ε are all ≤ 6ε
+  exactly because `(4a_Γ+3) ≤ 6 ⟺ a_Γ ≤ 3/4`.
+* `z_dot_Gbar_ge` — Lemma B2's display `z·Ḡ ≥ z₀G^π₀ − 6εΣz` in abstract
+  indexed form (row `t₀` = the vector's row 0).
+* `lem_B2_region_zero` / `lem_B2_region_band` — the two dispatch cases,
+  hypotheses verbatim from the proof text.
+* `lem_B2_domination` — the verbatim conclusion
+  `−α_πU_{v,π} ≤ −Δ + z·Ḡ + 6εΣ_t z_t`, dispatch against the display.
+
+**Theorem B itself is out of this package's scope**: it is an algorithm
+statement (FAIL / estimates / error / word count) with the checksum procedure
+of §6.2 inside — the same boundary as Lemma A5's `D_s`, and BRIDGE's B4 row
+marks the domination argument as the formalizable content.  Prop B's 430
+integral bounds are separately certified and are *not* restated here (they
+would be data, and re-verification is explicitly out of scope).
+
+**Empty-expect audit:** B4 contains no `Finset.expect` — every hypothesis is
+pointwise and every average enters as an abstract parameter (`zGbar`).  There
+is no silent-`0` degeneracy class in this rung.
+
+`sorry` ledger at M1: 7 (region_existence, region_disjoint,
+row_errors_le_six_eps, z_dot_Gbar_ge, lem_B2_region_zero, lem_B2_region_band,
+lem_B2_domination); `region_unique` is already proved from the first two.
