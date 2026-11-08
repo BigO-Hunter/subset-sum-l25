@@ -17,7 +17,13 @@ has absolute value < 2^B (hypothesis `hB`, the paper's «Every nonzero integer
 `K·S(n,m)·B·L/2^L → 0` under the bit-guard, outside the lemma.  Same PNT
 premise (`hcount`) and well-formedness (`hpos`) as L2.5.
 
-`sorry`: M1 placeholder — proof target Proofs/SparseDistinctions.lean (M5).
+M5b statement fix (STMTS.md note 7): the paper (and STMTS.md note 6) bound the
+failure PROBABILITY — the bad-prime count divided by `#(primesInterval L)`;
+the M1 statement had dropped that division, which would make the claim
+degenerate (a count bound only holds past `L ≥ B`, vacuously).  The theorem now
+carries the division and is PROVED in
+`SubsetSumL25.Proofs.SparseDistinctions`; it moved here at M5b, as L2.5 did at
+M2.
 -/
 import SubsetSumL25.Statements.Defs
 import SubsetSumL25.Statements.PrimeCollision
@@ -33,17 +39,10 @@ noncomputable def badSparsePrimes (n m : ℕ) (c : Fin n → ℤ) (L : ℕ) : Fi
     ∃ v : Fin n → ℤ, isSparse n m v ∧
       (∑ i, v i * c i) ≠ 0 ∧ ((P : ℤ) ∣ ∑ i, v i * c i))
 
-/-- OpenAI L5.2: with high probability over a uniform prime P of `[2^L, 2^{L+1})`,
-mod-P reduction preserves every sparse distinction. -/
-theorem L5_2_sparse_distinctions (n m B : ℕ) (c : Fin n → ℤ)
-    (hB : ∀ v : Fin n → ℤ, isSparse n m v → (∑ i, v i * c i) ≠ 0 →
-      (((∑ i, v i * c i).natAbs : ℝ) < (2 : ℝ) ^ B))
-    (c₀ : ℝ) (hc₀ : 0 < c₀) (L₀ : ℕ)
-    (hcount : ∀ L, L₀ ≤ L → c₀ * (2 : ℝ) ^ L / L ≤ (primesInterval L).card)
-    (hpos : ∀ L, L₀ ≤ L → 0 < (primesInterval L).card) :
-    ∃ (K : ℝ) (Lstar : ℕ), 0 < K ∧ ∀ L, Lstar ≤ L →
-      (badSparsePrimes n m c L).card
-        ≤ K * (sparseCount n m : ℝ) * (B : ℝ) * (L : ℝ) / (2 : ℝ) ^ L := by
-  sorry
+/-
+`L5_2_sparse_distinctions` is PROVED in `SubsetSumL25.Proofs.SparseDistinctions`
+(M5b); it lived here with a `sorry` placeholder at M1 and moved to Proofs/ at
+M5b together with the probability-division fix described above.
+-/
 
 end SubsetSumL25
