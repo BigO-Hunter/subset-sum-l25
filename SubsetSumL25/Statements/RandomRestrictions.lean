@@ -33,9 +33,4 @@ theorem L2_3_halfVariance (c : Fin n → ℤ) (q : ℕ) (hq : q ≤ n) :
         (fun V => (deficiency c V - expectedDeficiency c q) ^ 2) ≤ (q : ℝ) := by
   sorry
 
-/-- OpenAI L2.3, monotonicity of the mean. -/
-theorem L2_3_expectation_mono (c : Fin n → ℤ) (q : ℕ) (hq : q < n) :
-    expectedDeficiency c q ≤ expectedDeficiency c (q + 1) := by
-  sorry
-
 end SubsetSumL25
