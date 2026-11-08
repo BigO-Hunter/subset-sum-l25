@@ -6,6 +6,7 @@ import SubsetSumL25.Statements.PrimeCollision
 import SubsetSumL25.Statements.SparseDistinctions
 import SubsetSumL25.Statements.LayerDefs
 import SubsetSumL25.Statements.Layers
+import SubsetSumL25.Statements.CorD
 import SubsetSumL25.Proofs.PrimeCollision
 import SubsetSumL25.Proofs.Isolation
 import SubsetSumL25.Proofs.Deficiency

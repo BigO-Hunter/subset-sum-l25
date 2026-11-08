@@ -217,3 +217,92 @@ Lean: `SubsetSumL25.L3_3_good_layer` (existence half) and
    Quot.sound]` for every one; no `native_decide`, no new axioms. Proofs live
    in `Proofs/Layers.lean` (statement-of-record; the `Statements` module keeps
    only the quotes and pointers).
+
+# Base (a-kapila) Corollary D — averaged small layer (B2)
+
+Source of every quote: `a-kapila/maths-proofs` @ `44c34961`,
+`subset-sum/PROOF_0.4877.tex` §3 (sha256
+`b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298`), immediately
+after Lemma 3.3. Cross-checked against `subset-sum-bridge/BRIDGE.md` appendix
+row B2, verdict «matches», **with the one correction recorded there**: the old
+condensation said «uniform half S», which is imprecise — the paper says
+«Let S be a uniform σ-subset and V a uniform v-subset of M», and σ = m/2 holds
+only in the application (§2.2, sizes S1), never in the corollary.
+**Credit: the corollary is Base's; this package formalizes it.**
+
+## Corollary D — verbatim
+
+> **Corollary D (averaged small layer).** Let M be a finite index set with
+> integer weights. Let k, σ, v be integers with 2k ≤ σ, 2σ ≤ v + 2k, v ≤ |M|
+> and C(σ,k)C(v,k) ≤ 2^v. Let S be a uniform σ-subset and V a uniform v-subset
+> of M. Then
+>   E_S a_k(S) ≥ (E_V 2^{−d(V)})/(v+1).
+
+Lean: `SubsetSumL25.Base_cor_D` (Proofs/CorD.lean), written
+`E_V 2^{−d(V)}/(v+1) ≤ E_S a_k(S)` (same inequality, paper read right-to-left).
+
+## Verbatim proof, and how each step maps
+
+> The hypotheses give k ≤ σ ≤ v. Fix a v-set V ⊆ M, and let S_V be a uniform
+> σ-subset of V. We show that 2^{−d(V)}/(v+1) ≤ E a_k(S_V). Take t from
+> Lemma 3.3.
+
+Per-`V` claim → `Base_cor_D_case_ge` (t ≥ k) and `Base_cor_D_case_lt` (t < k).
+
+> **Case t ≥ k.** Lemma 3.1 gives a_t(V) ≤ E_W a_k(V∖W), where
+> |V∖W| = v − t + k ≥ v/2 + k ≥ σ. Lemma 3.2 for V ∖ W and s = σ gives
+> a_k(V∖W) ≤ E a_k(S') for a uniform σ-subset S' of V∖W. When W is uniform,
+> S' is a uniform σ-subset of V. Hence 2^{−d(V)}/(v+1) ≤ a_t(V) ≤ E a_k(S_V).
+
+`L3_1_covering` + `L3_2_sampling` (both from the B1 rung) + the disjoint
+two-level averaging `expect_powersetCard_sdiff`. The cardinal inequality
+`2^{−d(V)}/(v+1) ≤ a_t(V)` is `layerDensity_ge_of_card` (extracted from the
+`L3_3_good_layer_density` assembly so the *same* `t` feeds both branches).
+
+> **Case t < k.** Then t < k ≤ v/2, so |Σ_t(V)| ≤ C(v,t) ≤ C(v,k). Lemma 3.3
+> gives 2^{v−d(V)} ≤ (v+1)C(v,k). With the hypothesis,
+> 2^{−d(V)}/(v+1) ≤ C(v,k)2^{−v} ≤ 1/C(σ,k). Every σ-set S has
+> a_k(S) ≥ 1/C(σ,k), because Σ_k(S) is not empty.
+
+`one_div_choose_le_layerDensity` (the floor: `Σ_k(S) ≠ ∅` ⟹ `|Σ_k(S)| ≥ 1`) plus
+`Nat.choose_le_choose` for `C(v,t) ≤ C(v,k)`, and the hypothesis
+`C(σ,k)C(v,k) ≤ 2^v` used exactly here (`C(v,k)/2^v ≤ 1/C(σ,k)`).
+
+> Finally average over V. A uniform σ-subset of a uniform v-subset of M is a
+> uniform σ-subset of M.
+
+`expect_powersetCard_powersetCard`.
+
+## Translation choices (B2)
+
+1. **Two separate averaging spaces, not one uniform measure.** «S uniform
+  σ-subset of M» and «V uniform v-subset of M» are independent averages, modeled
+  as `Finset.expect` over `M.powersetCard σ` and `M.powersetCard v`. The proof's
+  inner object `S_V` («a uniform σ-subset of V») is `V.powersetCard σ`, i.e. an
+  average nested inside the `V`-average — no coupling measure is introduced.
+2. **The σ-subset correction, made explicit.** No `σ = m/2`, no `σ = v/2`, no
+  «half» assumption anywhere: `σ` is an independent parameter constrained only
+  by `2k ≤ σ` and `2σ ≤ v + 2k`. What the paper *does* derive is `k ≤ σ ≤ v`;
+  that derivation is not a hypothesis in Lean, it stays inside the proof
+  (`2σ ≤ v + 2k` with `2k ≤ σ` gives `σ ≤ v`), so the statement does not
+  silently assume it.
+3. **`v ≤ |M|` is `v ≤ M.card`** and does double duty: it is the paper's
+  hypothesis *and* the nonemptiness certificate for `M.powersetCard v`. This is
+  the rung's known risk — `Finset.expect` over an empty finset is `0`, so a
+  weakened size hypothesis would make the average degenerate silently instead of
+  failing loudly. `σ ≤ M.card` is derived (`σ ≤ v ≤ M.card`), and the nested
+  spaces carry their own certificates: `expect_powersetCard_powersetCard` takes
+  `p ≤ M.card`, `expect_powersetCard_sdiff` takes `p + q ≤ V.card`.
+4. **`C` is `Nat.choose`** and `C(σ,k)C(v,k) ≤ 2^v` is a `ℕ` hypothesis, kept in
+  `ℕ` (not cast to `ℝ`) so the branch that uses it can apply `Nat.choose_pos`
+  and cast exactly once.
+5. **The `t` is Lemma 3.3's `t`, not a fresh one.** `L3_3_good_layer` returns
+  `t` with `2t ≤ |V|` and `|Σ(V)| ≤ (|V|+1)|Σ_t(V)|`; the density bound for that
+  *same* `t` is a separate lemma (`layerDensity_ge_of_card`), so the two branches
+  (`t ≥ k`, `t < k`) dispatch on one `t` as the paper does.
+6. **Paper premise convention** unchanged: paper premises are named hypotheses,
+  never `axiom`s. Nothing here claims a board row.
+7. **Scaffolding is labelled.** `one_div_choose_le_layerDensity`,
+  `expect_powersetCard_powersetCard` and `expect_powersetCard_sdiff` are not
+  paper lemmas — the paper does those counts inline. They are stated separately
+  (M1) and proved (M2/M3) so each count is auditable on its own.
