@@ -52,16 +52,21 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
 3. `a60faaa` M2 + M3a: L2.5 proved, L2.1(a) proved (axioms clean)
 4. `223028a` M4 first slice: L2.2 empty + nonneg proved
 
-## Next actions (in order)
+## Next actions (in order) — after M4b (2026-11-07)
 
-1. **M4b** `L2_2_deficiency_insert`: prove
-   `insert i V).powerset ⊆ V.powerset ∪ (V.powerset.map (insert i))`-style
-   support decomposition, then the two-sided card bound 2·|Σ(V)|; superadd and
-   exchange follow.
-2. **M4c** `L2_3_halfVariance`: exposure/coupling — consider `Finset.expect`
-   API (`Finset.expect_le_…`?) or direct two-point estimates over
-   `uniformQSubsets`.
-3. **M3b** `L2_1_isolation_prob`: formalize min-tie argument; probability space
-   `(Fin n → Fin N₀)`; union bound over indices.
-4. **M5** `L5_2_sparse_distinctions`: count lemma `#sparse ≤ sparseCount n m`
-   (inject into Σ C(n,j)·2^j) + per-vector `badPrimes_le` union bound.
+1. **M4c** `L2_3_halfVariance` / `L2_3_expectation_mono`: exposure/coupling
+   over `uniformQSubsets n q`. No uniform-permutation API assumed available —
+   consider transporting along a fixed bijection or direct two-point variance
+   telescoping. Mono is the easier of the two (superadditivity of L2.2 now
+   proved gives the monotone step).
+2. **M3b** `L2_1_isolation_prob`: min-tie argument. Slice the space
+   `(Fin n → Fin N₀)` by the coordinates off `i`; per slice ≤ 1 bad value of
+   `u i` (the tie equation `u i + k_A = k_B`); injective-slice counting gives
+   #{bad} ≤ n·N₀^{n−1}, then 11/12. Beware: ℕ-vs-ℝ cast facts must be stated
+   for linarith; Finset mem_insert/mem_union rcases need the `.mp` lemmas
+   FIRST in this fork (Quot.lift membership is not an inductive datatype).
+3. **M5b** `L5_2_sparse_distinctions`: needs the candidate sparse vectors as a
+   countable/Finset object — options: (a) inject (Fin n → Fin 3)-sparse
+   embeddings, (b) restate over an explicit Finset parameter `S` with
+   `#S ≤ sparseCount n m`, or (c) prove `badSparsePrimes ⊆ ⋃` over a
+   filtered powerset. Then per-vector `badPrimes_le` + union bound.
