@@ -19,9 +19,6 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
 | Theorem | File:line | Missing obligation |
 |---|---|---|
 | `L2_1_isolation_prob` | Statements/Isolation.lean:33 | MVV minimum-tie argument: per-index tie prob ≤ 1/N₀, union bound ≤ n/N₀ ≤ 1/12 |
-| `L2_2_deficiency_insert` | Statements/Deficiency.lean | needs Σ(V∪{i}) = Σ(V) ∪ (cᵢ+Σ(V)) decomposition |
-| `L2_2_deficiency_superadd` | Statements/Deficiency.lean | Σ(U∪V) ⊆ Σ(U)+Σ(V) image-cardinality |
-| `L2_2_deficiency_exchange` | Statements/Deficiency.lean | follows from insert bounds |
 | `L2_3_halfVariance` | Statements/RandomRestrictions.lean:31 | martingale/exposure argument (hardest of M4) |
 | `L2_3_expectation_mono` | Statements/RandomRestrictions.lean:37 | monotonicity via first-q-of-(q+1) coupling |
 | `L5_2_sparse_distinctions` | Statements/SparseDistinctions.lean:38 | union bound of L2.5 over sparseCount n m vectors + count bound |
