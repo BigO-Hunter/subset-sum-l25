@@ -467,3 +467,25 @@ is no silent-`0` degeneracy class in this rung.
 `sorry` ledger at M1: 7 (region_existence, region_disjoint,
 row_errors_le_six_eps, z_dot_Gbar_ge, lem_B2_region_zero, lem_B2_region_band,
 lem_B2_domination); `region_unique` is already proved from the first two.
+
+# B5 — preliminary search (Prop P) + cost accounting: entry + statements
+
+Source of every quote: `a-kapila/maths-proofs` @ `44c34961`, §4 (Prop P, (LD)),
+§5.2 (Thm A part 2), §5.7 (Lemma A7), §5.8. Cross-checked against BRIDGE row B5
+(«matches»). **Credit: Base.**
+
+## Proved-vs-named ledger (the A5 pattern)
+
+| Paper piece | Lean | Kind |
+|---|---|---|
+| Chebyshev over the split side («Var d(U) ≤ n, and Chebyshev's inequality gives …») | `chebyshev_fraction_le` | PROVED (finite-space Chebyshev; `s.Nonempty` stated) |
+| The `4/(ζ²n)` instantiation («n/(ζn/2)² = 4/(ζ²n)») | `prop_p_chebyshev` | PROVED; variance input `Var d(U) ≤ n` = OpenAI L2.3's first clause, named hypothesis — the `hcount` cousin of the L2.5 lane |
+| Cap fitting («log\|Σ(U)\| = \|U\| − d(U) ≤ n/2 + ½ − (½−τ₀+ζ/2)n < τ₀n for n > 1/ζ») | `cap_fit_lt` | PROVED (linear arithmetic; `1 < ζn`) |
+| «returns CONTINUE with probability O(1/n)» | `continue_prob_le` | PROVED (explicit `4/(ζ²n)`; the O(·) is the asymptotic reading) |
+| Thm A part 2 («Part 2 holds by Section 5.2»; op bound `2^{τ₀n+2n^{0.7}}poly`) | `prop_p_op_absorb` | PROVED (the absorption `2^{τ₀n} ≤ 2^{τ₀n+2n^{0.7}}`); the procedure's own op counts are the algorithm, named |
+| Lemma A7 («Every item is at most (b+2)2^{(τ₀−ε₀+ζ)n+O(n^{0.6})}»; 7 items) | `a7_envelope` | PROVED (7 items ≤ (b+2)2^K and `5 ≤ b` ⟹ total ≤ (b+2)2^K — the paper absorbs the 7 into the constant); the seven per-item analyses ((C2)–(C7), Lemma A3(2)–(4), (F4)) are item-level hypotheses |
+| Prop P correctness («returns the correct decision or CONTINUE»), Lemma 2.3 itself, Lemma A7's per-item exponents | — | algorithm/external-input boundary, named |
+
+**Empty-expect audit:** `chebyshev_fraction_le` and `continue_prob_le` divide by
+`#s` and carry `s.Nonempty` explicitly; no other statement touches
+`Finset.expect`.  No silent-`0` degeneracy class.
