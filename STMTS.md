@@ -108,7 +108,22 @@ Lean: `L5_2_sparse_distinctions`.
    as L2.5. P is uniform over a dyadic prime interval — the §5 application
    draws P from a specific range; the lemma is stated for generic L (the
    application fixes L).
-7. **Paper premise convention**: at lemma level, paper premises appear as named
+7. **L5.2 statement fix at M5b (important).** The M1 statement bounded the
+   COUNT `#(badSparsePrimes L)`; the paper (and note 6 above) bound the
+   failure PROBABILITY. The count form is degenerate — it is provable only
+   via `L* ≥ B`, where every interval prime exceeds every candidate sum and
+   the failure set is empty; it asserts nothing in the interesting regime.
+   The theorem now carries the division by `#(primesInterval L)`:
+   `#(badSparsePrimes L) / #(primesInterval L) ≤ K·S(n,m)·B·L·2^{−L}`.
+   Also note the translation choice for the candidate set: `Fin n → ℤ` is
+   infinite (`Fintype ℤ` does not exist), so the paper's «∑_{j=0}^m C(n,j)2^j
+   such vectors» is encoded as the explicit Finset `sparseAll n m` built from
+   (support, sign pattern) — the counting `#(sparseAll n m) ≤ sparseCount n m`
+   is PROVED (`sparseAll_card_le`), not assumed, so no `S` parameter appears
+   in the theorem signature (option (b) of the scoping round was executed
+   internally: the explicit `S` is `sparseAll`, with its cardinality bound
+   discharged in-proof).
+8. **Paper premise convention**: at lemma level, paper premises appear as named
    hypotheses (documented above), never as Lean `axiom`s. Nothing in this
    package claims a board row; per BRIDGE.md milestone 1, hypotheses-in-
    statements is the staged-ladder architecture, and rev8g's Theorem 1 is

@@ -13,15 +13,14 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
 | `primeFactors_card_lt` / `badPrimes_le_card` / `badPrimes_le` | Proofs/PrimeCollision.lean | # distinct prime divisors < B |
 | `L2_1_isolation` (first sentence) | Proofs/Isolation.lean | deterministic equivalence |
 | `L2_2_deficiency_empty` / `_nonneg` | Proofs/Deficiency.lean | 1 ≤ |Σ(V)| ≤ 2^|V| |
+| `L5_2_sparse_distinctions` | Proofs/SparseDistinctions.lean | union bound of L2.5 over `sparseAll`; K = 1/c₀ explicit, L* = max(L₀, 1); counting proved (`sparseAll_card_le`) |
 
-## Sorries (8, exactly)
+## Sorries (2, exactly)
 
 | Theorem | File:line | Missing obligation |
 |---|---|---|
-| `L2_1_isolation_prob` | Statements/Isolation.lean:33 | MVV minimum-tie argument: per-index tie prob ≤ 1/N₀, union bound ≤ n/N₀ ≤ 1/12 |
-| `L2_3_halfVariance` | Statements/RandomRestrictions.lean:31 | martingale/exposure argument (hardest of M4) |
-| `L2_3_expectation_mono` | Statements/RandomRestrictions.lean:37 | monotonicity via first-q-of-(q+1) coupling |
-| `L5_2_sparse_distinctions` | Statements/SparseDistinctions.lean:38 | union bound of L2.5 over sparseCount n m vectors + count bound |
+| `L2_1_isolation_prob` | Statements/Isolation.lean:43 | MVV minimum-tie argument: per-index tie prob ≤ 1/N₀, union bound ≤ n/N₀ ≤ 1/12 |
+| `L2_3_halfVariance` | Statements/RandomRestrictions.lean:34 | martingale/exposure argument (hardest of M4) |
 
 ## Key facts for the next mind
 
@@ -42,6 +41,16 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
   (bit me twice: `mul_le_mul_of_nonneg_right hcnt (by positivity)` picked c₀).
 * Anonymous-constructor ∃-patterns inside `Nat.dvd` mis-unify — use
   `Dvd.intro` or a stated type.
+* **M5b fork names** (all `#check`-verified on the pin): `Finset.biUnion` (NOT
+  `bUnion`), `Finset.card_biUnion_le`, `Finset.mem_biUnion`;
+  `dite_eq_left` / `dite_eq_right` (replace `dif_pos` / `dif_neg`);
+  `ite_eq_left` (replaces `if_pos`); `nsmul_eq_mul` for `card • x` (plain
+  `smul_eq_mul` does NOT fire on ℕ-smul of ℝ); `Nat.cast_id` for the ℕ↔ℕ
+  coercion after `nsmul_eq_mul`; `Fintype.card_bool`, `Fintype.card_coe`;
+  `Fintype.card_pi`. **`Fintype ℤ` does not exist (ℤ is infinite)** — never
+  write `Finset.univ` over `Fin n → ℤ`; build finite candidate sets from an
+  explicit encoding instead (`decode`/`sparseAll` in
+  Proofs/SparseDistinctions.lean).
 * Proved theorem bodies live in `Proofs/` and are REMOVED from `Statements/`
   (one declaration per theorem; statement-of-record = the proved one).
 
@@ -51,6 +60,9 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
 2. `bb636c0` M1: statements + STMTS.md, build green (12 sorries)
 3. `a60faaa` M2 + M3a: L2.5 proved, L2.1(a) proved (axioms clean)
 4. `223028a` M4 first slice: L2.2 empty + nonneg proved
+5. M5b: L5.2 sparse distinctions proved — `sparseAll` (support × sign-pattern
+   encoding) counting + L2.5 union bound; statement fixed to probability form
+   (STMTS.md note 7); axioms [propext, Classical.choice, Quot.sound]
 
 ## Next actions (in order) — after M4b (2026-11-07)
 
@@ -65,8 +77,9 @@ Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
    #{bad} ≤ n·N₀^{n−1}, then 11/12. Beware: ℕ-vs-ℝ cast facts must be stated
    for linarith; Finset mem_insert/mem_union rcases need the `.mp` lemmas
    FIRST in this fork (Quot.lift membership is not an inductive datatype).
-3. **M5b** `L5_2_sparse_distinctions`: needs the candidate sparse vectors as a
-   countable/Finset object — options: (a) inject (Fin n → Fin 3)-sparse
-   embeddings, (b) restate over an explicit Finset parameter `S` with
-   `#S ≤ sparseCount n m`, or (c) prove `badSparsePrimes ⊆ ⋃` over a
-   filtered powerset. Then per-vector `badPrimes_le` + union bound.
+3. ~~M5b `L5_2_sparse_distinctions`~~ **DONE** (see Proved table): the
+   candidate set is built explicitly as `sparseAll n m` from the
+   (support, sign-pattern) encoding, the counting `#sparseAll ≤ sparseCount`
+   is proved, and the union bound is `badSparsePrimes ⊆ ⋃_{d} {p ∣ d.natAbs}`
+   with `L2_5_prime_collision` applied per nonzero sum. Remaining for the
+   cluster: M4c (item 1) and M3b (item 2).
