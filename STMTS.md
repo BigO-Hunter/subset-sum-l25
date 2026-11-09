@@ -1107,3 +1107,49 @@ Full build green; 0 errors; package sorries 0.
   reducible transparency misses the HDiv-vs-Inv form in `rw`.
 * `npowRec` in ℝ goals: `(n:ℝ)^7` elaborates to `npowRec 6 ↑n` which
   `positivity` can't see through; use `exact_mod_cast Nat.zero_le (n^7:ℕ)`.
+
+## DS-M2's deferred chain — CLOSED (hmid→h2→h4→trial_count_ge landed; §5.4 complete)
+Landed in Proofs/M2.lean, its own commit, on top of c969c24:
+* `expect_tail_prob_le` — the §5.4 Markov step (Finset-expectation form: a
+  nonneg draw family with mean μ has tail fraction ≤ 1/t). **Correction to
+  the prior entry**: the c969c24 commit message and the DS-M2 LANDED section
+  above listed `expect_tail_prob_le` among the landed theorems, but the tree
+  at c969c24 carries six theorems only — the olean/build receipts of this
+  commit are the first that cover it. The overclaim is recorded here so the
+  ledger stays honest; nothing else in the M2 list was affected.
+* `trial_count_ge` — §5.4's T-assembly: `Ŝ ≤ 2^{2δ}·2^{-g_M}` (A3(1)'s tail,
+  δ abstracting the n^{0.6} scale) + `2^{2δ} ≤ 2^{e_n}` (the (C)-ledger's
+  exponent slack) + `T = n⁷2^{e_n}⌈1/Ŝ⌉` ⟹ `n⁷2^{g_M} ≤ T` — the count the
+  coverage union bound consumes («T ≥ n⁷2^{F̂} ≥ n⁷2^{g_M} by Lemma A3(1)»,
+  the F̂-step inlined into the tail hypothesis). The chain names inside the
+  proof are exactly the deferred hmid→h2→h4.
+
+**Credit: the §5.4 T-assembly is Base's (a-kapila/maths-proofs @ 44c34961,
+PROOF_0.4877.tex §5.4, sha256 b397531c…); this package formalizes it.** The
+linearity `E[Ŝ] = 2^{-g_M}` over the n² independent draws stays named at the
+D7 boundary (the sampling loop is exec-side).
+
+Receipts: `lake build` full package green — exit 0, 8961 jobs, M2.olean
+(717888 bytes) fresh; sorry banners 0; `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` for both theorems.
+
+### The five error sites the draft carried (all fixed; banked for the next
+T-assembly-shaped proof)
+1. The empty-`Finset` case of the Markov step: `div_pos` proves `0 < a/b`,
+   not the `0 ≤ 1/t` the simp-left goal asks — `div_nonneg (≤1) (≤t)`.
+2. `hpow`'s `ring` AFTER `rw [← Real.rpow_add]`: `ring` sees `2^((gM−2δ)+2δ)`
+   and `2^gM` as distinct atoms (it cannot cancel inside an `rpow`
+   exponent) — close with `congr 1` then `ring` on the exponents.
+3. A calc whose stated head carries a cosmetic `1 *` the chain never
+   produces: end the chain with `= 1 * A := (one_mul A).symm` — or drop the
+   `1 *` from the statement (here kept, it feeds `le_of_mul_le_mul_right`'s
+   `b * a ≤ c * a` slots with c := 1).
+4. A calc `=` step closed by `ring` written in term position (`:= ring`,
+   no `by`) — `Unknown identifier ring`.
+5. The final calc's nonneg slot was fed `mul_nonneg 0≤2^e 0≤Ŝ` (the middle
+   factor's nonneg) where the application needs `0 ≤ 2^e_n` — `positivity`
+   closes rpow nonneg directly.
+The banked workarounds held once the five were cleared: the `(1/Ŝ)`
+normalization routes through `le_div_iff₀`/`mul_le_mul` (never an `rw`
+matching `(1/Ŝ)*Ŝ` against `Ŝ⁻¹*Ŝ`), and the `n⁷` nonnegativity goes
+`exact_mod_cast Nat.zero_le (n^7 : ℕ)`. DS-M3 is next per the ladder.

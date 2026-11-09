@@ -19,11 +19,12 @@ Verbatim (§5.4, the T-assembly):
 Cast-discipline: the arithmetic is ℤ-natural/ℝ-real throughout; no cast
 injection.
 
-DS-M2's deferred tail (the hmid→h2→h4→trial_count_ge chain): the class-sum
-identity (5.2)'s `Finset.sum_image`/`finset_product` block — the hmid's
-`(1/Ŝ)*Ş = 1`-normalization step needs a keyed rw whose HDiv-vs-Inv match
-survives `kabstract`'s reducible transparency; deferred to the next session
-with the STMTS ledger note.
+The hmid→h2→h4→trial_count_ge chain is CLOSED in `trial_count_ge` below: the
+`(1/Ŝ)`-normalization routes around the `kabstract` HDiv-vs-Inv reducible-
+transparency pole (the `le_div_iff₀`/`mul_le_mul` route, never an `rw` that
+must match `(1/Ŝ)*Ŝ` against `Ŝ⁻¹*Ŝ`), and the `n⁷` nonnegativity goes
+through `exact_mod_cast Nat.zero_le (n^7 : ℕ)` (the `npowRec` elaboration is
+invisible to `positivity`).
 -/
 import Mathlib
 import SubsetSumL25.Statements.Defs
@@ -266,5 +267,120 @@ theorem support_card_eq_two_pow {c : Fin n → ℤ} (V : Finset (Fin n)) :
     unfold deficiency Real.logb
     ring
   rw [h2, Real.rpow_logb (by norm_num) (by norm_num) (by exact_mod_cast h1)]
+
+/-- The generic Markov step over the uniform draw family — the concentration
+slot of §5.4's A3(1).  The source applies Markov to the nonnegative draws
+(«Ŝ < 2^{2n^{0.6}} 2^{-g_M}», tail probability 2^{-2n^{0.6}}), not
+Chebyshev; the Finset-expectation form here needs only nonnegativity, no
+independence. -/
+theorem expect_tail_prob_le {α : Type*} (s : Finset α) (f : α → ℝ)
+    (hf : ∀ a ∈ s, 0 ≤ f a) {μ : ℝ} (hμ : s.expect f = μ) (hμpos : 0 < μ)
+    {t : ℝ} (ht : 1 ≤ t) :
+    ((s.filter (fun a => t * μ ≤ f a)).card : ℝ) / s.card ≤ 1 / t := by
+  classical
+  by_cases hs : s.card = 0
+  · have hse : s = ∅ := Finset.card_eq_zero.mp hs
+    subst hse
+    simp only [Finset.filter_empty, Finset.card_empty, Nat.cast_zero, zero_div]
+    exact div_nonneg (by norm_num : (0:ℝ) ≤ 1) (by linarith)
+  · have hcard : (0 : ℝ) < s.card := by exact_mod_cast Nat.pos_of_ne_zero hs
+    have htlt : 0 < t := by linarith
+    set bad := s.filter (fun a => t * μ ≤ f a)
+    have hlow : t * μ * bad.card ≤ ∑ a ∈ bad, f a := by
+      have h1 : (∑ a ∈ bad, (t * μ : ℝ)) = ↑bad.card * (t * μ) := by
+        induction bad using Finset.induction_on with
+        | empty => simp
+        | @insert a s ha ih =>
+            rw [Finset.sum_insert ha, ih, Finset.card_insert_of_notMem ha]
+            push_cast
+            ring
+      calc t * μ * bad.card = ∑ a ∈ bad, (t * μ : ℝ) := by
+            rw [h1]
+            ring
+        _ ≤ ∑ a ∈ bad, f a := Finset.sum_le_sum fun a ha => (Finset.mem_filter.mp ha).2
+    have hbadsub : bad ⊆ s := Finset.filter_subset _ s
+    have hbig : ∑ a ∈ bad, f a ≤ ∑ a ∈ s, f a := by
+      classical
+      have hdecomp : ∀ a ∈ s, f a = (if a ∈ bad then f a else 0) +
+          (if a ∈ bad then 0 else f a) := by
+        intro a ha
+        by_cases h : a ∈ bad <;> simp [h]
+      have hss : (∑ x ∈ bad, (if x ∈ bad then f x else 0))
+          = ∑ x ∈ s, (if x ∈ bad then f x else 0) :=
+        Finset.sum_subset (f := fun x : α => if x ∈ bad then f x else 0) hbadsub
+          fun x _ hx => by simp [hx]
+      have hfeq : s.filter (fun a => a ∈ bad) = bad := by
+        ext a
+        rw [Finset.mem_filter]
+        exact ⟨fun h => h.2, fun h => ⟨hbadsub h, h⟩⟩
+      have hind1 : (∑ a ∈ s, (if a ∈ bad then f a else 0)) = ∑ a ∈ bad, f a := by
+        rw [← Finset.sum_filter, hfeq]
+      calc ∑ a ∈ bad, f a = ∑ a ∈ s, (if a ∈ bad then f a else 0) := hind1.symm
+        _ ≤ ∑ a ∈ s, ((if a ∈ bad then f a else 0) + (if a ∈ bad then 0 else f a)) :=
+            Finset.sum_le_sum fun a ha => by
+              rw [hdecomp a ha]
+              by_cases h : a ∈ bad <;> simp [h, hf a ha]
+        _ = ∑ a ∈ s, f a := by
+            refine Finset.sum_congr rfl fun a ha => ?_
+            by_cases h : a ∈ bad <;> simp [h]
+    have hmu : μ * s.card = ∑ a ∈ s, f a := by
+      rw [← hμ, Finset.expect_eq_sum_div_card, div_mul_eq_mul_div]
+      field_simp
+    have hkey : t * bad.card ≤ s.card := by
+      have h1 : μ * (t * bad.card) ≤ μ * s.card := by linarith
+      exact le_of_mul_le_mul_left h1 hμpos
+    rw [div_le_iff₀ hcard]
+    field_simp
+    nlinarith [hkey]
+
+/-- §5.4, the assembly: with `Ŝ` the mean of the n² deficiency draws sitting
+in its A3(1) tail («Ŝ < 2^{2n^{0.6}} 2^{-g_M}» — `δ` abstracts the n^{0.6}
+scale) and the (C)-ledger's exponent slack `2^{2δ} ≤ 2^{e_n}`, the assembled
+trial count `T = n⁷·2^{e_n}·⌈1/Ŝ⌉` dominates `n⁷·2^{g_M}` — the count the
+coverage union bound consumes («T ≥ n⁷2^{F̂} ≥ n⁷2^{g_M} by Lemma A3(1)»;
+the F̂-step is inlined into the tail hypothesis).  The linearity
+`E[Ŝ] = 2^{-g_M}` over the n² independent draws stays named at the D7
+boundary (the sampling loop is exec-side). -/
+theorem trial_count_ge {δ gM Ŝ e_n : ℝ} (hS : 0 < Ŝ)
+    (htail : Ŝ ≤ (2:ℝ) ^ (2 * δ) * (2:ℝ) ^ (-gM))
+    (hE : (2:ℝ) ^ (2 * δ) ≤ (2:ℝ) ^ e_n)
+    (T : ℕ) (hT : (T : ℝ) = (n:ℝ) ^ 7 * (2:ℝ) ^ e_n * ⌈1 / Ŝ⌉) :
+    (n:ℝ) ^ 7 * (2:ℝ) ^ gM ≤ (T : ℝ) := by
+  have hp2 : 0 < (2:ℝ) := by norm_num
+  have h2pos : ∀ g : ℝ, 0 < (2:ℝ)^g := fun g => Real.rpow_pos_of_pos (by norm_num) _
+  have hpow : (2:ℝ)^(gM - 2*δ) * (2:ℝ)^(2*δ) = (2:ℝ)^gM := by
+    rw [← Real.rpow_add hp2]
+    congr 1
+    ring
+  have hid : (2:ℝ)^(-gM) * (2:ℝ)^gM = 1 := by
+    rw [Real.rpow_neg (by norm_num : (0:ℝ) ≤ 2) gM, inv_mul_cancel₀ (h2pos gM).ne']
+  have h1 : (2:ℝ)^gM * Ŝ ≤ (2:ℝ)^(2*δ) := by
+    calc (2:ℝ)^gM * Ŝ ≤ (2:ℝ)^gM * ((2:ℝ)^(2*δ) * (2:ℝ)^(-gM)) :=
+          mul_le_mul_of_nonneg_left htail (h2pos gM).le
+      _ = (2:ℝ)^(2*δ) * ((2:ℝ)^(-gM) * (2:ℝ)^gM) := by ring
+      _ = (2:ℝ)^(2*δ) := by rw [hid, mul_one]
+  have hmid : (2:ℝ)^(gM - 2*δ) * Ŝ * (2:ℝ)^(2*δ) ≤ 1 * (2:ℝ)^(2*δ) := by
+    calc (2:ℝ)^(gM - 2*δ) * Ŝ * (2:ℝ)^(2*δ)
+        = ((2:ℝ)^(gM - 2*δ) * (2:ℝ)^(2*δ)) * Ŝ := by ring
+      _ = (2:ℝ)^gM * Ŝ := by rw [← hpow]
+      _ ≤ (2:ℝ)^(2*δ) := h1
+      _ = 1 * (2:ℝ)^(2*δ) := (one_mul ((2:ℝ)^(2*δ))).symm
+  have h2 : (2:ℝ)^(gM - 2*δ) ≤ 1 / Ŝ :=
+    (le_div_iff₀ hS).mpr (le_of_mul_le_mul_right hmid (h2pos (2*δ)))
+  have h4 : (2:ℝ)^gM ≤ (2:ℝ)^e_n * (1 / Ŝ) := by
+    calc (2:ℝ)^gM = (2:ℝ)^(gM - 2*δ) * (2:ℝ)^(2*δ) := hpow.symm
+      _ ≤ (1 / Ŝ) * (2:ℝ)^e_n :=
+          mul_le_mul h2 hE (h2pos (2*δ)).le
+            (le_of_lt (div_pos (by norm_num : (0:ℝ) < 1) hS))
+      _ = (2:ℝ)^e_n * (1 / Ŝ) := by ring
+  calc (n:ℝ)^7 * (2:ℝ)^gM ≤ (n:ℝ)^7 * ((2:ℝ)^e_n * (1 / Ŝ)) :=
+        mul_le_mul_of_nonneg_left h4 (by
+          exact_mod_cast Nat.zero_le (n^7 : ℕ))
+    _ ≤ (n:ℝ)^7 * ((2:ℝ)^e_n * ⌈1 / Ŝ⌉) :=
+        mul_le_mul_of_nonneg_left
+          (mul_le_mul_of_nonneg_left (by exact_mod_cast Int.le_ceil (1 / Ŝ))
+            (by positivity : (0:ℝ) ≤ (2:ℝ)^e_n)) (by
+          exact_mod_cast Nat.zero_le (n^7 : ℕ))
+    _ = (T : ℝ) := by rw [hT, mul_assoc]
 
 end SubsetSumL25
