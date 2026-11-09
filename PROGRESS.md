@@ -765,3 +765,34 @@ claim). Structure:
 
 Estimated ~90 lines, ~3 build rounds. The δ > 8 sub-case in step 2's `8 ≤
 δn`: case-split or use `nlinarith [hn8' : (8/δ) ≤ 1 ∨ ...]` — see text.
+
+## ROWS M2 — transcription attempt + REFINED plan (2026-11-08, second pass)
+
+The mechanical transcription hit layered pin traps and was ROLLED BACK to
+the honest M1 state (git checkout; the sorry stands). New pin facts
+discovered (cost the attempt, banked for the next execution):
+
+1. `⌈x⌉` for `x : ℝ` is ℤ-VALUED (the O8 discovery, again): `(⌈1/(q−1)⌉ :
+   ℕ)` fails — use `(⌈x⌉ : ℤ).toNat` (the `o7Cap` pattern) or keep the
+   threshold existentially via `exists_nat_gt` (which avoids ⌈⌉ entirely —
+   RECOMMENDED: `obtain ⟨N, hN⟩ := exists_nat_gt (1/(√q−1))` gives
+   `1/(√q−1) < ↑N` directly, no ceil, no cast).
+2. `Real.rpow_pos` is ABSENT — use `Real.rpow_nonneg` (O8) or `Real.rpow_pos_of_pos` if present (probe).
+3. `eq_or_lt_of_le hc` gives the REVERSED `0 = c` (third occurrence of this
+   trap) — `rw [← hc0]` or match with `hc0.symm`.
+4. `lt_of_mul_lt_mul_left` expects the multiplied form — for `1 < √r` use
+   `lt_of_mul_lt_mul_left (h : 1·1 < √r·√r)` after
+   `Real.mul_self_sqrt`.
+5. The refined structure (v2, with the ℤ-trap avoided):
+   - `obtain ⟨N, hN⟩ := exists_nat_gt (1/(√q−1))` — the ratio threshold
+     WITHOUT ceil.
+   - hstep: `(n+2)² ≤ q(n+1)²` for `n ≥ N` (from `hN : 1/(√q−1) < ↑N ≤ ↑n`).
+   - invariant `c(n+1)² ≤ A·q^n`, `A := c(N+1)²/q^{2N}` — base TRIVIAL
+     (`A·q^N = c(N+1)²/q^N ≤ c(N+1)²` since `q^N ≥ 1`), step via the
+     q-ratio hstep.
+   - conclusion: `A ≤ q^n` for `n ≥ N₃` (`exists_nat_gt (log A/log q)` +
+     `Real.log_le_log_iff` + `Real.log_pow`) ⟹ `c(n+1)² ≤ A·q^n ≤ q^{2n} =
+     r^n` — NO ceil anywhere, NO N-offset needed.
+   - then the √-slack lemma and assembly as in the previous plan entry.
+Estimated ~60 lines with the exists_nat_gt form (SHORTER than v1 — the ceil
+elimination removes the whole cast-juggling layer).
