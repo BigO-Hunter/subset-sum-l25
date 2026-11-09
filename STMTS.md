@@ -531,9 +531,9 @@ the APSP lane's FFT contract is stated over its own counters.
 | Paper piece | Lean | Kind |
 |---|---|---|
 | Step 6 cap `2^{⌈τ₀n⌉+⌈n^{0.7}⌉}` | `o8Cap` | definition (ℝ; `noncomputable`) |
-| Cap fits part 2's budget (`⌈x⌉ ≤ x+1` twice, absorbed by `2n^{0.7}`) | `o8_cap_absorb` | PROVED |
+| Cap fits part 2's budget (`⌈x⌉ < x+1` twice, absorbed by `2n^{0.7}`) | `o8_cap_absorb` | PROVED; hypothesis `2 ≤ n^{0.7}` = the paper's «sufficiently large n» made explicit (n ≥ 2^{10/7}; below it the absorption is genuinely false — n = 1/2 gives cap 2² > 2^{1.46}) |
 | Ten counted categories within a uniform `C` | `o8_cap_envelope` | PROVED (`∑ ≤ 10·C`); the ten per-category analyses are the algorithm, named |
-| Part 2's display, `poly(n+b+2)` slot = named `P` | `o8_time_bound` | PROVED skeleton: ten categories ≤ `cap·P` ⟹ total ≤ `16·P·2^{τ₀n+2n^{0.7}}` (16 = 2⁴ absorbs the ten) |
+| Part 2's display, `poly(n+b+2)` slot = named `P` | `o8_time_bound` | PROVED skeleton (same `2 ≤ n^{0.7}` via `o8_cap_absorb`): ten categories ≤ `cap·P` ⟹ total ≤ `16·P·2^{τ₀n+2n^{0.7}}` (16 = 2⁴ absorbs the ten) |
 | Step 3 trial count `n⁷2^{F̂} ≤ T ≤ 2n⁷2^{F̂}` | `o8_trial_count_bound` | PROVED; needs only `0 < Ŝ ≤ 1` (the `e_n` integer range is Lemma A3's input, not this bound's — noted in the docstring); the merge procedure of Prop 2.4 and the `V_j` draws are the algorithm, named |
 | «Halts every execution» | `o8_trials_le_cap` | PROVED checkable core: per-trial ≥ 1 counted step (named data `S`) + prefix ≤ cap ⟹ `K ≤ cap` — no execution passes `cap` elementary steps; the FAIL rule itself is the named mechanism |
 | «At most 2^{O(n)} draws» (§5.8 bullet 5) | `o8_draws_le` | PROVED explicit form: draws `2 + n² + 3K ≤ (n²+5)·cap` (Steps 1+3 draw 2+n², each trial draws 3: `F`, `P′`, `j′` — named ledger) |
@@ -551,5 +551,15 @@ the APSP lane's FFT contract is stated over its own counters.
   `n` is the input size), so `n^{0.7}` never has a negative base.
 * **Identifier note:** `Ŝ` (combining circumflex) is not a valid Lean
   identifier — the Lean name is `Shat` throughout.
-* M1 sorries: 6, exactly the six theorems above (`o8Cap` is a def), build
-  green at 8924 jobs.
+* **Pin fact (cost two failed builds to find):** `⌈x⌉` for `x : ℝ` is
+  ℤ-valued here (`Int.ceil`); a `2 ^ (⌈τ₀n⌉ + …)` term is integer-exponent
+  **zpow**, not `Real.rpow`. Bridge with `Real.rpow_intCast`
+  (`x ^ ↑n = x ^ n`) before applying rpow lemmas; the ceil bounds live in the
+  `Int` namespace even for ℝ (`Int.le_ceil`, `Int.ceil_lt_add_one`).
+* **M2 status (2026-11-08): ALL PROVED.** `Proofs/O8.lean` is the
+  statement-of-record; `Statements/O8.lean` holds quotes only. Receipts,
+  freshly measured: `o8_cap_absorb`, `o8_cap_envelope`, `o8_time_bound`,
+  `o8_trial_count_bound`, `o8_trials_le_cap` all
+  `[propext, Classical.choice, Quot.sound]`; `o8_draws_le`
+  `[propext, Quot.sound]` (pure ℕ arithmetic — not even choice). Build green,
+  8949 jobs; package sorries 2 (the pre-existing L2.5 pair only).

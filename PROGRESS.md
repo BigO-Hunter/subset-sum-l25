@@ -497,3 +497,49 @@ D7 (L5's) and is not imported. Credit: Base.
    `Real.rpow_le_rpow_left_iff`, `rpow_logb`, `Finset.sum_const`); names
    pre-verified in this pin. Then receipts, commit, push.
 2. Then B4/B5-style close-out for O8 and the report.
+
+# O8 COMPLETE (word-RAM accounting, Base §5.2) — M2 2026-11-08
+
+All six O8 theorems PROVED in `Proofs/O8.lean` (statement-of-record;
+`Statements/O8.lean` is the quotes-only pointer file). Build green 8949 jobs;
+package sorries 2 (the pre-existing L2.5 pair only — not this lane's).
+
+## Proved (receipts freshly measured)
+
+| Theorem | Receipt |
+|---|---|
+| `o8_cap_absorb` — cap ≤ 2^{τ₀n+2n^{0.7}}, hyp. `2 ≤ n^{0.7}` | [propext, Classical.choice, Quot.sound] |
+| `o8_cap_envelope` — ten categories ≤ C ⟹ ∑ ≤ 10·C | [propext, Classical.choice, Quot.sound] |
+| `o8_time_bound` — ∑ ≤ 16·P·2^{τ₀n+2n^{0.7}} (P named) | [propext, Classical.choice, Quot.sound] |
+| `o8_trial_count_bound` — Step 3's n⁷2^{F̂} ≤ T ≤ 2n⁷2^{F̂} | [propext, Classical.choice, Quot.sound] |
+| `o8_trials_le_cap` — halts-every-execution core (K ≤ cap) | [propext, Classical.choice, Quot.sound] |
+| `o8_draws_le` — «2^{O(n)} draws»: 2+n²+3K ≤ (n²+5)·cap | [propext, Quot.sound] |
+
+## O8 fork gotchas added (two cost failed builds each)
+
+* **`⌈x⌉` for `x : ℝ` is ℤ-valued in this pin** (`Int.ceil`). So
+  `2 ^ (⌈τ₀n⌉ + …)` is integer-exponent **zpow**, and every `Real.rpow` lemma
+  fails to unify against it. Bridge: `rw [← Real.rpow_intCast]`
+  (`x ^ ↑n = x ^ n`), then `Real.rpow_le_rpow_of_exponent_le`. The ceil bound
+  lemmas are namespaced `Int` even when used on ℝ (`Int.le_ceil` — lower bound
+  only! — and `Int.ceil_lt_add_one` for the upper).
+* **The cap absorption is FALSE for small n** (n = 1/2, τ₀ = 0.487: cap 2² >
+  2^{1.46}). The paper's «for all sufficiently large n» is load-bearing; made
+  explicit as `hn07 : 2 ≤ n ^ (0.7:ℝ)` (n ≥ 2^{10/7}) on `o8_cap_absorb` and
+  `o8_time_bound`.
+* Postponed-`by` elaboration: a lemma with metavariable-typed args
+  (`Real.rpow_le_rpow_of_exponent_le h02 (by linarith …)`) elaborates the
+  tactic block against unmet metavariables and guesses garbage — pre-type the
+  side condition as a `have`.
+* `mul_le_mul_of_nonneg_right h hcp`'s second arg is the *whole product* factor
+  (`c` in `a*c ≤ b*c`), not a co-factor.
+
+## BRIDGE row O8 scorecard (per the row's three properties)
+
+* *exact uniform finite draws bounded* → `o8_draws_le` (+ `o8_trials_le_cap`)
+* *halts every execution* → `o8_trials_le_cap` (the FAIL rule is the named
+  mechanism; its arithmetic consequence is proved)
+* *per-outcome time bound* → `o8_time_bound` (+ `o8_cap_absorb`,
+  `o8_cap_envelope`), part 2's display with the `poly(n+b+2)` slot named `P`
+
+D7 boundary held throughout: Base's own word-op counters only.
