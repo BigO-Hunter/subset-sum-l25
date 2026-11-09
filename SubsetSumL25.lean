@@ -23,3 +23,6 @@ import SubsetSumL25.Proofs.SparseDistinctions
 import SubsetSumL25.Proofs.Layers
 import SubsetSumL25.Proofs.CorD
 import SubsetSumL25.Proofs.A5
+import SubsetSumL25.Proofs.O8
+import SubsetSumL25.Proofs.O4
+import SubsetSumL25.Proofs.O57
