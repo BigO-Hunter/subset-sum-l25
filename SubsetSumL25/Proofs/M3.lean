@@ -22,6 +22,7 @@ at the ℕ↔ℝ boundary only.
 -/
 import Mathlib
 import SubsetSumL25.Statements.Defs
+import SubsetSumL25.Proofs.DS
 import SubsetSumL25.Proofs.A5
 
 open scoped symmDiff
@@ -127,5 +128,48 @@ theorem half_block_prob_ge (M Z : Finset (Fin n)) (hZ : Z ⊆ M) :
         Finset.powersetCard_eq_filter]
   rw [hcount]
   exact middle_choose_div_two_pow_ge_inv M.card
+
+/-! ### DS-M3 Step 2 — the signs on `S` are fixed -/
+
+/-- Step 2's pointwise core: on `S = Z ∆ F` (with `Z ⊆ M`), the signed
+weights `w^F` agree with the complement signing `w^{M ∖ Z}` — the paper's
+«on S the signed weights equal the weights c^I_i = c_i (i ∈ I ∩ M), c^I_i
+= −c_i (i ∈ M ∖ I)» with `Z := I ∩ M` (inside `M`, `M ∖ (I ∩ M) = M ∖ I`). -/
+theorem sgnW_eq_of_mem_symmDiff {w : Fin n → ℤ} {M Z F : Finset (Fin n)}
+    {i : Fin n} (hiM : i ∈ M) (hi : i ∈ Z ∆ F) :
+    sgnW w F i = sgnW w (M \ Z) i := by
+  rcases Finset.mem_symmDiff.mp hi with ⟨hZ, hF⟩ | ⟨hF, hZ⟩
+  · rw [sgnW, ite_eq_right hF, sgnW,
+      ite_eq_right (by intro hm; exact (Finset.mem_sdiff.mp hm).2 hZ)]
+  · rw [sgnW, ite_eq_left hF, sgnW, ite_eq_left (Finset.mem_sdiff.mpr ⟨hiM, hZ⟩)]
+
+/-- Step 2, verbatim: with `S = (I ∩ M) ∆ F`, every `i ∈ S ∩ M` has
+`w^F_i = w^I_i` where `w^I = sgnW w (M ∖ I)` («Either i ∈ I∖F, and then
+c^F_i = c_i; or i ∈ F∖I, and then c^F_i = −c_i. So on S the signed weights
+equal the weights … These depend on I but not on S»). The same holds for
+`b^F` and `b^I` — the statement is for general weights `w`. -/
+theorem sgnW_eq_sgnI_of_mem_half_block {w : Fin n → ℤ} {M I F : Finset (Fin n)}
+    {i : Fin n} (hiM : i ∈ M) (hi : i ∈ (I ∩ M) ∆ F) :
+    sgnW w F i = sgnW w (M \ I) i := by
+  have hseteq : M \ (I ∩ M) = M \ I := by
+    ext j
+    simp only [Finset.mem_sdiff, Finset.mem_inter]
+    tauto
+  calc sgnW w F i = sgnW w (M \ (I ∩ M)) i :=
+        sgnW_eq_of_mem_symmDiff hiM hi
+    _ = sgnW w (M \ I) i := by rw [hseteq]
+
+/-- Step 2's sum form — the layer sums agree: for `W ⊆ S = Z ∆ F` inside
+`M`, `∑_{i∈W} w^F_i = ∑_{i∈W} w^{M∖Z}_i` (what Step 3's `a_k(S; c^I)` and
+Step 5's recovery walk consume). -/
+theorem subsum_sgnW_eq_of_subset_symmDiff {w : Fin n → ℤ} {M Z F W : Finset (Fin n)}
+    (hZM : Z ⊆ M) (hFM : F ⊆ M) (hW : W ⊆ Z ∆ F) :
+    ∑ i ∈ W, sgnW w F i = ∑ i ∈ W, sgnW w (M \ Z) i :=
+  Finset.sum_congr rfl fun i hi =>
+    sgnW_eq_of_mem_symmDiff
+      (by rcases Finset.mem_symmDiff.mp (hW hi) with ⟨h1, -⟩ | ⟨h1, -⟩
+          · exact hZM h1
+          · exact hFM h1)
+      (hW hi)
 
 end SubsetSumL25
