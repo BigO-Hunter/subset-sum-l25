@@ -863,6 +863,22 @@ everywhere else in this campaign) or `Finset.mem_union.mp`-haves, one
 recovery per build round.  The tree was reverted to the green M1.5 state
 (recovery proofs deferred, zero sorry landed).
 
+## DS-M1's (5.2) assembly — 90% written, the sum_image-unification is the pole
+The full class_sum_eq draft (the hmem/hinjOn/hALof/hBRof haves + the
+sum_image/sum_product'/sum_mul x2/ring chain) is preserved at
+/tmp/DS_draft_52.lean (session scratch).  The ONLY blocking step: the
+`rw [Finset.sum_image ...]` — this pin's sum_image hypothesis expects
+`Set.InjOn χ ↑?m` (the χ — the theorem's χ-binder — as the InjOn-map),
+i.e. the rw's f-slot unifies against the GOAL's sum-body function rather
+than the image-map, and both the bare-hinj and the (g := χ)-named-arg
+forms hit the same wall.  Next session: try the exact-shape hinj (the
+hypothesis stated as `Set.InjOn (fun p => p.1 ∪ Z ∪ p.2) ↑pairs` with the
+pairs-let via `set`), or `simp only [Finset.sum_image]`, or `rw
+[Finset.sum_image]` at the goal AFTER `rw [cls]` only (the phi-rws may
+interfere with the unifier's display).  Everything else is in place: the
+mem_product-projection obtain-chain, the four-recovery-fed Prod.ext
+injectivity, the chi_split per-term, and the sum_mul x2/ring tail.
+
 ## Gotchas banked (M2b)## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
 Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
 pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
@@ -931,6 +947,22 @@ rcases.  Next session: bind the union-memberships via
 everywhere else in this campaign) or `Finset.mem_union.mp`-haves, one
 recovery per build round.  The tree was reverted to the green M1.5 state
 (recovery proofs deferred, zero sorry landed).
+
+## DS-M1's (5.2) assembly — 90% written, the sum_image-unification is the pole
+The full class_sum_eq draft (the hmem/hinjOn/hALof/hBRof haves + the
+sum_image/sum_product'/sum_mul x2/ring chain) is preserved at
+/tmp/DS_draft_52.lean (session scratch).  The ONLY blocking step: the
+`rw [Finset.sum_image ...]` — this pin's sum_image hypothesis expects
+`Set.InjOn χ ↑?m` (the χ — the theorem's χ-binder — as the InjOn-map),
+i.e. the rw's f-slot unifies against the GOAL's sum-body function rather
+than the image-map, and both the bare-hinj and the (g := χ)-named-arg
+forms hit the same wall.  Next session: try the exact-shape hinj (the
+hypothesis stated as `Set.InjOn (fun p => p.1 ∪ Z ∪ p.2) ↑pairs` with the
+pairs-let via `set`), or `simp only [Finset.sum_image]`, or `rw
+[Finset.sum_image]` at the goal AFTER `rw [cls]` only (the phi-rws may
+interfere with the unifier's display).  Everything else is in place: the
+mem_product-projection obtain-chain, the four-recovery-fed Prod.ext
+injectivity, the chi_split per-term, and the sum_mul x2/ring tail.
 
 ## Gotchas banked (M2b)
 * Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
