@@ -388,3 +388,42 @@ Zero sorries in the B4 lane. Prop B's 430 integral bounds: separately certified,
 **B5 — preliminary search + cost accounting** (Prop P: cap `2^{⌈τ₀n⌉}`, Chebyshev `4/(ζ²n)` → (LD); Thm A part 2 op bound; Lemma A7 expected work) — then O8 (word-RAM accounting, our home turf) per BRIDGE attack order; O4 and O5+O7 remain.
 
 * Tell-hook note (2026-11-08): the session tell scanner fires on the word 'analysis' — it appears in this lane's own name (Base's region analysis, §6.3) and in every B4 report. Classified false-positive on topic vocabulary; no wound deferred. B1–B4 flagged issues all live in the gotcha lists above.
+
+---
+
+# B5 (preliminary search + cost accounting) — M1 banked, M2 partial 2026-11-08
+
+Statements verbatim from §4 (Prop P + (LD)), §5.2/5.8 (Thm A part 2 absorption),
+§5.7 (Lemma A7 envelope). Proved-vs-named ledger in STMTS.md §B5 (the A5
+pattern): variance input `Var d(U) ≤ n` = OpenAI L2.3's first clause, named
+hypothesis (the `hcount` cousin); the procedure's own op counts are the
+algorithm, named; Lemma A7's seven per-item analyses ((C2)–(C7), A3(2)–(4),
+(F4)) are item-level hypotheses.
+
+## Proved (4; receipts fresh [propext, Classical.choice, Quot.sound])
+
+* `cap_fit_lt` — §4's cap-fitting arithmetic (`n > 1/ζ` ⟹ both lists fit)
+* `continue_prob_le` — the explicit O(1/n) CONTINUE bound (subset monotonicity
+  + `prop_p_chebyshev`)
+* `prop_p_op_absorb` — Thm A part 2 absorption `2^{τ₀n} ≤ 2^{τ₀n+2n^{0.7}}`
+  (`Real.rpow_add` + `le_mul_of_one_le_right`)
+* `a7_envelope` — Lemma A7's seven-item envelope: `∑_{i<7} Sᵢ ≤ (b+2)·2^{K+3}`
+  (the factor 7 goes into the exponent's +3, the paper's «polynomial factors
+  go into 2^{O(n^{0.6})}»)
+
+## WIP sorry (1, M3 target)
+
+* `chebyshev_fraction_le` — finite-space Chebyshev. Fully decomposed:
+  (i) pointwise `t² ≤ (x−μ)²` on the below-threshold set via the nonpos
+  multiplier chain `mul_le_mul_of_nonpos_left hlt ht0 / hx0` (verified shape),
+  (ii) `∑ (if i ∈ B then t² else 0) = t²·|B|` via `Finset.card_filter` +
+  `Finset.mul_sum` + by_cases simp (the ite must be ℝ-typed from the start —
+  ℕ-ite blocks `push_cast`/`mul_sum`), (iii) finish by cross-multiplication
+  `div_le_div_iff₀` + `div_mul_cancel₀` against `E = Σ/↑#s`. Each piece alone
+  compiled in isolation checks; the assembly needs one more session.
+
+## Statement corrections
+
+* `prop_p_op_absorb` gained `hn : 0 ≤ n` (rpow with negative base is junk).
+* `prop_p_chebyshev` needs no mean hypothesis — Chebyshev is unconditional in
+  the mean; the (LD)-mean enters only through `continue_prob_le`'s subset.

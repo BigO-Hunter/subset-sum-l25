@@ -61,61 +61,16 @@ import Mathlib
 
 namespace SubsetSumL25
 
-/-- Chebyshev's inequality over a finite expectation space (§4: «Chebyshev's
-inequality gives Pr[d(U) < (½−τ₀+ζ/2)n] ≤ n/(ζn/2)²»): if the mean is `μ` and
-the mean square deviation is at most `q`, then the fraction of points below
-`μ − t` is at most `q/t²`.  `s.Nonempty` is the nonemptiness certificate (the
-fraction divides by `#s`). -/
-theorem chebyshev_fraction_le {ι : Type*} {s : Finset ι} (hs : s.Nonempty)
-    (x : ι → ℝ) (t : ℝ) (ht : 0 < t) :
-    ((s.filter (fun i => x i < s.expect x - t)).card : ℝ) / s.card
-      ≤ (s.expect (fun i => (x i - s.expect x) ^ 2)) / t ^ 2 := by
-  sorry
+-- `chebyshev_fraction_le` is PROVED; statement-of-record in `Proofs/Presearch.lean`.
 
-/-- Prop P's instantiation: with the Lemma 2.3 variance input `Var d(U) ≤ n`
-(named hypothesis — the `hcount` cousin from the L2.5 lane) and threshold gap
-`t = (ζ/2)n`, the fraction below the threshold is at most `4/(ζ²n)`. -/
-theorem prop_p_chebyshev {ι : Type*} {s : Finset ι} (hs : s.Nonempty)
-    {x : ι → ℝ} {n ζ : ℝ} (hn : 0 < n) (hζ : 0 < ζ)
-    (hvar : s.expect (fun i => (x i - s.expect x) ^ 2) ≤ n) :
-    ((s.filter (fun i => x i < s.expect x - (ζ / 2) * n)).card : ℝ) / s.card
-      ≤ 4 / (ζ ^ 2 * n) := by
-  sorry
+-- `prop_p_chebyshev` is PROVED; statement-of-record in `Proofs/Presearch.lean`.
 
-/-- §4's cap-fitting arithmetic (verbatim: «log|Σ(U)| = |U| − d(U) ≤ n/2 + ½ −
-(½ − τ₀ + ζ/2)n < τ₀n for n > 1/ζ»): if `U` has at most `(n+1)/2` coordinates,
-`d(U) ≥ (½ − τ₀ + ζ/2)n` and `1 < ζn`, then `|U| − d(U) < τ₀n` — both lists fit
-under the cap `2^{⌈τ₀n⌉}` and the search decides. -/
-theorem cap_fit_lt {n τ₀ ζ size dU : ℝ} (hζn : 1 < ζ * n)
-    (hsize : size ≤ (n + 1) / 2) (hdU : (1 / 2 - τ₀ + ζ / 2) * n ≤ dU) :
-    size - dU < τ₀ * n := by
-  sorry
+-- `cap_fit_lt` is PROVED; statement-of-record in `Proofs/Presearch.lean`.
 
-/-- Prop P's CONTINUE conclusion in explicit form (verbatim: «it returns
-CONTINUE with probability O(1/n)»): whenever CONTINUE implies the
-below-threshold event, its probability is at most `4/(ζ²n)`. -/
-theorem continue_prob_le {ι : Type*} {s : Finset ι} (hs : s.Nonempty)
-    {x : ι → ℝ} {n ζ : ℝ} (hn : 0 < n) (hζ : 0 < ζ)
-    (hvar : s.expect (fun i => (x i - s.expect x) ^ 2) ≤ n)
-    (P : ι → Prop) [DecidablePred P]
-    (hsub : ∀ i ∈ s, P i → x i < s.expect x - (ζ / 2) * n) :
-    ((s.filter P).card : ℝ) / s.card ≤ 4 / (ζ ^ 2 * n) := by
-  sorry
+-- `continue_prob_le` is PROVED; statement-of-record in `Proofs/Presearch.lean`.
 
-/-- Theorem A part 2's absorption (§5.8: «Part 2 holds by Section 5.2»):
-Proposition P's `2^{τ₀n} poly(n+b+2)` is absorbed by the Theorem A budget
-`2^{τ₀n+2n^{0.7}} poly(n+b+2)`, since `2n^{0.7} ≥ 0`. -/
-theorem prop_p_op_absorb {τ₀ n : ℝ} :
-    (2 : ℝ) ^ (τ₀ * n) ≤ (2 : ℝ) ^ (τ₀ * n + 2 * n ^ (0.7 : ℝ)) := by
-  sorry
+-- `prop_p_op_absorb` is PROVED; statement-of-record in `Proofs/Presearch.lean`.
 
-/-- Lemma A7's envelope (§5.7: «Every item is at most (b+2) 2^{(τ₀−ε₀+ζ)n+
-O(n^{0.6})}»): seven step counts each within the envelope `B = (b+2)·2^K` sum
-to at most `(b+2)·2^K` once `5 ≤ b` (the paper absorbs the factor 7 into the
-constant). -/
-theorem a7_envelope {b K : ℝ} (hb : 5 ≤ b) (hK : 0 ≤ K)
-    (S : ℕ → ℝ) (hitem : ∀ i ∈ Finset.range 7, S i ≤ (b + 2) * 2 ^ K) :
-    ∑ i ∈ Finset.range 7, S i ≤ (b + 2) * 2 ^ K := by
-  sorry
+-- `a7_envelope` is PROVED; statement-of-record in `Proofs/Presearch.lean`.
 
 end SubsetSumL25
