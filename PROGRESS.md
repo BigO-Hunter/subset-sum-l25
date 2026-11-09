@@ -430,30 +430,30 @@ algorithm, named; Lemma A7's seven per-item analyses ((C2)–(C7), A3(2)–(4),
 
 ---
 
-# B5 chebyshev assembly — residual recorded verbatim (2026-11-08, per directive #3)
+# B5 chebyshev CLOSED (2026-11-08) — the residual was an assembly artifact
 
-Both parent remedies were attempted. TRAP 1 (`Finset.sum_ite` + `simp`) now
-PROVES the indicator-sum piece: `∑ (if i ∈ B then t² else 0) = t²·↑#B` (h2
-closes with `rw [Finset.sum_ite, Finset.sum_const]; simp`). TRAP 2
-(proof-term `rw [hE]`) fixed the double-eta-unfold of the mean.
+`chebyshev_fraction_le` is **PROVED** (no sorry). Root cause of the "bare
+mul_comm that would not close": it never was an order problem — the previous
+route built `hsum` through `Finset.card_filter`'s ℕ-ite sum + cast bridging,
+and the two `t ^ 2` / `↑{...}.card` atoms ended up elaborated from different
+terms (hence `rw [mul_comm]` and `linear_combination` both failing). The cure
+was a route that never produces that shape:
 
-Remaining residual, verbatim from the build log at
-`SubsetSumL25/Proofs/Presearch.lean:56:79`:
+1. `set E := s.expect x` (one mean atom everywhere) and `set B := filter`.
+2. Per-point `t² ≤ (x i − E)²` on B (`mul_le_mul_of_nonneg_right/left` + ring).
+3. `↑#B·t² = ∑ i ∈ B, t²` via `Finset.sum_const, nsmul_eq_mul` (no ite, no
+   card_filter — the ℝ monoid family sum directly).
+4. `∑ i ∈ B ≤ ∑ i ∈ s` via `Finset.sum_le_sum_of_subset_of_nonneg hsub
+   (sq_nonneg)` — **NOT** `sum_le_sum_of_subset`, which in d13f23b requires
+   `[CanonicallyOrderedAdd M]` and does not apply to ℝ (new gotcha).
+5. `Finset.expect_eq_sum_div_card` unfolds the expect; `div_le_div_iff₀` with
+   `d := t ^ 2` pinned by an explicit `have ht2` (passing bare `ht` pins
+   `d := t` — elaboration-order trap); cancel `↑s` by a local
+   `field_simp` have; close with `exact hmain`.
 
-```
-⊢ ↑{x_1 ∈ s | x x_1 < s.expect x - t}.card * t ^ 2
-  = t ^ 2 * ↑{x_1 ∈ s | x x_1 < s.expect x - t}.card
-```
+Fresh receipts: `chebyshev_fraction_le`, `prop_p_chebyshev`,
+`continue_prob_le` all `[propext, Classical.choice, Quot.sound]`. Build green
+8947 jobs; package sorries now 2 (the pre-existing L2.5 pair only).
 
-— a bare `mul_comm` residue appearing as hsum's remaining goal after the
-per-point `sum_le_sum` branches close. Neither trailing `rw [mul_comm]` nor
-`linear_combination hmul` closes it (the latter fails with «ring expressions
-not equal up to an additive constant», suggesting the atoms `t ^ 2` and
-`↑{...}.card` are not being normalized as the same monomial family — likely an
-ℕ-cast shape inside `Finset.card_filter`'s ℝ-cast sum). Next mind: try
-`simp only [mul_comm]`, `RingNF`, or restate hsum with the product order
-matching the residual exactly.
-
-Everything else in the B5 lane is proved (5/6): cap_fit_lt, continue_prob_le
-(conditioned on the WIP sorry), prop_p_op_absorb, a7_envelope, and the
-prop_p_chebyshev hkey/hstep/hEq assembly (conditioned likewise).
+Everything in the B5 lane is proved (6/6): chebyshev_fraction_le,
+prop_p_chebyshev, cap_fit_lt, continue_prob_le, prop_p_op_absorb, a7_envelope.

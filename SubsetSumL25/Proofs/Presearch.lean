@@ -8,18 +8,47 @@ import SubsetSumL25.Statements.Presearch
 
 namespace SubsetSumL25
 
-/-- Chebyshev's inequality over a finite expectation space.  WIP: the proof is
-fully decomposed in PROGRESS.md (B5 §M2) — three pieces, each verified to
-compile in isolation during this session: (i) pointwise `t² ≤ (x−μ)²` on the
-below-threshold set via the nonpos-multiplier chain `mul_le_mul_of_nonpos_left
-hlt ht0/hx0`; (ii) `t²·↑#B ≤ Σ (x−μ)²` directly by `Finset.mul_sum` +
-per-point by_cases (`mul_one`/`mul_zero`); (iii) finish by cross-multiplying
-`div_le_div_iff₀` + `div_mul_cancel₀` against `E = Σ/↑#s`. -/
+/-- Chebyshev's inequality over a finite expectation space. -/
 theorem chebyshev_fraction_le {ι : Type*} {s : Finset ι} (hs : s.Nonempty)
     (x : ι → ℝ) (t : ℝ) (ht : 0 < t) :
     ((s.filter (fun i => x i < s.expect x - t)).card : ℝ) / s.card
       ≤ (s.expect (fun i => (x i - s.expect x) ^ 2)) / t ^ 2 := by
-  sorry
+  classical
+  -- One name for the mean; `set` replaces every occurrence (incl. under binders),
+  -- so both the filter's threshold and the centered squares refer to the same atom.
+  set E : ℝ := s.expect x with hEdef
+  set B : Finset ι := s.filter (fun i => x i < E - t) with hBdef
+  have hcard : (0 : ℝ) < s.card := by exact_mod_cast Finset.card_pos.mpr hs
+  -- per-point: below threshold ⟹ t² ≤ (x i − E)²
+  have hpoint : ∀ i ∈ B, t ^ 2 ≤ (x i - E) ^ 2 := by
+    intro i hi
+    have hlt : x i < E - t := (Finset.mem_filter.mp hi).2
+    have hEt : t < E - x i := by linarith
+    calc t ^ 2 = t * t := by ring
+      _ ≤ (E - x i) * t := mul_le_mul_of_nonneg_right (le_of_lt hEt) (le_of_lt ht)
+      _ ≤ (E - x i) * (E - x i) :=
+          mul_le_mul_of_nonneg_left (le_of_lt hEt) (by linarith)
+      _ = (x i - E) ^ 2 := by ring
+  -- sum over the below-threshold set: ↑#B · t²
+  have hsumB : (B.card : ℝ) * t ^ 2 ≤ ∑ i ∈ B, (x i - E) ^ 2 := by
+    calc (B.card : ℝ) * t ^ 2 = ∑ i ∈ B, t ^ 2 := by
+          rw [Finset.sum_const, nsmul_eq_mul]
+      _ ≤ ∑ i ∈ B, (x i - E) ^ 2 := Finset.sum_le_sum hpoint
+  have hsub : B ⊆ s := by
+    intro i hi
+    rw [hBdef] at hi
+    exact (Finset.mem_filter.mp hi).1
+  have hmain : (B.card : ℝ) * t ^ 2 ≤ ∑ i ∈ s, (x i - E) ^ 2 :=
+    le_trans hsumB (Finset.sum_le_sum_of_subset_of_nonneg hsub
+      (fun _i _hi _hB => sq_nonneg _))
+  -- assemble: cross-multiply the goal (both denominators positive)
+  rw [Finset.expect_eq_sum_div_card]
+  have ht2 : (0 : ℝ) < t ^ 2 := by positivity
+  refine div_le_div_iff₀ hcard ht2 |>.mpr ?_
+  have hcancel : (∑ i ∈ s, (x i - E) ^ 2) / s.card * s.card
+      = ∑ i ∈ s, (x i - E) ^ 2 := by field_simp
+  rw [hcancel]
+  exact hmain
 
 /-- Prop P's instantiation: variance ≤ `n` (Lemma 2.3, named), gap `(ζ/2)n`. -/
 theorem prop_p_chebyshev {ι : Type*} {s : Finset ι} (hs : s.Nonempty)
