@@ -237,4 +237,69 @@ theorem recovery_B {A B L R Z : Finset (Fin n)} (hlz : Disjoint L Z)
       · exact absurd h'' h₅
     · exact h'
 
+/-- The bridge between the two product spellings: `cls`'s body writes the
+dot-notation `Finset.product`, while Mathlib's `×ˢ` notation (and hence
+`Finset.sum_product` and friends) elaborates to the generic `SProd.sprod`
+instance wrapper. The two are definitionally equal, but `rw`'s pattern
+matcher works at reducible transparency and cannot see through the wrapper —
+this `rfl`-lemma makes the alignment explicit for the rewrites below. -/
+theorem finset_product_eq_sprod {α β : Type} (s : Finset α) (t : Finset β) :
+    Finset.product s t = s ×ˢ t := rfl
+
+/-! ### (5.2) — the union-map injectivity and the class-sum identity -/
+
+/-- The union map of the class construction is injective on the filtered
+product of the `κ`-consistent subsets: `(A ∪ Z ∪ B)` determines `(A, B)` once
+`L`, `R`, `Z` are pairwise disjoint (the two recoveries, assembled).  This is
+the `Set.InjOn` side-condition of `Finset.sum_image` in (5.2), stated at fully
+concrete types — the standalone statement survives the `rw` elaboration order
+where an inline by-proof (elaborated against `Set.InjOn ?g ↑?s` before goal
+unification) cannot. -/
+theorem cls_union_injOn (hlz : Disjoint L Z) (hrz : Disjoint R Z) (hlr : Disjoint L R)
+    {c b : Fin n → ℤ} {κL κR : ℤ × ℤ} :
+    Set.InjOn (fun p : Finset (Fin n) × Finset (Fin n) => p.1 ∪ Z ∪ p.2)
+      ((L.powerset.filter (fun A => keyOf c b A = κL)).product
+        (R.powerset.filter (fun B => keyOf c b B = κR))) := by
+  rintro ⟨A₁, B₁⟩ h₁ ⟨A₂, B₂⟩ h₂ heq
+  have h₁' : A₁ ∈ L.powerset.filter (fun A => keyOf c b A = κL)
+      ∧ B₁ ∈ R.powerset.filter (fun B => keyOf c b B = κR) := Finset.mem_product.mp h₁
+  have h₂' : A₂ ∈ L.powerset.filter (fun A => keyOf c b A = κL)
+      ∧ B₂ ∈ R.powerset.filter (fun B => keyOf c b B = κR) := Finset.mem_product.mp h₂
+  obtain ⟨hAp₁, -⟩ := Finset.mem_filter.mp h₁'.1
+  obtain ⟨hBp₁, -⟩ := Finset.mem_filter.mp h₁'.2
+  obtain ⟨hAp₂, -⟩ := Finset.mem_filter.mp h₂'.1
+  obtain ⟨hBp₂, -⟩ := Finset.mem_filter.mp h₂'.2
+  have hA₁L : A₁ ⊆ L := Finset.mem_powerset.mp hAp₁
+  have hB₁R : B₁ ⊆ R := Finset.mem_powerset.mp hBp₁
+  have hA₂L : A₂ ⊆ L := Finset.mem_powerset.mp hAp₂
+  have hB₂R : B₂ ⊆ R := Finset.mem_powerset.mp hBp₂
+  have hA₁ := recovery_A hlz hlr hA₁L hB₁R
+  have hA₂ := recovery_A hlz hlr hA₂L hB₂R
+  have hB₁ := recovery_B hlz hrz hlr hA₁L hB₁R
+  have hB₂ := recovery_B hlz hrz hlr hA₂L hB₂R
+  rw [show A₁ ∪ Z ∪ B₁ = A₂ ∪ Z ∪ B₂ from heq] at hA₁ hB₁
+  exact Prod.ext (hA₁.trans hA₂.symm) (hB₁.trans hB₂.symm)
+
+/-- (5.2): the class-sum identity — the phase-sum over a class factors as
+`Φ_L(κ_L)·Φ_R(κ_R)·χ(Z)` («Since phases add, Σ_{I ∈ C} χ(I) =
+Φ_L Φ_R χ_Z»). -/
+theorem class_sum_eq (hlz : Disjoint L Z) (hrz : Disjoint R Z)
+    (hlr : Disjoint L R) {χ : Finset (Fin n) → ℂ}
+    (hχ : ∀ A B : Finset (Fin n), Disjoint A B → χ (A ∪ B) = χ A * χ B)
+    {κL κR : ℤ × ℤ} :
+    ∑ I ∈ cls c b L R κL κR Z, χ I
+      = phi χ c b L κL * phi χ c b R κR * χ Z := by
+  classical
+  rw [cls, Finset.sum_image (f := χ) (cls_union_injOn hlz hrz hlr),
+    finset_product_eq_sprod]
+  rw [Finset.sum_product
+    (f := fun p : Finset (Fin n) × Finset (Fin n) => χ (p.1 ∪ Z ∪ p.2))]
+  rw [phi, phi]
+  rw [Finset.sum_congr rfl fun A hAs => Finset.sum_congr rfl fun B hBt =>
+    chi_split hlz hrz hlr hχ
+      (Finset.mem_powerset.mp (Finset.mem_filter.mp hAs).1)
+      (Finset.mem_powerset.mp (Finset.mem_filter.mp hBt).1)]
+  rw [← Finset.sum_mul_sum _ _ (fun A => χ A * χ Z) χ, ← Finset.sum_mul]
+  ring
+
 end SubsetSumL25

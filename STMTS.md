@@ -1004,8 +1004,43 @@ drafts + the four datapoints; fresh eyes closed an identical naming pole in
 one pass.  The tree stays at the green M1.5+M1.6+chi_split state — zero
 sorry landed.  Full build green 8960 jobs; package sorries 0.
 
+## DS-M1's (5.2) — CLOSED (the fresh session's datapoint; the pole's resolution)
+Root cause was NOT the sum_image binder-names (the `#check @Finset.sum_image`
+at this pin gives `{f : ι → M}` summand / `{g : κ → ι}` map / `{s : Finset κ}`
+preimage / `Set.InjOn g ↑s` positional — f/g were right all along).  Three
+stacked causes, each measured:
+1. ELABORATION ORDER: `rw [Finset.sum_image (by ...)]` elaborates the
+   by-block BEFORE goal-unification, so the inline proof sees
+   `Set.InjOn ?g ↑?s` with both slots undetermined — no naming of chi can
+   fix that form.  The fix is the standalone fully-concrete
+   `cls_union_injOn` (the mandate's variant (c)); with it, plain
+   `rw [Finset.sum_image (f := chi) hinj]` crosses the pole, as do the
+   conv_lhs-targeted (variant (a)) and simp-only-with-discharge-fact
+   (variant (b)) forms — all three measured green.
+2. THE DRAFT'S BY-BLOCK NEVER TYPECHECKED: the recovery calls routed the
+   pairs crosswise (p2.1-subset-L fed into the B-subset-R slot; p1.2/p2.2
+   conflated), and the heq-rewrite pattern could not match the recoveries'
+   unions.  Reassembled same-pair (A1,B1)/(A2,B2) with both recoveries per
+   side + `show`-beta'd heq + Prod.ext — green.
+3. THE ×ˢ/`.product` SPLIT (the pole UNDER the pole): at this Mathlib pin
+   the `×ˢ` notation is the generic `SProd.sprod` instance wrapper, while
+   cls's body wrote dot-notation `Finset.product`; kabstract matches at
+   reducible transparency and cannot unfold the wrapper, so every
+   sum_product-family pattern missed the goal even after the pole crossed
+   (displayed shapes identical).  Fix: the rfl-bridge
+   `finset_product_eq_sprod : Finset.product s t = s ×ˢ t` placed
+   immediately after the sum_image rw.
+Also measured: sum_product'/'s `?f x.1 x.2` pattern is not a Miller pattern
+(the projections are not distinct bvars) and `?f x ≟ chi (x.1 ∪ Z ∪ x.2)`
+buries the bvar — both fail where `?f x ≟ chi x`-spine forms succeed; the
+summand goes in explicitly as a lambda.  The draft's `sum_mul x3` tail was
+also unrunnable (this pin's `Finset.sum_mul` is direction-reversed and the
+B-dependent right factor dangles) — replaced by
+`← Finset.sum_mul_sum _ _ (fun A => chi A * chi Z) chi, ← Finset.sum_mul,
+ring`.  Landed: finset_product_eq_sprod + cls_union_injOn + class_sum_eq in
+Proofs/DS.lean.  Full build receipt recorded at commit; package sorries 0.
+
 ## Gotchas banked (M2b)
-* Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
   level goes through Finset.mem_filter.1 (the And-projections are safe).
 * Nat.cast_pos vs Nat.cast_ne_zero: Real.log_prod's hypothesis is the
   NE-form (f x ≠ 0), not the 0<-form.
