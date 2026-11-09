@@ -108,7 +108,7 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
     have hprod : (8:ℝ) * Real.sqrt (n:ℝ) ≤ δ * ((Real.sqrt (n:ℝ)) * Real.sqrt (n:ℝ)) := by
       refine mul_le_mul_of_nonneg_right h8 (Real.sqrt_nonneg n)
     rw [mul_assoc δ (Real.sqrt (n:ℝ)) (Real.sqrt (n:ℝ)),
-        Real.mul_self_sqrt (by exact_mod_cast h4n)] at hprod
+        Real.mul_self_sqrt (by positivity)] at hprod
     have hs2' : (2:ℝ) + 2 * Real.sqrt (n:ℝ) ≤ (4:ℝ) * Real.sqrt (n:ℝ) := by nlinarith
     refine Real.rpow_le_rpow_of_exponent_le (by norm_num) ?_
     linarith [hprod, hs2']
@@ -133,7 +133,7 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
       calc ((n:ℝ) + 2) ^ 2 ≤ (Real.sqrt q * ((n:ℝ) + 1)) ^ 2 :=
             pow_le_pow_left₀ (by positivity) hle 2
         _ = q * ((n:ℝ) + 1) ^ 2 := by
-              rw [mul_pow, Real.mul_self_sqrt (le_of_lt hr1), hq]
+              rw [mul_pow, pow_two, ← hqq, hq]
     -- geometric invariant past N: c·(n+1)² ≤ A·q^n, A := c(N+1)²/q^N
     -- (the base is trivially true by div_mul_cancel₀; the step uses the q-ratio)
     set A : ℝ := c * (((N:ℕ) : ℝ) + 1) ^ 2 / q ^ (N:ℕ) with hAdef
@@ -150,10 +150,12 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
         have hkN : N ≤ k := by omega
         have hks := hstep k hkN
         rw [Nat.cast_add, Nat.cast_one]
+        have heq : (((k:ℕ) : ℝ) + 1 + 1) = ((k:ℕ) : ℝ) + 2 := by norm_cast
+        rw [heq]
         calc c * (((k:ℕ) : ℝ) + 2) ^ 2 ≤ c * (q * (((k:ℕ) : ℝ) + 1) ^ 2) := by
               exact mul_le_mul_of_nonneg_left hks (le_of_lt hc0)
           _ = q * (c * (((k:ℕ) : ℝ) + 1) ^ 2) := by ring
-          _ ≤ q * (A * q ^ (k:ℕ)) := mul_le_mul_of_nonneg_left ihk (le_of_lt hqpos)
+          _ ≤ q * (A * q ^ (k:ℕ)) := mul_le_mul_of_nonneg_left ihk hqpos
           _ = A * q ^ ((k:ℕ) + 1) := by
               rw [pow_succ]
               ring
