@@ -41,6 +41,13 @@ theorem symmDiff_left_involutive (Z F : Finset (Fin n)) : Z ∆ (Z ∆ F) = F :=
   by_cases hZ : i ∈ Z <;> by_cases hF : i ∈ F <;>
     simp [hZ, hF]
 
+/-- The symmetry-difference commutes (no `Finset.symmDiff_comm` at this
+pin — same story as `symmDiff_left_involutive`). -/
+theorem symmDiff_comm' (s t : Finset (Fin n)) : s ∆ t = t ∆ s := by
+  ext i
+  simp only [Finset.mem_symmDiff]
+  tauto
+
 /-- Step 1's «F is a uniform subset of M, so S is too»: the map
 `F ↦ Z ∆ F` preserves the uniform measure on `M.powerset` (expectation is
 reindexed with the involution `symmDiff_left_involutive`). -/
@@ -171,5 +178,165 @@ theorem subsum_sgnW_eq_of_subset_symmDiff {w : Fin n → ℤ} {M Z F W : Finset 
           · exact hZM h1
           · exact hFM h1)
       (hW hi)
+
+/-! ### DS-M3 Step 3 — many layer values (the Corollary-D consumption) -/
+
+/-- The (F2) translate identity: for `X ⊆ V`, the signed sum over `X`
+equals an (unslotted) `c`-subsum of `X ∆ (F ∩ V)` minus `c(F ∩ V)` —
+«Negating the weights of a set F maps Σ(V) to its translate by
+−c(F ∩ V)» (PROOF_0.4877.tex, (F2)). -/
+theorem subsum_sgnW_eq_translate {c : Fin n → ℤ} {V F X : Finset (Fin n)}
+    (hXV : X ⊆ V) :
+    ∑ i ∈ X, sgnW c F i = subsum c (X ∆ (F ∩ V)) - subsum c (F ∩ V) := by
+  classical
+  have hdisj1 : Disjoint (X \ F) ((F ∩ V) \ X) := by
+    rw [Finset.disjoint_left]
+    intro i h1 h2
+    exact (Finset.mem_sdiff.mp h1).2
+      (Finset.mem_inter.mp (Finset.mem_sdiff.mp h2).1).1
+  have hdisj2 : Disjoint (X ∩ F) ((F ∩ V) \ X) := by
+    rw [Finset.disjoint_left]
+    intro i h1 h2
+    exact (Finset.mem_sdiff.mp h2).2 (Finset.mem_inter.mp h1).1
+  have hdisj3 : Disjoint (X \ F) (F \ X) := by
+    rw [Finset.disjoint_left]
+    intro i h1 h2
+    exact (Finset.mem_sdiff.mp h1).2 (Finset.mem_sdiff.mp h2).1
+  have hdisj4 : Disjoint (X ∩ F) (F \ X) := by
+    rw [Finset.disjoint_left]
+    intro i h1 h2
+    exact (Finset.mem_sdiff.mp h2).2 (Finset.mem_inter.mp h1).1
+  have hsplitF : F = (X ∩ F) ∪ (F \ X) := by
+    ext i
+    simp only [Finset.mem_union, Finset.mem_sdiff, Finset.mem_inter]
+    by_cases hiX : i ∈ X
+    · simp only [hiX]
+      tauto
+    · simp only [hiX]
+      tauto
+  have e1 : subsum c (X ∆ F) = subsum c (X \ F) + subsum c (F \ X) := by
+    show (X ∆ F).sum c = (X \ F).sum c + (F \ X).sum c
+    rw [Finset.symmDiff_def, Finset.sum_union hdisj3]
+  have e2 : subsum c F = subsum c (X ∩ F) + subsum c (F \ X) := by
+    show F.sum c = (X ∩ F).sum c + (F \ X).sum c
+    conv_lhs => rw [hsplitF]
+    rw [Finset.sum_union hdisj4]
+  have hsplitY : X ∆ (F ∩ V) = (X \ F) ∪ ((F ∩ V) \ X) := by
+    ext i
+    simp only [Finset.mem_union, Finset.mem_symmDiff, Finset.mem_sdiff,
+      Finset.mem_inter]
+    by_cases hiX : i ∈ X
+    · simp only [hiX, hXV hiX]
+      tauto
+    · simp only [hiX]
+      tauto
+  have hsplitKV : F ∩ V = (X ∩ F) ∪ ((F ∩ V) \ X) := by
+    ext i
+    simp only [Finset.mem_union, Finset.mem_sdiff, Finset.mem_inter]
+    by_cases hiX : i ∈ X
+    · simp only [hiX, hXV hiX]
+      tauto
+    · simp only [hiX]
+      tauto
+  have qY : subsum c (X ∆ (F ∩ V)) = subsum c (X \ F) + subsum c ((F ∩ V) \ X) := by
+    show (X ∆ (F ∩ V)).sum c = (X \ F).sum c + ((F ∩ V) \ X).sum c
+    rw [hsplitY, Finset.sum_union hdisj1]
+  have qK : subsum c (F ∩ V) = subsum c (X ∩ F) + subsum c ((F ∩ V) \ X) := by
+    show (F ∩ V).sum c = (X ∩ F).sum c + ((F ∩ V) \ X).sum c
+    conv_lhs => rw [hsplitKV]
+    rw [Finset.sum_union hdisj2]
+  have hsum := subsum_sgnW_eq c F X
+  rw [e1, e2] at hsum
+  rw [hsum, qY, qK]
+  ring
+
+/-- (F2)'s card form: signs do not change `|Σ(V)|` — the signed support
+and the plain support biject through the translate `±c(F ∩ V)`
+(«Negating the weights of a set F maps Σ(V) to its translate by −c(F ∩ V)»
+— PROOF_0.4877.tex, (F2)). -/
+theorem support_sgnW_card_eq (c : Fin n → ℤ) (V F : Finset (Fin n)) :
+    (support (sgnW c F) V).card = (support c V).card := by
+  classical
+  have key : ∀ X ∈ V.powerset, subsum (sgnW c F) X
+      = subsum c (X ∆ (F ∩ V)) - subsum c (F ∩ V) := fun X hX =>
+    subsum_sgnW_eq_translate (Finset.mem_powerset.mp hX)
+  have hclose : ∀ X ∈ V.powerset, X ∆ (F ∩ V) ∈ V.powerset := by
+    intro X hX
+    rw [Finset.mem_powerset] at hX ⊢
+    intro i hi
+    rcases Finset.mem_symmDiff.mp hi with h1 | h1
+    · exact hX h1.1
+    · exact (Finset.mem_inter.mp h1.1).2
+  have hle : (support (sgnW c F) V).card ≤ (support c V).card := by
+    have himg : (support (sgnW c F) V).image (fun y => y + subsum c (F ∩ V))
+        ⊆ support c V := by
+      intro z hz
+      obtain ⟨y, hy, rfl⟩ := Finset.mem_image.mp hz
+      rw [support] at hy
+      rw [support, Finset.mem_image]
+      obtain ⟨X, hX, hEq⟩ := Finset.mem_image.mp hy
+      exact ⟨X ∆ (F ∩ V), hclose X hX, by linarith [hEq, key X hX]⟩
+    have hinj : Function.Injective (fun y : ℤ => y + subsum c (F ∩ V)) :=
+      fun _ _ hEq => by linarith [hEq]
+    calc (support (sgnW c F) V).card
+        = ((support (sgnW c F) V).image (fun y => y + subsum c (F ∩ V))).card :=
+          (Finset.card_image_of_injective _ hinj).symm
+      _ ≤ (support c V).card := Finset.card_le_card himg
+  have hge : (support c V).card ≤ (support (sgnW c F) V).card := by
+    have himg : (support c V).image (fun y => y - subsum c (F ∩ V))
+        ⊆ support (sgnW c F) V := by
+      intro z hz
+      obtain ⟨y, hy, rfl⟩ := Finset.mem_image.mp hz
+      rw [support] at hy
+      rw [support, Finset.mem_image]
+      obtain ⟨X, hX, hEq⟩ := Finset.mem_image.mp hy
+      have hK : X ∆ (F ∩ V) ∆ (F ∩ V) = X := by
+        ext i
+        by_cases h1 : i ∈ X <;> by_cases h2 : i ∈ F ∩ V <;>
+          simp [h1, h2]
+      exact ⟨X ∆ (F ∩ V), hclose X hX, by
+        rw [key (X ∆ (F ∩ V)) (hclose X hX), congrArg (subsum c) hK, hEq]⟩
+    have hinj : Function.Injective (fun y : ℤ => y - subsum c (F ∩ V)) :=
+      fun _ _ hEq => by linarith [hEq]
+    calc (support c V).card
+        = ((support c V).image (fun y => y - subsum c (F ∩ V))).card :=
+          (Finset.card_image_of_injective _ hinj).symm
+      _ ≤ (support (sgnW c F) V).card := Finset.card_le_card himg
+  exact le_antisymm hle hge
+/-- (F2)'s deficiency form: «d does not change». -/
+theorem deficiency_sgnW_eq (c : Fin n → ℤ) (V F : Finset (Fin n)) :
+    deficiency (sgnW c F) V = deficiency c V := by
+  unfold deficiency
+  rw [support_sgnW_card_eq]
+
+/-- Step 3, verbatim form: «Apply Corollary D to the weights c^I on M …
+By (F2), d is the same for c^I and for c. Hence E_S a_k(S; c^I) ≥
+E_V 2^{−d(V)}/(v+1) = 2^{−g_M}/(v+1)» — with `c^I = sgnW c (M ∖ I)`, the
+Corollary-D input `Base_cor_D`, the (F2) rewrites, and the A5 lane's
+`two_pow_neg_gM` closing the `E_V` fold. -/
+theorem expect_layerDensity_sgnI_ge (c : Fin n → ℤ) {M I : Finset (Fin n)}
+    {k σ v : ℕ}
+    (hvM : v ≤ M.card) (hk2 : 2 * k ≤ σ) (hσ2 : 2 * σ ≤ v + 2 * k)
+    (hch : Nat.choose σ k * Nat.choose v k ≤ 2 ^ v) :
+    (2 : ℝ) ^ (-(gM c M v)) / ((v : ℝ) + 1)
+      ≤ (M.powersetCard σ).expect (fun S => layerDensity (sgnW c (M \ I)) S k) := by
+  classical
+  have hcorD := Base_cor_D (sgnW c (M \ I)) M hk2 hσ2 hvM hch
+  have hconv : (M.powersetCard v).expect
+        (fun V => (2 : ℝ) ^ (-(deficiency (sgnW c (M \ I)) V)) / ((v : ℝ) + 1))
+      = (M.powersetCard v).expect
+        (fun V => (2 : ℝ) ^ (-(deficiency c V)) / ((v : ℝ) + 1)) := by
+    refine Finset.expect_congr rfl fun V _ => ?_
+    show (2 : ℝ) ^ (-(deficiency (sgnW c (M \ I)) V)) / ((v : ℝ) + 1)
+        = (2 : ℝ) ^ (-(deficiency c V)) / ((v : ℝ) + 1)
+    rw [deficiency_sgnW_eq]
+  have hstep : (2 : ℝ) ^ (-(gM c M v)) / ((v : ℝ) + 1)
+      = (M.powersetCard v).expect
+        (fun V => (2 : ℝ) ^ (-(deficiency c V)) / ((v : ℝ) + 1)) := by
+    rw [two_pow_neg_gM c hvM, Finset.expect_eq_sum_div_card,
+      Finset.expect_eq_sum_div_card, ← Finset.sum_div, div_div, div_div,
+      mul_comm ((M.powersetCard v).card : ℝ) ((v : ℝ) + 1)]
+  rw [hstep, ← hconv]
+  exact hcorD
 
 end SubsetSumL25

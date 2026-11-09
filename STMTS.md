@@ -1153,3 +1153,69 @@ The banked workarounds held once the five were cleared: the `(1/Ŝ)`
 normalization routes through `le_div_iff₀`/`mul_le_mul` (never an `rw`
 matching `(1/Ŝ)*Ŝ` against `Ŝ⁻¹*Ŝ`), and the `n⁷` nonnegativity goes
 `exact_mod_cast Nat.zero_le (n^7 : ℕ)`. DS-M3 is next per the ladder.
+
+## DS-M3 — Lemma A5 Steps 1–3 LANDED (half-block sampling; signs fixed; Corollary-D consumption)
+Three commits on top of the M2-chain closure, all in Proofs/M3.lean
+(statement-of-record; verbatim quotes in its header), one per step:
+
+* **Step 1 (fe4e384) — half of the block.** `symmDiff_left_involutive`
+  (`Z ∆ (Z ∆ F) = F`; no symmDiff-cancel lemma at pin d13f23b),
+  `symmDiff_comm'`, `expect_symmDiff_reindex` («F is a uniform subset of M,
+  so S is too» — the `F ↦ Z ∆ F` reindex preserves the uniform measure on
+  `M.powerset`, via `Finset.sum_image` over the involution),
+  `half_block_filter_card_eq` (|S| = σ and |F| = σ have equal witness
+  counts), `half_block_prob_ge` (C(m,σ)2^{−m} ≥ 1/(m+1) at σ = m/2, via the
+  A5 lane's `middle_choose_div_two_pow_ge_inv` transferred from F to S).
+* **Step 2 (978cafa) — the signs on S are fixed.** `sgnW_eq_of_mem_symmDiff`
+  (pointwise: on `i ∈ Z ∆ F ∩ M`, `w^F_i = w^{M∖Z}_i` — membership in
+  `Z ∆ F` flips exactly the F-flag against Z), `sgnW_eq_sgnI_of_mem_half_block`
+  (the paper form with Z := I ∩ M: on `S = (I∩M) ∆ F`, `w^F = w^I` with
+  `w^I = sgnW w (M ∖ I)`; «These depend on I but not on S»),
+  `subsum_sgnW_eq_of_subset_symmDiff` (the sum form W ⊆ S). **This
+  discharges what the B3 lane carried as the named hypothesis `hgood` of
+  `good_hit_expect_ge`** — the DS-M1 machinery ((5.1), sgnW) makes it
+  unconditional.
+* **Step 3 (this commit) — many layer values.** `subsum_sgnW_eq_translate`
+  (for X ⊆ V: `subsum (sgnW c F) X = subsum c (X ∆ (F ∩ V)) − subsum c
+  (F ∩ V)` — the (F2) translate), `support_sgnW_card_eq` ((F2)'s card form:
+  the signed and plain supports biject through `±c(F ∩ V)`),
+  `deficiency_sgnW_eq` («d does not change»), `expect_layerDensity_sgnI_ge`
+  («Apply Corollary D to the weights c^I on M … E_S a_k(S; c^I) ≥
+  E_V 2^{−d(V)}/(v+1) = 2^{−g_M}/(v+1)») — `Base_cor_D` at the weights
+  `sgnW c (M ∖ I)`, (F2) inside the expect via `Finset.expect_congr`, and
+  the A5 lane's `two_pow_neg_gM` closing the `E_V` fold.
+
+**Credit: Steps 1–3 are Base's (a-kapila/maths-proofs @ 44c34961,
+PROOF_0.4877.tex §5.6, sha256 b397531c…); this package formalizes them.**
+The Corollary-D input is our proved B2 machinery (`Base_cor_D`, CorD.lean);
+the (5.1) sign machinery is DS-M1's (`Proofs/DS.lean`); the middle-layer
+floor is B3's `middle_choose_div_two_pow_ge_inv`. Still named after Step 3:
+the bad-fraction bound 2^{−δn} (Lemma A4's event) and the Step-4 (F4)
+dispatch — DS-M4's inputs, per the ladder.
+
+Receipts: full `lake build` green — exit 0, 8962 jobs, M3.olean fresh
+(427120 bytes); sorry banners 0; `#print axioms` for all 12 M3 declarations
+= `[propext, Classical.choice, Quot.sound]`.
+
+### Gotchas banked (DS-M3 round)
+* Pin d13f23b has NO `Finset.symmDiff_comm`/`symmDiff_symmDiff_cancel_left`
+  — both hand-rolled from `Finset.mem_symmDiff` (`symmDiff_comm'`,
+  `symmDiff_left_involutive`).
+* The ∆ notation is OVERLOADED (`scoped symmDiff` carries a ℤ instance too):
+  in `refine ⟨Z ∆ K, …⟩` anonymous constructors the un-elaborated ∆ picks
+  the wrong instance — ascribe `(Z ∆ (F ∩ V) : Finset (Fin n))`.
+* `rw [mem_powerset] at hF` flip-flops between ∈ and ⊆ forms — prefer
+  `Finset.mem_powerset.mp`/`.mpr` terms over rewriting the hypothesis.
+* Fact-rewrites (`rw [hiX]` with hiX : i ∈ X) are NOT accepted by `rw` on
+  this pin — use `simp only [hiX]`.
+* `if_pos`/`if_neg` deprecated here → `ite_eq_left`/`ite_eq_right` (the
+  hypothesis stays the single argument).
+* Nested `.image` memberships: `simp only [Finset.mem_image]` unfolds only
+  the OUTER layer and leaves an ℤ-binder ∃ — do not drive image-equality
+  through `ext y`; state card equalities via two ±translate injections
+  (`card_image_of_injective` + `card_le_card` + `le_antisymm`) instead.
+  Also remember `card_image_of_injective` concludes `(image).card = .card`
+  — the = needs `.symm` when going source→image.
+* In an image-membership ∃ (`∃ a ∈ s, f a = y`) the anon-constructor
+  component is the ELEMENT of s (a subset for `V.powerset.image (subsum c)`),
+  not the value — a wrong-slot element silently retypes the equation goal.
