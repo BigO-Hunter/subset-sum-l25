@@ -427,3 +427,33 @@ algorithm, named; Lemma A7's seven per-item analyses ((C2)–(C7), A3(2)–(4),
 * `prop_p_op_absorb` gained `hn : 0 ≤ n` (rpow with negative base is junk).
 * `prop_p_chebyshev` needs no mean hypothesis — Chebyshev is unconditional in
   the mean; the (LD)-mean enters only through `continue_prob_le`'s subset.
+
+---
+
+# B5 chebyshev assembly — residual recorded verbatim (2026-11-08, per directive #3)
+
+Both parent remedies were attempted. TRAP 1 (`Finset.sum_ite` + `simp`) now
+PROVES the indicator-sum piece: `∑ (if i ∈ B then t² else 0) = t²·↑#B` (h2
+closes with `rw [Finset.sum_ite, Finset.sum_const]; simp`). TRAP 2
+(proof-term `rw [hE]`) fixed the double-eta-unfold of the mean.
+
+Remaining residual, verbatim from the build log at
+`SubsetSumL25/Proofs/Presearch.lean:56:79`:
+
+```
+⊢ ↑{x_1 ∈ s | x x_1 < s.expect x - t}.card * t ^ 2
+  = t ^ 2 * ↑{x_1 ∈ s | x x_1 < s.expect x - t}.card
+```
+
+— a bare `mul_comm` residue appearing as hsum's remaining goal after the
+per-point `sum_le_sum` branches close. Neither trailing `rw [mul_comm]` nor
+`linear_combination hmul` closes it (the latter fails with «ring expressions
+not equal up to an additive constant», suggesting the atoms `t ^ 2` and
+`↑{...}.card` are not being normalized as the same monomial family — likely an
+ℕ-cast shape inside `Finset.card_filter`'s ℝ-cast sum). Next mind: try
+`simp only [mul_comm]`, `RingNF`, or restate hsum with the product order
+matching the residual exactly.
+
+Everything else in the B5 lane is proved (5/6): cap_fit_lt, continue_prob_le
+(conditioned on the WIP sorry), prop_p_op_absorb, a7_envelope, and the
+prop_p_chebyshev hkey/hstep/hEq assembly (conditioned likewise).
