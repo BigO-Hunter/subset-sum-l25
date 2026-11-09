@@ -160,7 +160,7 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
   obtain ⟨N₃, hN₃⟩ := exists_nat_gt (Real.log A / Real.log q)
   have hA : A ≤ q ^ (n:ℕ) := by
     have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
-      rw [Real.log_pow (le_of_lt hq1)]
+      rw [Real.log_pow (by linarith : (0:ℝ) < q)]
       have hnpos : (0:ℝ) < (n:ℝ) := by positivity
       have hdiv : (Real.log A / Real.log q) ≤ (n:ℝ) := by linarith
       rw [div_le_iff₀ hlogq] at hdiv
@@ -171,15 +171,15 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
     intro n hn
     have hA : A ≤ q ^ (n:ℕ) := by
       have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
-        rw [Real.log_pow (le_of_lt hq1)]
+        rw [Real.log_pow (by linarith : (0:ℝ) < q)]
         have hnpos : (0:ℝ) < (n:ℝ) := by positivity
         have hdiv : (Real.log A / Real.log q) ≤ (n:ℝ) := by linarith
         rw [div_le_iff₀ hlogq] at hdiv
         exact hdiv
-      exact (Real.log_le_log_iff hApos hqpos.le).mp h1
+      exact (Real.log_le_log_iff hApos hqpos).mp h1
     have h2 := hinv n hn
     calc c * ((n:ℝ) + 1) ^ 2 ≤ A * q ^ (n:ℕ) := h2
-      _ ≤ q ^ (n:ℕ) * q ^ (n:ℕ) := mul_le_mul_of_nonneg_left hA (le_of_lt hqpos)
+      _ ≤ q ^ (n:ℕ) * q ^ (n:ℕ) := mul_le_mul_of_nonneg_left hA hqpos
       _ = q ^ ((n:ℕ) + (n:ℕ)) := (pow_add q n n).symm
       _ = q ^ (2 * (n:ℕ)) := by ring_nf
       _ = r ^ (n:ℕ) := by rw [← pow_mul, hqq]
