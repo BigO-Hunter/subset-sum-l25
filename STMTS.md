@@ -738,9 +738,35 @@ Landed on wip-hcount (not yet merged to main):
    — one `obtain` + `exact` away.
 
 ## Build receipts
-* M2a: green 8927 jobs. M2b: green 8927 jobs.
+* M2a: green 8927 jobs. M2b: green 8927 jobs. M2b-fix: green 8927 jobs.
 * Package sorries: Statements 2 (the M2c targets), Proofs 1 (hprim tail).
-* Axioms receipts for the new M2a/M2b lemmas: not yet re-measured this
-  session (the #print-axioms probe was SIGTERM-killed mid-import); the
-  module sources use no native_decide and no custom axioms — re-measure
-  on merge.
+* Axioms freshly measured (M2c session): central_four_split and
+  mid_factorization_eq_zero on [propext, Classical.choice, Quot.sound]
+  (house triple ✓); mid_prod_le carries sorryAx for the named hprim tail.
+
+## M2c state (post M2b-fix, for the next session)
+The hprim block inside mid_prod_le: the hppos, hmono, hsub, hstep pieces
+are PROVED. The remaining piece is ONLY the log-cast bridge:
+  θ (2*n/3) = ∑ p ∈ primesLE (2*n/3), log p   [theta_eq_sum_primesLE_log
+  — the primesLE n = primesUpTo n defeq verified]
+  ≤ log 4 * ↑(2*n/3)                            [theta_le_log4_mul_x]
+bridged to ∏ p ∈ primesUpTo (2*n/3), p ≤ 4^(2*n/3) via Real.log_prod
+(h : ∀ x ∈ s, f x ≠ 0 — the ≠-form, NOT 0<) + Real.log_le_log_iff + the
+Nat.cast_ne_zero / Nat.cast_prod / Nat.cast_pow cast-chain. The verified
+hlogprod (Nat.cast_prod + Real.log_prod with cast_ne_zero) and h4log
+(Real.log_pow (4:ℝ) (2*n/3)) pieces are in the git history at 187:43's
+pre-revert state (commit range a8b4541^..8719a64's successor experiments)
+— the next session can recover them from the reflog of the wip-hcount
+branch (the exact hlogprod/h4log/hkey/hpos2/hypos/hprimr block was
+elaborating with only ONE goal left: the IFF-slot cast-bridge).
+
+## Gotchas banked (M2b)
+* Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
+  level goes through Finset.mem_filter.1 (the And-projections are safe).
+* Nat.cast_pos vs Nat.cast_ne_zero: Real.log_prod's hypothesis is the
+  NE-form (f x ≠ 0), not the 0<-form.
+* Real.log_pow's signature: (x : ℝ) (n : ℕ), no hypothesis — the hx-form
+  (by norm_num) leaves an unassigned ℝ-mvar.
+* Nat.mul_lt_mul_left is an IFF in this Mathlib (use .mp).
+* omega cannot prove 2*n < n*n (the n*n atom) — route through
+  Nat.sqrt_lt.1 on the √(2n) < n guard instead.
