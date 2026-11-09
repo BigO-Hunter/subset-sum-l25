@@ -181,4 +181,22 @@ theorem isAliasClass_of_mem_alias (L R Z : Finset (Fin n)) (hlz : Disjoint L Z)
   · rw [hJc, ← hIc, hJb, ← hIb]; exact hIA.2.1
   · rw [hJc, ← hIc]; exact hIA.2.2
 
+/-! ### (5.2) — the class-sum identity (DS-M1's closing piece)
+
+The per-term χ-split (χ (A ∪ Z ∪ B) = χ A · χ Z · χ B for A ⊆ L, B ⊆ R,
+from the χ-multiplicativity + the pairwise disjointness) was this session's
+target: the `Finset.union_assoc` reassociation + the two hχ-instantiations
+land, but the mono_right/mono_left slot-elaboration on the disjointness
+transports fought the unifier past budget.  Battle-notes for the next
+session: the A-side transport needs `Disjoint.mono_left hAL hlz` FIRST
+(composing the A-narrowing before the t-widening); the B-side is
+`(hrz.mono_left hBR).symm`; the t-widening subset is
+`(Finset.subset_union_left : Z ⊆ Z ∪ B)` with its type ascription EXACTLY
+`Z ⊆ Z ∪ B` (the unifier determines the t'-slot from the outer hχ only
+after the Disjoint-arg is pinned).  After the per-term split: the
+`Finset.sum_product` assembly over the pair-set with the union-map's
+injectivity (recover `A = (I \ Z) ∩ L`), then the D_s closure corollary.
+
+-/
+
 end SubsetSumL25
