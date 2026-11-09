@@ -19,6 +19,16 @@ DS-M4 Step 4 (the small prime keeps many residues) — verbatim:
     Then the Cauchy–Schwarz inequality (Σ_y z_y)² ≤ #{y : z_y > 0} · Σ_y z_y²
     shows that at least min(B_S, 2^{γm})/(4K₀n²) residues are occupied.»
 
+DS-M4 Step 5 (a hit is recovered) — verbatim:
+    «Suppose j' ≡ b(A) + b^F(X) (mod P') for some X ⊆ S with |X| = k.  Then
+    the left record (κ(A), X) is listed.  Put Y = S \ X; so |Y| = σ − k and
+    X ∩ Y = ∅.  Since S ∆ F = I ∩ M, (5.1) gives
+    b(A) + b^F(X) + b(B) + b^F(Y) = b(A) + b(B) + b(I ∩ M) − b(F) =
+    T_{s,q} − b(F) = T^F.  So the class record (κ(B), λ(Y)) has the residue
+    T^F − j'.  … The expansion reaches its member Y and inserts
+    (κ(A), κ(B), (X ∪ Y) ∆ F) = (κ(A), κ(B), I ∩ M), unless the key is
+    already there.»
+
 Here `W` is the abstract value set of the walk (the paper's `W_S` — its
 instantiation `W := layerSupport (sgnW b F) S k` is the consumer's); the
 (F4) dispatch consumes our proved `L2_5_prime_collision_two` (the per-pair
@@ -37,6 +47,8 @@ import SubsetSumL25.Proofs.DS
 import SubsetSumL25.Proofs.A5
 import SubsetSumL25.Proofs.M2
 import SubsetSumL25.Proofs.M3
+
+open scoped symmDiff
 
 namespace SubsetSumL25
 
@@ -378,5 +390,125 @@ theorem hit_prob_ge_of_sum_sq_le (W : Finset ℤ) {p : ℕ} (hp : 0 < p) {C : �
       ≤ ((C : ℝ) * ((W.image (fun x => x % (p : ℤ))).card : ℝ)) * (p : ℝ) :=
         mul_le_mul_of_nonneg_right hoccC (by exact_mod_cast (Nat.zero_le p))
     _ = ((W.image (fun x => x % (p : ℤ))).card : ℝ) * ((p : ℝ) * (C : ℝ)) := by ring
+
+/-! ### DS-M4 Step 5 — the recovery walk -/
+
+/-- The right-involutive companion of M3's `symmDiff_left_involutive`:
+`(Z ∆ F) ∆ F = Z` (Step 5's «Since S ∆ F = I ∩ M», with S = (I ∩ M) ∆ F). -/
+theorem symmDiff_right_involutive (Z F : Finset (Fin n)) : (Z ∆ F) ∆ F = Z := by
+  rw [symmDiff_comm', symmDiff_comm' Z F, symmDiff_left_involutive]
+
+/-- The partition of a sum over a covered triple: with `I ⊆ A₁ ∪ A₂ ∪ A₃`
+and the three parts pairwise disjoint, `w(I)` splits over `I ∩ A₁, I ∩ A₂,
+I ∩ A₃` — the paper's `b(A) + b(Z) + b(B) = b(I)` with `A = I ∩ L`,
+`Z = I ∩ M`, `B = I ∩ R`. -/
+theorem subsum_eq_sum_of_union_cover {w : Fin n → ℤ} {A₁ A₂ A₃ I : Finset (Fin n)}
+    (hcover : I ⊆ A₁ ∪ A₂ ∪ A₃)
+    (h12 : Disjoint A₁ A₂) (h13 : Disjoint A₁ A₃) (h23 : Disjoint A₂ A₃) :
+    subsum w I = subsum w (I ∩ A₁) + subsum w (I ∩ A₂) + subsum w (I ∩ A₃) := by
+  classical
+  have hd12 : Disjoint (I ∩ A₁) (I ∩ A₂) :=
+    h12.mono Finset.inter_subset_right Finset.inter_subset_right
+  have hd13 : Disjoint (I ∩ A₁) (I ∩ A₃) :=
+    h13.mono Finset.inter_subset_right Finset.inter_subset_right
+  have hd23 : Disjoint (I ∩ A₂) (I ∩ A₃) :=
+    h23.mono Finset.inter_subset_right Finset.inter_subset_right
+  have hd : Disjoint (I ∩ A₁ ∪ I ∩ A₂) (I ∩ A₃) := by
+    rw [Finset.disjoint_left]
+    intro i h1 h2
+    rcases Finset.mem_union.mp h1 with h | h
+    · exact Finset.disjoint_left.mp hd13 h h2
+    · exact Finset.disjoint_left.mp hd23 h h2
+  have hunion : I ∩ A₁ ∪ I ∩ A₂ ∪ I ∩ A₃ = I := by
+    ext i
+    simp only [Finset.mem_union, Finset.mem_inter]
+    constructor
+    · rintro ((⟨hI, _⟩ | ⟨hI, _⟩) | ⟨hI, _⟩)
+      · exact hI
+      · exact hI
+      · exact hI
+    · intro hI
+      rcases Finset.mem_union.mp (hcover hI) with h | h
+      · rcases Finset.mem_union.mp h with h' | h'
+        · exact Or.inl (Or.inl ⟨hI, h'⟩)
+        · exact Or.inl (Or.inr ⟨hI, h'⟩)
+      · exact Or.inr ⟨hI, h⟩
+  show I.sum w = (I ∩ A₁).sum w + (I ∩ A₂).sum w + (I ∩ A₃).sum w
+  conv_lhs => rw [← hunion]
+  rw [Finset.sum_union hd, Finset.sum_union hd12]
+
+/-- Step 5's walk identity («(5.1) gives b(A) + b^F(X) + b(B) + b^F(Y) =
+b(A) + b(B) + b(I ∩ M) − b(F) = T_{s,q} − b(F)»): with `S = (I ∩ M) ∆ F`,
+`X ⊆ S` and `Y = S \ X`, the four walked values add up to `w(I) − w(F)` —
+the unreduced sum.  The (5.1) identity `subsum_sgnW_eq` (DS-M1) and the
+right involution turn the signed sums into the unreduced `w(I ∩ M) − w(F)` -/
+theorem recovery_walk_eq (w : Fin n → ℤ) {L M R I X F : Finset (Fin n)}
+    (hcover : I ⊆ L ∪ M ∪ R) (hlm : Disjoint L M) (hlr : Disjoint L R)
+    (hmr : Disjoint M R) (hX : X ⊆ (I ∩ M) ∆ F) :
+    subsum w (I ∩ L) + ∑ i ∈ X, sgnW w F i
+        + (subsum w (I ∩ R) + ∑ i ∈ ((I ∩ M) ∆ F) \ X, sgnW w F i)
+      = subsum w I - subsum w F := by
+  classical
+  have hpart := subsum_eq_sum_of_union_cover (w := w) hcover hlm hlr hmr
+  have hsumS := subsum_sgnW_eq w F ((I ∩ M) ∆ F)
+  rw [symmDiff_right_involutive] at hsumS
+  have hsplit := Finset.sum_sdiff (f := fun i => sgnW w F i) hX
+  linarith
+
+/-- Step 5's residue form («So the class record (κ(B), λ(Y)) has the residue
+T^F − j′»): a hit `j′ ≡ b(A) + b^F(X) (mod P′)` forces the complementary
+record `b(B) + b^F(Y)` to the residue `T − b(F) − j′`, where `T = b(I)` is
+the alias's `b`-sum (the paper's `T_{s,q}`). -/
+theorem complement_record_residue_eq {b : Fin n → ℤ} {L M R I X F : Finset (Fin n)}
+    {_P T _ts : ℤ} (hcover : I ⊆ L ∪ M ∪ R) (hlm : Disjoint L M) (hlr : Disjoint L R)
+    (hmr : Disjoint M R) (hX : X ⊆ (I ∩ M) ∆ F) (hbI : subsum b I = T)
+    {p' : ℕ} (j' : ℤ)
+    (hhit : (subsum b (I ∩ L) + ∑ i ∈ X, sgnW b F i) % (p' : ℤ) = j' % (p' : ℤ)) :
+    (subsum b (I ∩ R) + ∑ i ∈ ((I ∩ M) ∆ F) \ X, sgnW b F i) % (p' : ℤ)
+      = (T - subsum b F - j') % (p' : ℤ) := by
+  have hw := recovery_walk_eq (w := b) hcover hlm hlr hmr hX
+  rw [hbI] at hw
+  have hkey : subsum b (I ∩ R) + ∑ i ∈ ((I ∩ M) ∆ F) \ X, sgnW b F i
+      = T - subsum b F - (subsum b (I ∩ L) + ∑ i ∈ X, sgnW b F i) := by linarith
+  rw [hkey]
+  exact Int.ModEq.sub_left _ hhit
+
+/-- Step 5's insertion content («The expansion … inserts (κ(A), κ(B),
+(X ∪ Y) ∆ F) = (κ(A), κ(B), I ∩ M)»): the key-triple the trial's expansion
+inserts is exactly the class key of `I` itself — `I` lies in its own class,
+unconditionally (the hit is the algorithmic trigger; by
+`mem_cls_key_unique` the triple is THE key of `I`'s class). -/
+theorem mem_cls_self (c b : Fin n → ℤ) {L M R I : Finset (Fin n)}
+    (hcover : I ⊆ L ∪ M ∪ R) (_hlm : Disjoint L M) (_hlr : Disjoint L R)
+    (_hmr : Disjoint M R) :
+    I ∈ cls c b L R (keyOf c b (I ∩ L)) (keyOf c b (I ∩ R)) (I ∩ M) := by
+  rw [cls, Finset.mem_image]
+  refine ⟨(I ∩ L, I ∩ R), Finset.mem_product.mpr ⟨?_, ?_⟩, ?_⟩
+  · rw [Finset.mem_filter]
+    exact ⟨Finset.mem_powerset.mpr Finset.inter_subset_right, rfl⟩
+  · rw [Finset.mem_filter]
+    exact ⟨Finset.mem_powerset.mpr Finset.inter_subset_right, rfl⟩
+  · ext i
+    simp only [Finset.mem_union, Finset.mem_inter]
+    constructor
+    · rintro ((⟨hI, _⟩ | ⟨hI, _⟩) | ⟨hI, _⟩)
+      · exact hI
+      · exact hI
+      · exact hI
+    · intro hI
+      rcases Finset.mem_union.mp (hcover hI) with h | h
+      · rcases Finset.mem_union.mp h with h' | h'
+        · exact Or.inl (Or.inl ⟨hI, h'⟩)
+        · exact Or.inl (Or.inr ⟨hI, h'⟩)
+      · exact Or.inr ⟨hI, h⟩
+
+/-- Step 5's «not in the skipped interval» core: the unreduced `c`-walk sum
+`c(I) − c(F)` differs from the target's `t_s − c(F)`, because `I` is an
+alias (`c(I) ≠ t_s`). -/
+theorem c_walk_differs_from_target {c : Fin n → ℤ} {I F : Finset (Fin n)}
+    {ts : ℤ} (hcI : subsum c I ≠ ts) :
+    subsum c I - subsum c F ≠ ts - subsum c F := by
+  intro h
+  exact hcI (by linarith)
 
 end SubsetSumL25

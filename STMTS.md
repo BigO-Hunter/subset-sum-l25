@@ -1290,3 +1290,56 @@ Quot.sound]`; no sorryAx, no native_decide.
   needs `Module ℚ≥0` and fires only on a literal `∅`.
 * The generic Markov theorem is FALSE for empty s (0/0 = 0 junk) — carry the
   nonemptiness hypothesis explicitly.
+
+## DS-M4 Step 5 — the recovery walk LANDED (the (5.1) sum-form; Proofs/M4.lean)
+
+Six theorems appended to `Proofs/M4.lean` (statement-of-record; the verbatim
+§5.6 Step 5 quote in the file header).  The B3 lane carried Step 5 as the
+named hypothesis `hstep5` of `Base_lem_A5`; the DS-M1 machinery ((5.1),
+`subsum_sgnW_eq`, `subsum_eq_of_mem_cls`) makes its mathematical content
+unconditional:
+
+* `symmDiff_right_involutive` — `(Z ∆ F) ∆ F = Z` (companion of M3's
+  left-involutive; this is «Since S ∆ F = I ∩ M» with S = (I ∩ M) ∆ F).
+* `subsum_eq_sum_of_union_cover` — the partition of a sum over a covered
+  triple: `w(I) = w(I∩L) + w(I∩M) + w(I∩R)` under `I ⊆ L ∪ M ∪ R` and
+  pairwise disjointness — the paper's `b(A) + b(Z) + b(B) = b(I)`.
+* `recovery_walk_eq` — THE WALK IDENTITY: with `S = (I ∩ M) ∆ F`, `X ⊆ S`,
+  `Y = S \ X`, `b(A) + b^F(X) + b(B) + b^F(Y) = b(I) − b(F)` — the paper's
+  «(5.1) gives … = T_{s,q} − b(F) = T^F», with general weights.  Proof: the
+  partition + (5.1) `subsum_sgnW_eq` + the right involution +
+  `Finset.sum_sdiff` — linarith over the assembled facts.
+* `complement_record_residue_eq` — the residue form: a hit
+  `j′ ≡ b(A) + b^F(X) (mod P′)` forces the complementary record
+  `b(B) + b^F(Y)` to residue `T − b(F) − j′` (the paper's «the class record
+  (κ(B), λ(Y)) has the residue T^F − j′»), via `Int.ModEq.sub_left`.
+* `mem_cls_self` — the insertion content: `I ∈ cls c b L R (κ(A)) (κ(B))
+  (I ∩ M)` — the key-triple the trial's expansion inserts is exactly I's own
+  class key, UNCONDITIONALLY (the hit is the algorithmic trigger; by
+  `mem_cls_key_unique` the triple is THE key of I's class).  The disjointness
+  hypotheses are carried for class-setup documentation but the union
+  partition makes them redundant — the theorem is stronger than stated.
+* `c_walk_differs_from_target` — «The same computation with c gives the
+  unreduced sum c(I) − c(F).  This differs from t^F = t_s − c(F), because I
+  is an alias»: `c(I) − c(F) ≠ t_s − c(F)` from the alias's `c(I) ≠ t_s`.
+
+The exec-side clauses of Step 5 («the left record is listed», «it lies in
+the group of the left record», «it is visited», «unless the key is already
+there») stay named at the D7 boundary — same as every rung.
+
+Receipts: `lake build SubsetSumL25.Proofs.M4` green (8938 jobs); M4.olean
+fresh (665184 bytes); `#print axioms` for all 6 = `[propext,
+Classical.choice, Quot.sound]`; no sorryAx, no native_decide.
+
+### Gotchas banked (DS-M4 Step 5 round)
+* `open scoped symmDiff` is per-file — a lane file that avoided ∆ in its
+  first section still needs the open before its first ∆ (cost one parse
+  error at `theorem symmDiff_right_involutive`).
+* `Finset.sum_sdiff hX` leaves the summation monoid a metavariable (stuck
+  AddCommMonoid) — pass `Finset.sum_sdiff (f := fun i => sgnW w F i) hX`.
+* `rw [← hunion]` rewrites EVERY occurrence of the equation's RHS — for
+  `hunion : I∩A₁ ∪ I∩A₂ ∪ I∩A₃ = I` it also rewrote the `I` inside the
+  goal's `I ∩ A₁` — route through `conv_lhs => rw [← hunion]`.
+* rcases on `mem_union.mp` of a THREE-part union `A₁ ∪ A₂ ∪ A₃`
+  (left-assoc!) yields `i ∈ A₁ ∪ A₂` in the FIRST branch — the inner rcases
+  belongs there, not in the second.
