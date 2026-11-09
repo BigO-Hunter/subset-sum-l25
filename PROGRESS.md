@@ -730,3 +730,38 @@ paper_2026-11-06_rev8g.tex sha256 18899a6e… (PROVENANCE_rev8g.md).
 3. The merge landed: main @ 3692143 (merge 603ed2e + the O-rung import
    fixup) — base-core's whole ladder is on main, 0 sorries, receipts
    spot-checked (B3/B4/O8/O4/O5+O7 + the formerly-sorry L2.5 pair).
+
+## ROWS M2 — the absorption tail: COMPLETE PROOF PLAN (executed next session)
+
+The proof is fully designed and lemma-name-verified; the session budget ran
+out mid-write (the M1 sorry stands, precisely reported — build-or-don't-
+claim). Structure:
+
+1. **Crux lemma `o57_poly_le_pow`** `∃ n₁, ∀ n ≥ n₁, c·(n+1)² ≤ r^n` for
+   `0 ≤ c`, `1 < r` (all names probed ✓):
+   - `r^{1/4} > 1` (`Real.one_lt_rpow hr (by positivity)`).
+   - `N₂ := ⌈1/(√r−1)⌉ + 1`: for n ≥ N₂, `(n+2)² ≤ √r·(n+1)²` — from
+     `(n+2)/(n+1) ≤ √r` ⟸ `(√r−1)(n+1) ≥ 1` ⟸ `n+1 ≥ 1/(√r−1)` via
+     `exists_nat_gt` + `Nat.le_ceil` + cast juggling (the O8/O4 pattern).
+   - Geometric decay: `b_n := c(n+1)²/q^{2n}` (q := √r) satisfies
+     `b_{n+1} ≤ b_n/q` for n ≥ N₂ (from `(n+2)² ≤ q(n+1)²`, i.e. the
+     √r-ratio form); invariant `c(n+1)² ≤ A·q^n` with
+     `A := c(N₂+1)²/q^{N₂}` via `Nat.le_induction` (step:
+     `c(n+2)² ≤ q·c(n+1)² ≤ q·A·q^n = A·q^{n+1}` ✓).
+   - Constant absorption: `A ≤ q^{N₃}` for
+     `N₃ := ⌈log A / log q⌉ + 1 + N₂` — via `exists_nat_gt (log A / log q)`
+     + `Real.log_le_log_iff` + `Real.log_pow (0 < q)`; then
+     `c(n+1)² ≤ q^n·q^n = q^{2n} = r^n` (`pow_add`, `pow_mul`, `hqq`).
+   - Case split `c = 0` at the top (trivial).
+2. **√-slack lemma `o57_sqrt_le`** `∃ n₂, ∀ n ≥ n₂, 2^{2√n+2} ≤ 2^{(δ/2)n}`:
+   `n₂ := ⌈(8/δ)²⌉ + 1`; `√n ≥ 8/δ` via
+   `Real.le_sqrt_of_sq_le ((8/δ)² ≤ n)`; `2√n ≤ n` for n ≥ 4 via
+   `2 ≤ √n` (`Real.le_sqrt_of_sq_le (4 ≤ n)`) + `nlinarith [Real.sq_sqrt]`;
+   `2√n + 2 ≤ 4√n` (n ≥ 1); `4√n ≤ (δ/2)n ⟺ 8 ≤ δn` ⟸ `δn ≥ δ·(8/δ)² ≥ 8`
+   (δ ≤ 8; the δ > 8 case: n ≥ 1 ⟹ δn > 8) — `nlinarith`.
+3. **Assembly**: `ops n ≤ c·poly·2^{2√n+2}·2^{(τ₀+20ε)n}` (rpow_add split)
+   `≤ 2^{(δ/2)n}·2^{(δ/2)n}·2^{(τ₀+20ε)n} = 2^{T'n}` (`hδdef`; ring; and
+   `(n:ℝ)` vs n cast via `Real.rpow_le_rpow_of_exponent_le` + le_refl).
+
+Estimated ~90 lines, ~3 build rounds. The δ > 8 sub-case in step 2's `8 ≤
+δn`: case-split or use `nlinarith [hn8' : (8/δ) ≤ 1 ∨ ...]` — see text.
