@@ -8,7 +8,13 @@ import SubsetSumL25.Statements.Presearch
 
 namespace SubsetSumL25
 
-/-- Chebyshev's inequality over a finite expectation space. -/
+/-- Chebyshev's inequality over a finite expectation space.  WIP: the proof is
+fully decomposed in PROGRESS.md (B5 §M2) — three pieces, each verified to
+compile in isolation during this session: (i) pointwise `t² ≤ (x−μ)²` on the
+below-threshold set via the nonpos-multiplier chain `mul_le_mul_of_nonpos_left
+hlt ht0/hx0`; (ii) `t²·↑#B ≤ Σ (x−μ)²` directly by `Finset.mul_sum` +
+per-point by_cases (`mul_one`/`mul_zero`); (iii) finish by cross-multiplying
+`div_le_div_iff₀` + `div_mul_cancel₀` against `E = Σ/↑#s`. -/
 theorem chebyshev_fraction_le {ι : Type*} {s : Finset ι} (hs : s.Nonempty)
     (x : ι → ℝ) (t : ℝ) (ht : 0 < t) :
     ((s.filter (fun i => x i < s.expect x - t)).card : ℝ) / s.card
