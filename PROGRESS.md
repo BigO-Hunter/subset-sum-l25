@@ -457,3 +457,43 @@ Fresh receipts: `chebyshev_fraction_le`, `prop_p_chebyshev`,
 
 Everything in the B5 lane is proved (6/6): chebyshev_fraction_le,
 prop_p_chebyshev, cap_fit_lt, continue_prob_le, prop_p_op_absorb, a7_envelope.
+
+---
+
+# O8 (word-RAM accounting, Base §5.2) — M1 banked 2026-11-08
+
+Statements verbatim from §5.1 (Thm A part 2), §5.2 (Steps 3 and 6 + the
+closing accounting paragraph), §5.8 (bullet 5 «2^{O(n)} draws»). Proved-vs-
+named ledger in STMTS.md §O8. **D7 boundary held**: everything counts word
+operations in Base's own counters; the bit-cost → Light-step translation is
+D7 (L5's) and is not imported. Credit: Base.
+
+## The six O8 statements (`Statements/O8.lean`; 6 sorries, build green)
+
+* `o8Cap` — §5.2 Step 6's cap `2^{⌈τ₀n⌉+⌈n^{0.7}⌉}` as a def (noncomputable ℝ).
+* `o8_cap_absorb` — cap ≤ `2^{τ₀n+2n^{0.7}}` (two `⌈x⌉ ≤ x+1` absorbed).
+* `o8_cap_envelope` — ten counted categories ≤ C ⟹ ∑ ≤ 10·C.
+* `o8_time_bound` — part 2's display with the `poly(n+b+2)` slot as named `P`:
+  ten categories ≤ cap·P ⟹ ∑ ≤ 16·P·2^{τ₀n+2n^{0.7}}.
+* `o8_trial_count_bound` — §5.2 Step 3's verbatim `n⁷2^{F̂} ≤ T ≤ 2n⁷2^{F̂}`
+  (needs only `0 < Ŝ ≤ 1`; the `e_n` integer range is Lemma A3's input, noted).
+* `o8_trials_le_cap` + `o8_draws_le` — «halts every execution»'s checkable
+  core (K ≤ cap from per-trial ≥ 1 counted step) and «2^{O(n)} draws»
+  explicit (`2+n²+3K ≤ (n²+5)·cap`).
+
+## O8 statement hygiene notes
+
+* **`Ŝ` is not a Lean identifier** (combining circumflex) — the Lean name is
+  `Shat`. Cost one failed build to find.
+* `o8Cap` needs `noncomputable` (ℝ division dependency).
+* Empty-expect audit: no `Finset.expect` in any O8 statement; `1/Ŝ` guarded by
+  explicit `0 < Ŝ`; `n ≥ 0` stated on every rpow consumer (no negative-base
+  junk). `Ŝ ≤ 1` follows in-application from proved L2.2 (`d ≥ 0`), carried as
+  hypothesis because the `V_j` draws are algorithm data.
+
+## Next actions (O8 lane)
+
+1. **M2**: `Proofs/O8.lean` — the proofs are elementary (ceil bounds,
+   `Real.rpow_le_rpow_left_iff`, `rpow_logb`, `Finset.sum_const`); names
+   pre-verified in this pin. Then receipts, commit, push.
+2. Then B4/B5-style close-out for O8 and the report.

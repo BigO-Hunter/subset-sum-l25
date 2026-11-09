@@ -489,3 +489,67 @@ Source of every quote: `a-kapila/maths-proofs` @ `44c34961`, §4 (Prop P, (LD)),
 **Empty-expect audit:** `chebyshev_fraction_le` and `continue_prob_le` divide by
 `#s` and carry `s.Nonempty` explicitly; no other statement touches
 `Finset.expect`.  No silent-`0` degeneracy class.
+
+# O8 — Base §5.2 word-RAM accounting: statements + proved-vs-named ledger
+
+Source of every quote: `a-kapila/maths-proofs` @ `44c34961`,
+`subset-sum/PROOF_0.4877.tex` §5.1 (Thm A part 2), §5.2 (Steps 3 and 6, the
+closing accounting paragraph), §5.8 (bullet 5); sha256 re-verified this session
+(`b397531c…`). Cross-checked against BRIDGE appendix rows O8 («paper-only») and
+B5. **Credit: the accounting is Base's; this package formalizes it.**
+
+**Boundary (D7 note):** every O8 statement counts *word operations* /
+*elementary steps* in Base's OWN counters. The bit-cost → Light-step
+translation is D7, assigned to L5 — it is deliberately not imported, exactly as
+the APSP lane's FFT contract is stated over its own counters.
+
+## Verbatim anchors
+
+> (§5.1, Thm A part 2) On every execution the procedure uses at most
+> 2^{τ₀n+2n^{0.7}} poly(n+b+2) word operations.
+
+> (§5.2 Step 6) Count the elementary steps of Steps 1–5: subsets enumerated,
+> merge operations, masks listed, keys sorted, records formed, records
+> visited, members expanded, dictionary operations, terms summed, and trial
+> divisions. Return FAIL as soon as the count would exceed
+> 2^{⌈τ₀n⌉+⌈n^{0.7}⌉}. Also return FAIL if a bounded sampler fails.
+
+> (§5.2, closing) Each step costs poly(n+b) word operations. Keys have
+> O(b+log n) bits, masks have m bits, and the dictionaries are balanced search
+> trees. The finite-precision sums use n² fractional bits (Section 6.2). With
+> the cap, this proves part 2 of Theorem A.
+
+> (§5.2 Step 3) … T = n⁷2^{e_n}⌈1/Ŝ⌉ … where e_n is an integer with
+> 2n^{0.6} ≤ e_n ≤ 2n^{0.6}+1. Then n⁷2^{F̂} ≤ T ≤ 2n⁷2^{F̂}.
+> (F̂ = log(1/Ŝ) + e_n, Ŝ = (1/n²)∑_{j≤n²} 2^{−d(V_j)})
+
+> (§5.8, bullet 5) A bounded sampler fails. A capped execution makes at most
+> 2^{O(n)} draws, so this has probability 2^{O(n)}(2^{−n³}+e^{−c₀n²}) = o(1).
+
+## Proved-vs-named ledger (the B4/B5 pattern)
+
+| Paper piece | Lean | Kind |
+|---|---|---|
+| Step 6 cap `2^{⌈τ₀n⌉+⌈n^{0.7}⌉}` | `o8Cap` | definition (ℝ; `noncomputable`) |
+| Cap fits part 2's budget (`⌈x⌉ ≤ x+1` twice, absorbed by `2n^{0.7}`) | `o8_cap_absorb` | PROVED |
+| Ten counted categories within a uniform `C` | `o8_cap_envelope` | PROVED (`∑ ≤ 10·C`); the ten per-category analyses are the algorithm, named |
+| Part 2's display, `poly(n+b+2)` slot = named `P` | `o8_time_bound` | PROVED skeleton: ten categories ≤ `cap·P` ⟹ total ≤ `16·P·2^{τ₀n+2n^{0.7}}` (16 = 2⁴ absorbs the ten) |
+| Step 3 trial count `n⁷2^{F̂} ≤ T ≤ 2n⁷2^{F̂}` | `o8_trial_count_bound` | PROVED; needs only `0 < Ŝ ≤ 1` (the `e_n` integer range is Lemma A3's input, not this bound's — noted in the docstring); the merge procedure of Prop 2.4 and the `V_j` draws are the algorithm, named |
+| «Halts every execution» | `o8_trials_le_cap` | PROVED checkable core: per-trial ≥ 1 counted step (named data `S`) + prefix ≤ cap ⟹ `K ≤ cap` — no execution passes `cap` elementary steps; the FAIL rule itself is the named mechanism |
+| «At most 2^{O(n)} draws» (§5.8 bullet 5) | `o8_draws_le` | PROVED explicit form: draws `2 + n² + 3K ≤ (n²+5)·cap` (Steps 1+3 draw 2+n², each trial draws 3: `F`, `P′`, `j′` — named ledger) |
+| «Each step costs poly(n+b) word ops», key/mask bit-widths, balanced trees, n² fractional bits (§6.2) | — | algorithm/bit-level boundary, named |
+
+## Statement hygiene (the standing audits)
+
+* **Empty-expect audit:** no O8 statement touches `Finset.expect`. The only
+  division is `1/Ŝ` in `o8_trial_count_bound`, guarded by explicit
+  `hS : 0 < Ŝ` (well-formedness, so no `0/0`-junk); `Ŝ ≤ 1` follows in the
+  application from proved L2.2 (`d(V) ≥ 0` ⟹ `2^{−d(V)} ≤ 1`) plus the draw
+  structure, but is carried as a hypothesis because the `V_j` draws are
+  algorithm data.
+* **rpow junk audit:** `o8Cap` and every consumer state `n ≥ 0` (the paper's
+  `n` is the input size), so `n^{0.7}` never has a negative base.
+* **Identifier note:** `Ŝ` (combining circumflex) is not a valid Lean
+  identifier — the Lean name is `Shat` throughout.
+* M1 sorries: 6, exactly the six theorems above (`o8Cap` is a def), build
+  green at 8924 jobs.
