@@ -105,14 +105,17 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
       have h1 : (8:ℝ)/δ ≤ Real.sqrt (n:ℝ) := hsqrt8
       rw [div_le_iff₀ hnδ] at h1
       linarith
-    have hprod : (8:ℝ) * Real.sqrt (n:ℝ) ≤ δ * ((Real.sqrt (n:ℝ)) * Real.sqrt (n:ℝ)) := by
-      refine mul_le_mul_of_nonneg_right h8 (Real.sqrt_nonneg n)
-    rw [mul_assoc δ (Real.sqrt (n:ℝ)) (Real.sqrt (n:ℝ)),
-        Real.mul_self_sqrt (by positivity)] at hprod
+    have hprod : (8:ℝ) * Real.sqrt (n:ℝ) ≤ δ * (n:ℝ) := by
+      have h1 : (8:ℝ) * Real.sqrt (n:ℝ) ≤ (δ * Real.sqrt (n:ℝ)) * Real.sqrt (n:ℝ) := by
+        exact mul_le_mul_of_nonneg_right h8 (Real.sqrt_nonneg n)
+      rw [mul_assoc, Real.mul_self_sqrt (Real.sqrt_nonneg (n:ℝ))] at h1
+      exact h1
     have hs2' : (2:ℝ) + 2 * Real.sqrt (n:ℝ) ≤ (4:ℝ) * Real.sqrt (n:ℝ) := by nlinarith
     refine Real.rpow_le_rpow_of_exponent_le (by norm_num) ?_
-    linarith [hprod, hs2']
   -- aux 2: the polynomial absorbs — c·(n+1)² ≤ 2^{(δ/2)n} eventually
+  rcases eq_or_lt_of_le hc with hc0 | hc0
+  · exact ⟨0, fun n _ => by rw [hc0.symm, zero_mul]; exact Real.rpow_nonneg (by norm_num)⟩
+  have hc0 : 0 < c := hc0
   -- the ratio threshold: (n+2)² ≤ q(n+1)² past N
   obtain ⟨N, hN⟩ := exists_nat_gt (1 / (Real.sqrt q - 1))
   have hstep : ∀ n ≥ N, ((n:ℝ) + 2) ^ 2 ≤ q * ((n:ℝ) + 1) ^ 2 := by
@@ -129,8 +132,9 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
     calc ((n:ℝ) + 2) ^ 2 ≤ (Real.sqrt q * ((n:ℝ) + 1)) ^ 2 :=
           pow_le_pow_left₀ (by positivity) hle 2
       _ = q * ((n:ℝ) + 1) ^ 2 := by
-            rw [mul_pow, Real.mul_self_sqrt (le_of_lt hr1), hq]
+            rw [mul_pow, pow_two, ← hqq, hq]
   -- geometric invariant past N: c·(n+1)² ≤ A·q^n, A := c(N+1)²/q^N
+  -- (the base is trivially true by div_mul_cancel₀; the step uses the q-ratio)
   set A : ℝ := c * (((N:ℕ) : ℝ) + 1) ^ 2 / q ^ (N:ℕ) with hAdef
   have hApos : 0 < A := by
     rw [hAdef]
@@ -162,23 +166,24 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
       rw [div_le_iff₀ hlogq] at hdiv
       exact hdiv
     exact (Real.log_le_log_iff hApos (by positivity)).mp h1
-  have hpolyle : ∃ n₃ : ℕ, ∀ n ≥ n₃, c * ((n:ℝ) + 1) ^ 2 ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) :=
-    ⟨N, fun n hn => by
-      have hA : A ≤ q ^ (n:ℕ) := by
-        have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
-          rw [Real.log_pow (le_of_lt hq1)]
-          have hnpos : (0:ℝ) < (n:ℝ) := by positivity
-          have hdiv : (Real.log A / Real.log q) ≤ (n:ℝ) := by linarith
-          rw [div_le_iff₀ hlogq] at hdiv
-          exact hdiv
-        exact (Real.log_le_log_iff hApos (by positivity)).mp h1
-      have hinv := hinv n hn
-      calc c * ((n:ℝ) + 1) ^ 2 ≤ A * q ^ (n:ℕ) := hinv
-        _ ≤ q ^ (n:ℕ) * q ^ (n:ℕ) := mul_le_mul_of_nonneg_left hA (le_of_lt hqpos)
-        _ = q ^ ((n:ℕ) + (n:ℕ)) := (pow_add q n n).symm
-        _ = q ^ (2 * (n:ℕ)) := by ring_nf
-        _ = r ^ (n:ℕ) := by rw [← pow_mul, hqq]
-        _ = (2:ℝ) ^ ((δ/2) * (n:ℕ)) := by rw [hrdef, Real.rpow_natCast, ← Real.rpow_mul (by norm_num : (0:ℝ) < 2)]
+  have hpolyle : ∃ n₃ : ℕ, ∀ n ≥ n₃, c * ((n:ℝ) + 1) ^ 2 ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) := by
+    refine ⟨N, ?_⟩
+    intro n hn
+    have hA : A ≤ q ^ (n:ℕ) := by
+      have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
+        rw [Real.log_pow (le_of_lt hq1)]
+        have hnpos : (0:ℝ) < (n:ℝ) := by positivity
+        have hdiv : (Real.log A / Real.log q) ≤ (n:ℝ) := by linarith
+        rw [div_le_iff₀ hlogq] at hdiv
+        exact hdiv
+      exact (Real.log_le_log_iff hApos hqpos.le).mp h1
+    have h2 := hinv n hn
+    calc c * ((n:ℝ) + 1) ^ 2 ≤ A * q ^ (n:ℕ) := h2
+      _ ≤ q ^ (n:ℕ) * q ^ (n:ℕ) := mul_le_mul_of_nonneg_left hA (le_of_lt hqpos)
+      _ = q ^ ((n:ℕ) + (n:ℕ)) := (pow_add q n n).symm
+      _ = q ^ (2 * (n:ℕ)) := by ring_nf
+      _ = r ^ (n:ℕ) := by rw [← pow_mul, hqq]
+      _ = (2:ℝ) ^ ((δ/2) * (n:ℕ)) := by rw [hrdef, Real.rpow_natCast, ← Real.rpow_mul (by norm_num : (0:ℝ) < 2)]
   -- assemble
   have hE : ((τ₀ + 20 * ε) * (n:ℝ) + 2 * Real.sqrt (n:ℝ) + 2)
       = 2 * Real.sqrt (n:ℝ) + 2 + (τ₀ + 20 * ε) * (n:ℝ) := by ring
