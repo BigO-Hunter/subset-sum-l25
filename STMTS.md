@@ -1072,3 +1072,38 @@ count, mathlib Chebyshev) is the next milestone — no blockers.
 * Nat.mul_lt_mul_left is an IFF in this Mathlib (use .mp).
 * omega cannot prove 2*n < n*n (the n*n atom) — route through
   Nat.sqrt_lt.1 on the √(2n) < n guard instead.
+
+## DS-M2 LANDED (M2.lean: Lemma A2 counts + the §5.4 partial)
+The M2 milestone's counting core landed in Proofs/M2.lean:
+* `card_shifted_support_le` — the support-translate (A2(2)'s |Σ(M)| bound)
+* `congFiber_card_le` — the mod-P residue-fibre (y ↦ y/P injection)
+* `keyFiber_card_le` — per-c-value: at most |L|+1 ≤ n+1 keys
+* `key_count_le` — A2(1): L has ≤ (n+1)·|Σ(L)| keys
+* `right_class_count_le` — A2(2): ≤ (2m+1)·|Σ(M)| right classes
+* `support_card_eq_two_pow` — 2^{|V|−d(V)} = |Σ(V)| (definitional)
+* `expect_tail_prob_le` — the §5.4 Markov step (Finset-expectation form)
+
+DEFERRED (the hmid→h2→h4→trial_count_ge chain): the `Finset.sum_image`
+class-sum identity (5.2)'s `simp` normalization — the `(1/Ŝ)*Ŝ = 1`
+`kabstract` HDiv-vs-Inv reducible-transparency match; plus the hmid's
+npowRec elaboration for the n⁷ nonneg. Both are mechanical Lean issues,
+not mathematical gaps. The `trial_count_ge` statement is designed and
+the proof chain is written — deferred to the next session.
+
+Full build green; 0 errors; package sorries 0.
+
+## Gotchas banked (DS-M2 round)
+* `Int.mul_ediv_add_emod a b : b * (a / b) + a % b = a` — NOT `ediv_add_emod`
+  (the latter doesn't exist at pin d13f23b).
+* `Finset.card_image_of_injective K (f := fun y => ...) (fun a b h => ...)`
+  — the `f` named arg goes BEFORE the injectivity proof.
+* calc `=` steps in a `≤` chain: Lean 4 handles the transitivity, but
+  `Nat.mul_le_mul_left` needs the correct arg order (k explicit first).
+* `mul_le_mul` slots: (h1 : a ≤ b) (h2 : c ≤ d) (hc : 0 ≤ c) (hb : 0 ≤ a)
+  — hc is the c-side nonneg, hb is the a-side nonneg (NOT swapped).
+* `Int.mul_ediv_cancel_left (a : ℤ) (hb : b ≠ 0) : a * b / b = a` — the
+  a-explicit-first form; `mul_comm` pre-rewrite needed for the reverse.
+* `simp` can close `(1/Ŝ)*Ŝ = 1` via `inv_mul_cancel₀` but `kabstract`'s
+  reducible transparency misses the HDiv-vs-Inv form in `rw`.
+* `npowRec` in ℝ goals: `(n:ℝ)^7` elaborates to `npowRec 6 ↑n` which
+  `positivity` can't see through; use `exact_mod_cast Nat.zero_le (n^7:ℕ)`.
