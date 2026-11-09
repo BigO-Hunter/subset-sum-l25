@@ -543,3 +543,27 @@ package sorries 2 (the pre-existing L2.5 pair only — not this lane's).
   `o8_cap_envelope`), part 2's display with the `poly(n+b+2)` slot named `P`
 
 D7 boundary held throughout: Base's own word-op counters only.
+
+---
+
+# O4 (OpenAI L3.2 finite filtering data) — M1 banked 2026-11-08
+
+Statements verbatim: OpenAI `sections/filtering.tex` Lemma 3.2 + the Riemann
+estimate + the effective version; Base (F7), Lemma B1, App. B.2. Ledger in
+STMTS.md §O4. D7 boundary held (procedure named, certified numerics are
+data-not-restated). Formalizable core identified and stated: Riemann estimate
+(Lipschitz form `2πB/P`), Gibbs for the finite order (3.3) via Jensen, the
+P₀+slack assembly (`o4P₀` explicit), log/quotient boundedness primitives.
+
+## The six O4 statements (`Statements/O4.lean`; 6 sorries, build green)
+
+o4_avg_err_le, o4_gibbs, o4_finite_from_continuous, o4_log_abs_le,
+o4_div_le, o4_le_div; defs o4Avg, o4P₀.
+
+## Next actions (O4 lane)
+
+1. **M2** `Proofs/O4.lean`: Riemann via
+   `intervalIntegral.sum_integral_adjacent_intervals` + Lipschitz slicing;
+   Gibbs via `ConcaveOn.le_map_sum` + `strictConcaveOn_log_Ioi`; P₀ assembly
+   arithmetic; the rest linarith/`div_le_div_iff₀`. All names pre-verified.
+2. Receipts, commit, push; then the O4→O5+O7 handoff report.

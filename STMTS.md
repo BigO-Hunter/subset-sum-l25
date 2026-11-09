@@ -563,3 +563,41 @@ the APSP lane's FFT contract is stated over its own counters.
   `[propext, Classical.choice, Quot.sound]`; `o8_draws_le`
   `[propext, Quot.sound]` (pure ℕ arithmetic — not even choice). Build green,
   8949 jobs; package sorries 2 (the pre-existing L2.5 pair only).
+
+# O4 — OpenAI L3.2 «Finite filtering data»: statements + proved-vs-named ledger
+
+Sources: OpenAI preprint (`sections/filtering.tex`, Lemma 3.2 =
+`lemma:finite-filtering` + the Riemann estimate + the effective version) and
+Base `PROOF_0.4877.tex` (F7), §6.1 Lemma B1, Appendix B.2 (sha re-verified
+`b397531c…`). Cross-checked against BRIDGE rows O4 and V1. **Credit: L3.2 is
+OpenAI's; the (F7) generalization observation and Lemma B1's use are Base's;
+this package formalizes the mathematical core.**
+
+**Boundary (D7 note, as on O8):** the approximability procedure is an
+algorithm statement (one fixed deterministic procedure, time poly(log P), no
+point enumeration) and stays NAMED — no Light-step translation is imported,
+and no procedure is constructed here. The numerical moment bounds
+(2^{0.5168}, Base's Prop B 2^{η−0.00025} over the 430 certified rows) are
+certified DATA and are not restated — the same decision as B4's certificate
+rows.
+
+## Proved-vs-named ledger
+
+| Paper piece | Lean | Kind |
+|---|---|---|
+| «replace every integral … by the normalized average P⁻¹∑» | `o4Avg` | definition (junk `P = 0` guarded by `0 < P` on every consumer) |
+| «the error … is at most 2π‖∂_w H‖_∞/P, uniformly in x» | `o4_avg_err_le` | PROVED in Lipschitz form; the derivative bound `B` is named data («the displayed coefficient bounds give explicit bounds on every fixed derivative») |
+| (3.3) finite form: D ≥ 0, D−A ≥ 0, D−E ≥ 0 («unchanged for normalized finite averages») | `o4_gibbs` | PROVED (Gibbs via `ConcaveOn.le_map_sum` on `strictConcaveOn_log_Ioi`); one lemma, three instantiations (q = 1, f_*(x+·), g_*) as in the paper |
+| «converge … at their grid points» + «the strict slack between 0.5168 and 0.5169» ⟹ finite moments; Lemma B1's «absolute P₀» | `o4_finite_from_continuous` + `o4P₀` | PROVED; P₀ is the explicit ceiling threshold, the continuous bound `C` and target `T` are named data (so (3.7)'s numerals enter only as parameters — Base's own (F7) exclusion respected) |
+| «bounded above and bounded away from zero … their logarithms … uniformly bounded» | `o4_log_abs_le`, `o4_div_le`, `o4_le_div` | PROVED primitives; the composition with the displayed constants \|r\| ≤ 2.433, \|s\| ≤ 4.010 is named data |
+| «one fixed deterministic procedure … in time polynomial in log P … need not enumerate the P points» | — | algorithm, named (the D_s boundary) |
+| Prop 3.1's (3.6) / Prop B's 430 certified moment bounds | — | certified data, not restated (the B4 decision) |
+
+## Statement hygiene (the standing audits)
+
+* **Empty-expect audit:** no `Finset.expect` in any O4 statement. Junk
+  guards: `P = 0` on `o4Avg` (guarded by `0 < P` on consumers), the division
+  in `o4P₀` (guarded by `C < T`), all `q/w` divisions in `o4_gibbs` (guarded
+  by strict positivity — the paper's `K_x` is a strictly positive density).
+* M1 sorries: 6, exactly the six theorems (`o4Avg`, `o4P₀` are defs), build
+  green at 8924 jobs.
