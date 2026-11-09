@@ -796,3 +796,29 @@ discovered (cost the attempt, banked for the next execution):
    - then the √-slack lemma and assembly as in the previous plan entry.
 Estimated ~60 lines with the exists_nat_gt form (SHORTER than v1 — the ceil
 elimination removes the whole cast-juggling layer).
+
+## ROWS M2 — plan v2 transcription attempt + plan v3 (2026-11-08, third pass)
+
+The v2 transcription hit NEW traps and was ROLLED BACK again (the M1 state
+stands). Four new pin facts (banked):
+
+1. **Application-bind parse trap**: `exists_nat_gt ((8:ℝ)/δ)^2` parses as
+   `(exists_nat_gt ((8:ℝ)/δ)) ^ 2` — `^` binds tighter than application
+   AFTER the paren-group. Fix: `exists_nat_gt (((8:ℝ)/δ)^2)` — wrap the
+   whole squared term.
+2. **∃-body `(2:ℝ)` annotations are REQUIRED** when no expected type
+   propagates: `∃ n₂, ∀ n ≥ n₂, 2 ^ (...) ≤ 2 ^ (...)` elaborates the bases
+   as ℕ (`HPow ℕ ℝ` fails). Write `(2:ℝ) ^ (...)` in ∃-bodies.
+3. `Real.rpow_pos_of_pos (h : 0 < x) (y)` WORKS at this pin (hrpos built
+   ✓); `Real.rpow_nonneg`'s h-slot form needs probing before use.
+4. `eq_or_lt_of_le` reversed-equation trap: third occurrence — the M1
+   pattern `rw [hc0.symm, zero_mul]` is correct as written.
+
+**Plan v3 (the deltas from v2 — everything else in v2 stands):**
+- `obtain ⟨n₂, hn₂⟩ := exists_nat_gt (((8:ℝ)/δ)^2)` (extra parens).
+- ∃-bodies: `(2:ℝ) ^ (…)` annotations on both sides.
+- `hrpos := Real.rpow_pos_of_pos (by norm_num : (0:ℝ) < 2) _` (proven form).
+- `hqq := Real.mul_self_sqrt (le_of_lt hr1)` — worked in O4, but if the
+  0 < / 0 ≤ form fights at the set-fvar, `rw [hq]` first then
+  `exact Real.mul_self_sqrt (le_of_lt hr1)`.
+- The invariant/conclusion/√-slack structure of v2 stands unchanged.
