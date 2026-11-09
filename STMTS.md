@@ -1219,3 +1219,74 @@ Receipts: full `lake build` green — exit 0, 8962 jobs, M3.olean fresh
 * In an image-membership ∃ (`∃ a ∈ s, f a = y`) the anon-constructor
   component is the ELEMENT of s (a subset for `V.powerset.image (subsum c)`),
   not the value — a wrong-slot element silently retypes the equation goal.
+
+## DS-M4 Step 4 — small-prime residues LANDED (the (F4) dispatch; Proofs/M4.lean)
+
+Eight theorems in `Proofs/M4.lean` (statement-of-record; the verbatim §5.6
+Step 4 quote in its header), consuming the B3 residue spine (A5.lean) and our
+unconditional `L2_5_prime_collision_two`:
+
+* `pair_expect_le_L25` — the (F4) instance per pair, expectation form: the
+  exact place the paper writes «(F4) with L′ = ⌊γm⌋ gives Pr[P′ | x − x′] ≤ …».
+  The `∃ K Lstar` conclusion carries L2.5's uniform K (1/c₀) — the one-K-for-
+  every-pair shape the second moment needs. Composes
+  `L2_5_prime_collision_two` with the A5 lane's `pair_collision_le`.
+* `collisionPairs_expect_le_L25` — `E_{P′} #{colliding pairs} ≤ |W|²·K·B·L/2^L`
+  (the A5 lane's `collisionPairs_expect_le` with `K₀ := K·B·L` explicit).
+* `sum_sq_classes_eq_card_add_collisionPairs` — the second moment's pointwise
+  identity `Σ_y z_y² = |W| + #{ordered colliding pairs}`, for every modulus
+  p ≥ 1 (each x contributes its diagonal 1; the off-diagonal terms are exactly
+  `collisionPairs`).
+* `sum_classes_eq_card` — `Σ_y z_y = |W|` (each element lies in exactly one
+  residue class) — the C–S input.
+* `expect_sum_sq_le_L25` — «E_{P′} Σ_y z_y² ≤ B_S + K₀n²B_S²2^{−γm}» with the
+  constant explicit: `≤ |W| + |W|²·K·B·L/2^L`. The empty-interval case is
+  disposed of directly (the add-a-constant shift E[c+f] = c + E[f] is FALSE
+  for an empty index set — E[c+f] = 0 ≠ c = c + E[f]).
+* `prob_le_twice_mean_ge_half` — the Markov step, generic form: the
+  below-twice-the-mean event has probability ≥ 1/2 (DS-M2's
+  `expect_tail_prob_le` is the ≤-tail; this is its complement, via the
+  filter-complement identity + {2μ < f} ⊆ {2μ ≤ f}). Needs s nonempty (the
+  empty average is 0/0 = 0 junk — the statement is false there).
+* `card_sq_le_sum_sq_mul_occupied` — the Cauchy–Schwarz occupancy
+  `|W|² ≤ Σ_y z_y² · #occupied` (via `Finset.sum_mul_sq_le_sq_mul_sq` with
+  g := 1 and `sum_classes_eq_card`).
+* `hit_prob_ge_of_sum_sq_le` — on the good-prime event `Σ_y z_y² ≤ C`, a
+  uniform j′ hits an occupied residue with probability ≥ `|W|²/(P′·C)`
+  (C–S occupancy × the A5 lane's `hit_prob_eq_occupied`).
+
+**Named remainder (the seam, per the ladder convention):** the paper's final
+squeeze to `min(B_S 2^{−γm}, 1)/(8K₀n²) ≥ B_S/(8K₀n²·C(σ,k))` — the two-case
+arithmetic on C̄'s shape (`B_S ≤ 2^{γm}` / else) with `P′ < 2^{1+γm}` and
+`2^{γm} ≤ C(σ,k)` (S4) — is NOT landed. The chain stops at
+`|W|²/(P′·C)` on the good-prime event, with C explicit; the γm-
+parameterization (the K₀n² absorption of the bit-bound) is instance
+arithmetic for the DS-M5 assembly (Step 6 product + Cor A6), which consumes
+`hit_prob_ge_of_sum_sq_le` directly. The bit bound itself («differences have
+at most ηn + log n + 3 bits») enters as the hypothesis `hbits` — instance
+data, not package mathematics, same D7 boundary as everywhere.
+
+Receipts: full `lake build SubsetSumL25.Proofs.M4` green; M4.olean fresh
+(458856 bytes); `#print axioms` for all 8 = `[propext, Classical.choice,
+Quot.sound]`; no sorryAx, no native_decide.
+
+### Gotchas banked (DS-M4 Step 4 round)
+* `rw [Finset.sum_filter]` fails when the filter predicate mentions an OUTER
+  bound variable (the higher-order pattern defeats kabstract) —
+  `simp only [Finset.sum_filter]` fires where rw cannot.
+* `← Finset.sum_product` cannot match a double sum whose body is not in pair-
+  projection form; `← Finset.sum_product'` (the `f x.1 x.2` form, f implicit)
+  matches the (outer, inner)-oriented double sum directly — so the colliding-
+  pair predicate must be stated (outer, inner)-oriented (`x' ≠ x ∧ p ∣ x' − x`)
+  for the two to meet. Flipping `p ∣ x − x'` to `p ∣ x' − x` goes through
+  `neg_sub` + `Int.dvd_neg`.
+* `mul_div_cancel_left₀ (b) (h : a ≠ 0) : a * b / a = b` — b EXPLICIT first;
+  `mul_div_cancel₀` is the a·b/b form. The wrong sibling silently fails to
+  match. `div_add_div_same` does NOT exist at this pin; `← add_div` is the
+  route for a/c + b/c = (a+b)/c.
+* `Finset.sum_mul_sq_le_sq_mul_sq` squares BOTH functions — its RHS carries
+  `∑ 1 ^ 2`, not `∑ 1` (close with `one_pow`, not `pow_one`).
+* `Finset.expect_eq_sum_div_card` has (s) (f) EXPLICIT; `Finset.expect_empty`
+  needs `Module ℚ≥0` and fires only on a literal `∅`.
+* The generic Markov theorem is FALSE for empty s (0/0 = 0 junk) — carry the
+  nonemptiness hypothesis explicitly.
