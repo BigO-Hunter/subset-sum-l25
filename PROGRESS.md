@@ -567,3 +567,47 @@ o4_div_le, o4_le_div; defs o4Avg, o4P₀.
    Gibbs via `ConcaveOn.le_map_sum` + `strictConcaveOn_log_Ioi`; P₀ assembly
    arithmetic; the rest linarith/`div_le_div_iff₀`. All names pre-verified.
 2. Receipts, commit, push; then the O4→O5+O7 handoff report.
+
+# O4 COMPLETE (OpenAI L3.2 finite filtering data) — M2 2026-11-08
+
+All six O4 theorems PROVED in `Proofs/O4.lean`. Build green 8951 jobs;
+receipts (fresh): all six `[propext, Classical.choice, Quot.sound]`. The
+Riemann-sum estimate (`2π‖∂H‖_∞/P` in Lipschitz form) is the load-bearing
+piece: grid split via `intervalIntegral.sum_integral_adjacent_intervals`,
+per-slice `norm_integral_le_of_norm_le_const` with the in-slice Lipschitz
+bound, `len = 2π/P` algebra closed by field_simp + ring. Gibbs (3.3) via
+`ConcaveOn.le_map_sum` on `strictConcaveOn_log_Ioi`. P₀ assembly: `o4P₀` is
+the explicit ceiling threshold; the strict-slack argument (0.5168 → 0.5169,
+resp. Prop B → Lemma B1) is the paper's own, made formal.
+
+## M2 statement corrections (disclosed, the hn07 pattern)
+
+1. o4_div_le / o4_le_div: M1 directions were false; corrected to the paper's
+   `K_x = f·g/Q` use (denominator lower bound ⟹ upper quotient bound and the
+   dual), with `0 < d` explicit (correction 3: `d ≤ den` + `0 < den` does not
+   give `0 < d`).
+2. Log-divergence hypotheses: `Real.log_div` takes `≠ 0` at this pin.
+
+## O4 fork gotchas added (each cost ≥1 failed build)
+
+* `∫ x in a..b, H x - c` parses the subtraction INSIDE the integral —
+  parenthesize `(∫ …)` before subtracting.
+* `Finset.sum_le_sum` with a `?_` body cannot synthesize the implicit `g` —
+  pre-type the per-element proof as a typed `have`.
+* `Real.log_div` takes `≠ 0`; `norm_integral_le_of_norm_le_const` takes
+  `uIoc` + concludes `C * |b − a|`; `neg_le_abs_self` is absent (use
+  `le_abs_self (-a)` + `abs_neg` + linarith).
+* field_simp distributes and clears denominators but leaves atom-identity
+  residues (`B ≤ B`, `len·P = 2π` gaps) — close with `le_refl`/an explicit
+  `have` + rw, not bare ring.
+
+## O4→O5+O7 handoff shape
+
+O5+O7 (flat enumeration + op-bound, BRIDGE attack order item 7, «the
+mountain» ~18–35k) consume: the O4 finite-circle convergence for the
+checksum's numeric claims (this rung's o4Avg/Riemann/P₀ machinery transfers
+directly), O8's cap/budget accounting pattern (o8Cap/o8_time_bound), and the
+B5 Chebyshev chain. Source: OpenAI §5 (flat enumeration) + Base §5 context.
+The named-boundary pattern (procedure = named, arithmetic = proved) is now
+established across B1–B5, O4, O8 — O5's statement work should open with the
+same ledger table.

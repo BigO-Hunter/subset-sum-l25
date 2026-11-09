@@ -599,5 +599,24 @@ rows.
   guards: `P = 0` on `o4Avg` (guarded by `0 < P` on consumers), the division
   in `o4P₀` (guarded by `C < T`), all `q/w` divisions in `o4_gibbs` (guarded
   by strict positivity — the paper's `K_x` is a strictly positive density).
-* M1 sorries: 6, exactly the six theorems (`o4Avg`, `o4P₀` are defs), build
-  green at 8924 jobs.
+* **M2 status (2026-11-08): ALL PROVED.** `Proofs/O4.lean` is the
+  statement-of-record; `Statements/O4.lean` holds quotes only. Receipts,
+  freshly measured: all six `[propext, Classical.choice, Quot.sound]`.
+  Build green, 8951 jobs; package sorries 2 (the pre-existing L2.5 pair
+  only).
+* **M2 statement corrections (the hn07 pattern, disclosed):**
+  1. The quotient-boundedness pair as stated at M1 was FALSE: `num/den ≤ N/d`
+     needs the denominator lower bound `d ≤ den` (not `≤` flipped), plus
+     `0 < d` as an explicit hypothesis (correction 3: `d ≤ den` with
+     `0 < den` does NOT give `0 < d`); the dual `o4_le_div` likewise takes
+     `den ≤ D`. The corrected pair is exactly the paper's `K_x = f·g/Q` use.
+  2. `o4_avg_err_le`'s Lipschitz hypothesis absorbs the paper's derivative
+     bound (`B` named); `o4_finite_from_continuous` keeps `C`/`T` as
+     parameters — (3.7)'s numerals never enter.
+* **New pin gotchas (cost failed builds):** `∫ x in a..b, H x - c` parses
+  the subtraction INSIDE the integral body — parenthesize `(∫ …)` before
+  subtracting (bit twice); `Finset.sum_le_sum` with a `?_` body fails to
+  synthesize the implicit `g` — pre-type the per-element proof as a `have`;
+  `Real.log_div` takes `≠ 0` (not `0 <`); `norm_integral_le_of_norm_le_const`
+  takes `uIoc` membership and concludes `C * |b - a|`; `neg_le_abs_self` is
+  absent — derive via `le_abs_self (-a)` + `abs_neg` + linarith.
