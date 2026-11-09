@@ -82,7 +82,7 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
   have hr1 : 1 < r := Real.one_lt_rpow (by norm_num) (by positivity)
   set q : ℝ := Real.sqrt r with hq
   have hqpos : 0 ≤ q := Real.sqrt_nonneg r
-  have hqq : q * q = r := Real.mul_self_sqrt (le_of_lt hr1)
+  have hqq : q * q = r := Real.mul_self_sqrt (by linarith)
   have hq1 : (1:ℝ) < q := by nlinarith [hqq, hr1, hqpos]
   have hlogq : 0 < Real.log q := Real.log_pos hq1
   have hsqrt1 : (1:ℝ) < Real.sqrt q := by
@@ -97,7 +97,7 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
     have hnpos : (4:ℝ) ≤ (n:ℝ) := by exact_mod_cast h4n
     have hge : ((8:ℝ)/δ)^2 ≤ (n:ℝ) := by
       have h1 : ((8:ℝ)/δ)^2 < ((n₂:ℕ) : ℝ) := hn₂
-      have h2 : ((n₂:ℕ) : ℝ) ≤ (n:ℝ) := by exact_mod_cast (le_trans (Nat.le_succ n₂) hn)
+      have h2 : ((n₂:ℕ) : ℝ) ≤ (n:ℝ) := by exact_mod_cast (by omega : (n₂:ℕ) ≤ n)
       linarith
     have hsqrt8 : (8:ℝ)/δ ≤ Real.sqrt (n:ℝ) := Real.le_sqrt_of_sq_le hge
     have hs2 : (2:ℝ) ≤ Real.sqrt (n:ℝ) := Real.le_sqrt_of_sq_le (by linarith)
@@ -106,9 +106,9 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
       rw [div_le_iff₀ hnδ] at h1
       linarith
     have hprod : (8:ℝ) * Real.sqrt (n:ℝ) ≤ δ * ((Real.sqrt (n:ℝ)) * Real.sqrt (n:ℝ)) := by
-      refine mul_le_mul_of_nonneg_right h8 (le_of_lt hnpos)
+      refine mul_le_mul_of_nonneg_right h8 (Real.sqrt_nonneg n)
     rw [mul_assoc δ (Real.sqrt (n:ℝ)) (Real.sqrt (n:ℝ)),
-        Real.mul_self_sqrt hnpos.le] at hprod
+        Real.mul_self_sqrt (by exact_mod_cast h4n)] at hprod
     have hs2' : (2:ℝ) + 2 * Real.sqrt (n:ℝ) ≤ (4:ℝ) * Real.sqrt (n:ℝ) := by nlinarith
     refine Real.rpow_le_rpow_of_exponent_le (by norm_num) ?_
     linarith [hprod, hs2']
@@ -150,12 +150,15 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
         have hkN : N ≤ k := by omega
         have hks := hstep k hkN
         rw [Nat.cast_add, Nat.cast_one]
-        calc c * (((k:ℕ) : ℝ) + 2) ^ 2 ≤ q * (c * (((k:ℕ) : ℝ) + 1) ^ 2) := hks
+        calc c * (((k:ℕ) : ℝ) + 2) ^ 2 ≤ c * (q * (((k:ℕ) : ℝ) + 1) ^ 2) := by
+              exact mul_le_mul_of_nonneg_left hks (le_of_lt hc0)
+          _ = q * (c * (((k:ℕ) : ℝ) + 1) ^ 2) := by ring
           _ ≤ q * (A * q ^ (k:ℕ)) := mul_le_mul_of_nonneg_left ihk (le_of_lt hqpos)
           _ = A * q ^ ((k:ℕ) + 1) := by
               rw [pow_succ]
               ring
     -- absorb A via the log threshold: A ≤ q^n for large n
+    have hnN : N ≤ n := le_trans (le_max_left _ _) hn
     obtain ⟨N₃, hN₃⟩ := exists_nat_gt (Real.log A / Real.log q)
     have hA : A ≤ q ^ (n:ℕ) := by
       have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
