@@ -108,13 +108,18 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
     have hprod : (8:ℝ) * Real.sqrt (n:ℝ) ≤ δ * (n:ℝ) := by
       have h1 : (8:ℝ) * Real.sqrt (n:ℝ) ≤ (δ * Real.sqrt (n:ℝ)) * Real.sqrt (n:ℝ) := by
         exact mul_le_mul_of_nonneg_right h8 (Real.sqrt_nonneg n)
-      rw [mul_assoc, Real.mul_self_sqrt (Real.sqrt_nonneg (n:ℝ))] at h1
+      rw [mul_assoc, Real.mul_self_sqrt (show (0:ℝ) ≤ (n:ℝ) by linarith)] at h1
       exact h1
     have hs2' : (2:ℝ) + 2 * Real.sqrt (n:ℝ) ≤ (4:ℝ) * Real.sqrt (n:ℝ) := by nlinarith
     refine Real.rpow_le_rpow_of_exponent_le (by norm_num) ?_
+    rw [div_mul_eq_mul_div]
+    linarith [hprod, hs2']
   -- aux 2: the polynomial absorbs — c·(n+1)² ≤ 2^{(δ/2)n} eventually
   rcases eq_or_lt_of_le hc with hc0 | hc0
-  · exact ⟨0, fun n _ => by rw [hc0.symm, zero_mul]; exact Real.rpow_nonneg (by norm_num)⟩
+  · exact ⟨n₀, fun n hn => by
+      have h1 := hops n hn
+      rw [hc0.symm, zero_mul, zero_mul] at h1
+      exact le_trans h1 (Real.rpow_nonneg (by norm_num) _)⟩
   have hc0 : 0 < c := hc0
   -- the ratio threshold: (n+2)² ≤ q(n+1)² past N
   obtain ⟨N, hN⟩ := exists_nat_gt (1 / (Real.sqrt q - 1))
@@ -132,7 +137,7 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
     calc ((n:ℝ) + 2) ^ 2 ≤ (Real.sqrt q * ((n:ℝ) + 1)) ^ 2 :=
           pow_le_pow_left₀ (by positivity) hle 2
       _ = q * ((n:ℝ) + 1) ^ 2 := by
-            rw [mul_pow, pow_two, ← hqq, hq]
+            rw [mul_pow, pow_two, Real.mul_self_sqrt hqpos]
   -- geometric invariant past N: c·(n+1)² ≤ A·q^n, A := c(N+1)²/q^N
   -- (the base is trivially true by div_mul_cancel₀; the step uses the q-ratio)
   set A : ℝ := c * (((N:ℕ) : ℝ) + 1) ^ 2 / q ^ (N:ℕ) with hAdef
@@ -148,57 +153,64 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
     | succ k _ ihk =>
       have hkN : N ≤ k := by omega
       have hks := hstep k hkN
-      rw [Nat.cast_add, Nat.cast_one]
-      calc c * (((k:ℕ) : ℝ) + 2) ^ 2 ≤ c * (q * (((k:ℕ) : ℝ) + 1) ^ 2) := by
-            exact mul_le_mul_of_nonneg_left hks (le_of_lt hc0)
+      rw [pow_succ]
+      have hcast : (((k:ℕ) + 1 : ℕ) : ℝ) + 1 = ((k:ℕ) : ℝ) + 2 := by push_cast; ring
+      rw [hcast]
+      calc c * (((k:ℕ) : ℝ) + 2) ^ 2 ≤ c * (q * (((k:ℕ) : ℝ) + 1) ^ 2) :=
+            mul_le_mul_of_nonneg_left hks (le_of_lt hc0)
         _ = q * (c * (((k:ℕ) : ℝ) + 1) ^ 2) := by ring
         _ ≤ q * (A * q ^ (k:ℕ)) := mul_le_mul_of_nonneg_left ihk hqpos
-        _ = A * q ^ ((k:ℕ) + 1) := by
-            rw [pow_succ]
-            ring
+        _ = A * (q ^ (k:ℕ) * q) := by ring
   -- absorb A via the log threshold: A ≤ q^n for large n
   obtain ⟨N₃, hN₃⟩ := exists_nat_gt (Real.log A / Real.log q)
-  have hA : A ≤ q ^ (n:ℕ) := by
+  have hAabs : ∀ n ≥ N₃, A ≤ q ^ (n:ℕ) := by
+    intro n hn
+    have hq1' : (0:ℝ) < q := by linarith
     have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
-      rw [Real.log_pow (by linarith : (0:ℝ) < q)]
-      have hnpos : (0:ℝ) < (n:ℝ) := by positivity
-      have hdiv : (Real.log A / Real.log q) ≤ (n:ℝ) := by linarith
+      rw [Real.log_pow q n]
+      have h2 : ((N₃:ℕ):ℝ) ≤ ((n:ℕ):ℝ) := by exact_mod_cast hn
+      have hdiv : (Real.log A / Real.log q) ≤ ((n:ℕ):ℝ) := by linarith
       rw [div_le_iff₀ hlogq] at hdiv
       exact hdiv
-    exact (Real.log_le_log_iff hApos (by positivity)).mp h1
+    exact (Real.log_le_log_iff hApos (pow_pos hq1' n)).mp h1
   have hpolyle : ∃ n₃ : ℕ, ∀ n ≥ n₃, c * ((n:ℝ) + 1) ^ 2 ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) := by
-    refine ⟨N, ?_⟩
-    intro n hn
-    have hA : A ≤ q ^ (n:ℕ) := by
-      have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
-        rw [Real.log_pow (by linarith : (0:ℝ) < q)]
-        have hnpos : (0:ℝ) < (n:ℝ) := by positivity
-        have hdiv : (Real.log A / Real.log q) ≤ (n:ℝ) := by linarith
-        rw [div_le_iff₀ hlogq] at hdiv
-        exact hdiv
-      exact (Real.log_le_log_iff hApos hqpos).mp h1
-    have h2 := hinv n hn
+    refine ⟨max N N₃, fun n hn => ?_⟩
+    have hNle : N ≤ n := le_trans (le_max_left N N₃) hn
+    have hN₃le : N₃ ≤ n := le_trans (le_max_right N N₃) hn
+    have hAn := hAabs n hN₃le
+    have h2 := hinv n hNle
     calc c * ((n:ℝ) + 1) ^ 2 ≤ A * q ^ (n:ℕ) := h2
-      _ ≤ q ^ (n:ℕ) * q ^ (n:ℕ) := mul_le_mul_of_nonneg_left hA hqpos
+      _ ≤ q ^ (n:ℕ) * q ^ (n:ℕ) := mul_le_mul_of_nonneg_right hAn (pow_nonneg hqpos n)
       _ = q ^ ((n:ℕ) + (n:ℕ)) := (pow_add q n n).symm
-      _ = q ^ (2 * (n:ℕ)) := by ring_nf
-      _ = r ^ (n:ℕ) := by rw [← pow_mul, hqq]
-      _ = (2:ℝ) ^ ((δ/2) * (n:ℕ)) := by rw [hrdef, Real.rpow_natCast, ← Real.rpow_mul (by norm_num : (0:ℝ) < 2)]
-  -- assemble
+      _ = q ^ (2 * (n:ℕ)) := by rw [two_mul]
+      _ = r ^ (n:ℕ) := by rw [pow_mul, pow_two, hqq, hrdef]
+      _ = (2:ℝ) ^ ((δ/2) * (n:ℝ)) := by rw [Real.rpow_mul_natCast (by norm_num : (0:ℝ) ≤ 2)]
+  -- assemble: past max(n₀, n₄, N₃-threshold) both absorptions hold simultaneously
+  obtain ⟨n₄, hn₄⟩ := hsqrtle
+  obtain ⟨n₅, hn₅⟩ := hpolyle
+  refine ⟨max (max n₀ n₄) n₅, fun n hn => ?_⟩
+  have hn₀ : n₀ ≤ n := le_trans (le_max_left n₀ n₄) (le_trans (le_max_left (max n₀ n₄) n₅) hn)
+  have h₄ := hn₄ n (le_trans (le_max_right n₀ n₄) (le_trans (le_max_left (max n₀ n₄) n₅) hn))
+  have h₅ := hn₅ n (le_trans (le_max_right (max n₀ n₄) n₅) hn)
+  have h2nn : ∀ e : ℝ, (0:ℝ) ≤ (2:ℝ) ^ e := fun e => Real.rpow_nonneg (show (0:ℝ) ≤ 2 by norm_num) e
   have hE : ((τ₀ + 20 * ε) * (n:ℝ) + 2 * Real.sqrt (n:ℝ) + 2)
-      = 2 * Real.sqrt (n:ℝ) + 2 + (τ₀ + 20 * ε) * (n:ℝ) := by ring
-  calc ops n ≤ c * poly n * (2 ^ (2 * Real.sqrt (n:ℝ) + 2) * 2 ^ ((τ₀ + 20 * ε) * (n:ℝ))) := by
-        rw [Real.rpow_add (by norm_num : (0:ℝ) < 2)]
-        exact hops n hn₀
-    _ ≤ c * ((n:ℝ) + 1) ^ 2 * (2 ^ (2 * Real.sqrt (n:ℝ) + 2) * 2 ^ ((τ₀ + 20 * ε) * (n:ℝ))) := by
-        exact mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right (hpoly n)
-          (Real.rpow_nonneg (by norm_num))) hc0
-    _ ≤ ((2:ℝ) ^ ((δ/2) * (n:ℝ)) * 2 ^ ((δ/2) * (n:ℝ))) * 2 ^ ((τ₀ + 20 * ε) * (n:ℝ)) := by
-        exact mul_le_mul_of_nonneg_left (mul_le_mul (hn₃ n hn₃) (hn₂ n hn₂)
-          (by positivity) (by positivity)) (by positivity)
-    _ = (2:ℝ) ^ ((δ/2) * (n:ℝ) + (δ/2) * (n:ℝ) + (τ₀ + 20 * ε) * (n:ℝ)) := by
-        rw [← Real.rpow_add (by norm_num : (0:ℝ) < 2), ← Real.rpow_add (by norm_num : (0:ℝ) < 2)]
-    _ = (2:ℝ) ^ (T' * (n:ℝ)) := by congr 1; rw [hδdef]; ring
-  refine le_trans hbig ?_
-  refine Real.rpow_le_rpow_of_exponent_le (by norm_num) ?_
-  exact_mod_cast le_refl n
+      = (2 * Real.sqrt (n:ℝ) + 2) + (τ₀ + 20 * ε) * (n:ℝ) := by ring
+  calc ops n ≤ c * poly n * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ) + 2 * Real.sqrt (n:ℝ) + 2) :=
+        hops n hn₀
+    _ = c * poly n * ((2:ℝ) ^ (2 * Real.sqrt (n:ℝ) + 2) * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ))) := by
+        rw [hE, Real.rpow_add (by norm_num : (0:ℝ) < 2)]
+    _ ≤ c * ((n:ℝ) + 1) ^ 2 * ((2:ℝ) ^ (2 * Real.sqrt (n:ℝ) + 2) * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ))) :=
+        mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left (hpoly n) hc0.le)
+          (mul_nonneg (h2nn _) (h2nn _))
+    _ ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) * ((2:ℝ) ^ (2 * Real.sqrt (n:ℝ) + 2) * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ))) :=
+        mul_le_mul_of_nonneg_right h₅ (mul_nonneg (h2nn _) (h2nn _))
+    _ ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) * ((2:ℝ) ^ ((δ/2) * (n:ℝ)) * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ))) :=
+        mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right h₄ (h2nn _)) (h2nn _)
+    _ = (2:ℝ) ^ ((δ/2) * (n:ℝ) + ((δ/2) * (n:ℝ) + (τ₀ + 20 * ε) * (n:ℝ))) := by
+        rw [← Real.rpow_add (by norm_num : (0:ℝ) < 2) ((δ/2) * (n:ℝ)) ((τ₀ + 20 * ε) * (n:ℝ)),
+            ← Real.rpow_add (by norm_num : (0:ℝ) < 2) ((δ/2) * (n:ℝ))
+              ((δ/2) * (n:ℝ) + (τ₀ + 20 * ε) * (n:ℝ))]
+    _ = (2:ℝ) ^ (T' * (n:ℝ)) := by
+        congr 1
+        rw [hδdef]
+        ring
