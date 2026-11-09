@@ -238,6 +238,67 @@ theorem strip_prod_eq_one (n : ℕ) (hn : 0 < n) :
   have := mid_factorization_eq_zero n p hp hmid.2 hm.2 hp2
   rw [this, pow_zero]
 
+/-- Step M2c-1 (odd half-exponent): `12 * (2m+1) ≤ 2^(m+1)` for `m ≥ 12`.
+The induction step consumes `2^(k+1) ≥ 24`, which the conditional IH at
+`k ≥ 12` supplies; `k < 12` is decided directly (the statement is false for
+small `k`, so those cases close off the contradictory hypothesis). -/
+theorem twelve_le_odd (m : ℕ) (hm : 12 ≤ m) :
+    12 * (2 * m + 1) ≤ 2 ^ m := by
+  induction m with
+  | zero => exact absurd hm (by omega)
+  | succ k ih =>
+      rcases Nat.lt_or_ge k 12 with hk | hk
+      · interval_cases k <;> first | omega | decide
+      · have h2 : 2 ^ (k + 1) = 2 * 2 ^ k := by rw [Nat.pow_succ']
+        have h3 : 12 * (2 * (k + 1) + 1) = 12 * (2 * k + 1) + 24 := by ring
+        have h4 := ih hk
+        omega
+
+/-- Step M2c-1 (even half-exponent): `12 * (2m+2) ≤ 2^(m+1)` for `m ≥ 12`. -/
+theorem twelve_le_even (m : ℕ) (hm : 12 ≤ m) :
+    12 * (2 * m + 2) ≤ 2 ^ (m + 1) := by
+  induction m with
+  | zero => exact absurd hm (by omega)
+  | succ k ih =>
+      rcases Nat.lt_or_ge k 12 with hk | hk
+      · interval_cases k <;> first | omega | decide
+      · have h2 : 2 ^ (k + 2) = 2 * 2 ^ (k + 1) := by rw [Nat.pow_succ']
+        have h3 : 12 * (2 * (k + 1) + 2) = 12 * (2 * k + 2) + 24 := by ring
+        have h4 := ih hk
+        omega
+
+/-- Step M2c-1: `12 * (L + 1) ≤ 2 ^ ((L + 1) / 2)` for `L ≥ 24` (both parities,
+via `Nat.mod_two_eq_zero_or_one`). -/
+theorem twelve_le_half (L : ℕ) (hL : 24 ≤ L) : 12 * (L + 1) ≤ 2 ^ ((L + 1) / 2) := by
+  rcases Nat.mod_two_eq_zero_or_one L with hp | hp
+  · obtain ⟨m, rfl⟩ : ∃ m, L = 2 * m := ⟨L / 2, by omega⟩
+    have hm : 12 ≤ m := by omega
+    have hdiv : (2 * m + 1) / 2 = m := by omega
+    rw [hdiv]
+    exact twelve_le_odd m hm
+  · obtain ⟨m, rfl⟩ : ∃ m, L = 2 * m + 1 := ⟨L / 2, by omega⟩
+    have hm : 12 ≤ m := by omega
+    have hdiv : (2 * m + 1 + 1) / 2 = m + 1 := by omega
+    have he := twelve_le_even m hm
+    have heq : 12 * (2 * m + 1 + 1) = 12 * (2 * m + 2) := by ring
+    rw [hdiv, heq]
+    exact he
+
+/-- M2c helper: `42 * (L + 2) ≤ 2 ^ L` for `L ≥ 9` — the constant slack the
+final count bound consumes. -/
+theorem two_pow_ge_42_add : ∀ L, 9 ≤ L → 42 * (L + 2) ≤ 2 ^ L := by
+  intro L
+  induction L with
+  | zero => intro h; omega
+  | succ k ih =>
+      intro h
+      rcases Nat.lt_or_ge k 9 with hk | hk
+      · interval_cases k <;> first | omega | decide
+      · have h2 : 2 * 2 ^ k = 2 ^ (k + 1) := by rw [Nat.pow_succ']
+        have h9 := ih hk
+        have hstep : 42 * (k + 1 + 2) = 42 * (k + 2) + 42 := by ring
+        omega
+
 /-- The large factor is the plain product of the primes in `(n, 2n]` (E4). -/
 theorem large_prod_eq (n : ℕ) (hn : 0 < n) :
     ∏ p ∈ largeSet n, p ^ (Nat.choose (n + n) n).factorization p
@@ -267,6 +328,7 @@ theorem small_prod_le (n : ℕ) (hn : 0 < n) :
 theorem mid_prod_le (n : ℕ) (hn : 0 < n) :
     ∏ p ∈ midSet n, p ^ (Nat.choose (n + n) n).factorization p
       ≤ (4 : ℕ) ^ (2 * n / 3) := by
+  classical
   have hstep : ∏ p ∈ midSet n, p ^ (Nat.choose (n + n) n).factorization p
       ≤ ∏ p ∈ midSet n, p := by
     refine Finset.prod_le_prod (fun p hp => ?_)
@@ -289,9 +351,36 @@ theorem mid_prod_le (n : ℕ) (hn : 0 < n) :
       Finset.prod_le_prod_of_subset_of_one_le hsub fun p hp _hp' =>
         Nat.one_le_iff_ne_zero.2 (Nat.ne_of_gt (Finset.mem_filter.1 hp).2.pos)
     have hprim : ∏ p ∈ primesUpTo (2 * n / 3), p ≤ (4 : ℕ) ^ (2 * n / 3) := by
-      sorry  -- M2c tail: θ x = log (∏ primes ≤ x) via theta_eq_sum_primesLE_log
-             -- + Real.log_prod + Real.log_le_log_iff + the Nat.cast bridge;
-             -- the hθle/hppos pieces are verified in the M2c session notes
+      classical
+      have hppos : 0 < ∏ p ∈ primesUpTo (2 * n / 3), p := by
+        refine Finset.prod_pos ?_
+        intro p hp
+        exact Nat.Prime.pos (Finset.mem_filter.1 hp).2
+      have hθle := Chebyshev.theta_le_log4_mul_x
+        (x := ((2 * n / 3 : ℕ) : ℝ)) (by norm_num)
+      rw [Chebyshev.theta_eq_sum_primesLE_log] at hθle
+      have h4log : Real.log ((4:ℝ) ^ (2 * n / 3)) = ((2 * n / 3 : ℕ) : ℝ) * Real.log 4 :=
+        Real.log_pow (4:ℝ) (2 * n / 3)
+      have hlogprod : Real.log ((∏ p ∈ primesUpTo (2 * n / 3), p : ℕ) : ℝ)
+          = ∑ p ∈ primesUpTo (2 * n / 3), Real.log (p : ℝ) := by
+        rw [Nat.cast_prod]
+        exact Real.log_prod (fun p hp => Nat.cast_ne_zero.2
+          (Nat.ne_of_gt (Nat.Prime.pos (Finset.mem_filter.1 hp).2)))
+      have hkey : Real.log ((∏ p ∈ primesUpTo (2 * n / 3), p : ℕ) : ℝ)
+          ≤ Real.log (((4 : ℕ) ^ (2 * n / 3) : ℕ) : ℝ) := by
+        rw [Nat.cast_pow, Nat.cast_ofNat, h4log, hlogprod,
+          mul_comm ((2 * n / 3 : ℕ) : ℝ) (Real.log 4)]
+        exact hθle
+      have hpos2 : (0:ℝ) < ((∏ p ∈ primesUpTo (2 * n / 3), p : ℕ) : ℝ) := by
+        exact_mod_cast hppos
+      have hypos : (0:ℝ) < (((4 : ℕ) ^ (2 * n / 3) : ℕ) : ℝ) := by
+        positivity
+      have hprimr : (∏ p ∈ primesUpTo (2 * n / 3), p : ℕ)
+          ≤ ((4 : ℕ) ^ (2 * n / 3) : ℕ) :=
+        Nat.cast_le.1 (by
+          have h := (Real.log_le_log_iff hpos2 hypos).mp hkey
+          exact_mod_cast h)
+      exact hprimr
     exact le_trans hstep (le_trans hmono hprim)
   exact hmidchain
 
