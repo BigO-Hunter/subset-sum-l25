@@ -289,8 +289,9 @@ theorem mid_prod_le (n : ℕ) (hn : 0 < n) :
       Finset.prod_le_prod_of_subset_of_one_le hsub fun p hp _hp' =>
         Nat.one_le_iff_ne_zero.2 (Nat.ne_of_gt (Finset.mem_filter.1 hp).2.pos)
     have hprim : ∏ p ∈ primesUpTo (2 * n / 3), p ≤ (4 : ℕ) ^ (2 * n / 3) := by
-      sorry  -- M2c tail: θ x = log (primorial ⌊x⌋₊) (theta_eq_log_primorial at
-             -- x = (2*n/3 : ℕ)) + theta_le_log4_mul_x + the log-cast bridge
+      sorry  -- M2c tail: θ x = log (∏ primes ≤ x) via theta_eq_sum_primesLE_log
+             -- + Real.log_prod + Real.log_le_log_iff + the Nat.cast bridge;
+             -- the hθle/hppos pieces are verified in the M2c session notes
     exact le_trans hstep (le_trans hmono hprim)
   exact hmidchain
 
