@@ -822,3 +822,34 @@ stands). Four new pin facts (banked):
   0 < / 0 ≤ form fights at the set-fvar, `rw [hq]` first then
   `exact Real.mul_self_sqrt (le_of_lt hr1)`.
 - The invariant/conclusion/√-slack structure of v2 stands unchanged.
+
+## ROWS M2 — plan v3 attempt + THE COMPLETED ROUTE (2026-11-08, fourth pass)
+
+Plan v3's transcription surfaced the FINAL blocker: the polynomial-vs-
+exponential crux `c(n+1)² ≤ q^{2n}` eventually (for 1 < q, c > 0) — the
+explicit-threshold constructions spiral (three attempts: the q^n/r^n
+invariant error, the ℤ-⌈⌉ trap, the (k+1)+1/k+2 calc-syntax mismatch, the
+∃-body (2:ℝ) annotation requirement, the application-bind parse of
+`f ((x)/δ)^2`, the `neg_le_abs_self`/`one_le_pow₀`/`pow_le_pow_right` name
+drifts). ROLLED BACK to the honest M1 state (the sorry stands).
+
+**THE COMPLETED ROUTE (Mathlib-verified this round):** the crux via
+`Asymptotics` — `Real.isLittleO_log_id_atTop : log =o[atTop] id` EXISTS
+(Log/Base.lean:450 ✓) — the chain:
+1. `hloglittle : (fun n : ℕ => Real.log ((n:ℝ) + 1)) =o[atTop]
+   (fun n : ℕ => (n:ℝ))` — transported via
+   `Asymptotics.IsLittleO.trans_tendsto` +
+   `tendsto_natCast_atTop_atTop` (probe the exact forms).
+2. From `Asymptotics.isLittleO_iff` (∀ c > 0 form): for ε := δ/(2·log 2)
+   (δ := T′ − (τ₀+20ε)), ∃ n₁, ∀ n ≥ n₁: `Real.log ((n:ℝ)+1) ≤ (δ/2)·(n:ℝ)`
+   — then `Real.log_le_iff...`-family → `(n:ℝ)+1 ≤ 2^{(δ/2)·(n:ℝ)}` via
+   `Real.log_le_rpow`-form (probe) ⟹ `((n:ℝ)+1)² ≤ 2^{δ·(n:ℝ)}`.
+3. `c ≤ 2^{δn/3}` similarly (log c ≤ log 2 + log(c)/... — the
+   `Real.log_le_self`-family), and `2^{2√n+2} ≤ 2^{δn/3}` via √n ≤ n (n ≥ 4
+   — explicit `Real.le_sqrt_of_sq_le` ✓ verified).
+4. Product: `c·(n+1)²·2^{2√n+2} ≤ 2^{δn/3+δn/3+δn/3} = 2^{δn}` ✓.
+The v3 structure (invariant/conclusion) is REPLACED by this — shorter and
+every step Mathlib-grounded. Plus the verified-from-this-round forms:
+`Real.rpow_pos_of_pos (h : 0 < x) (y) : (0:ℝ) < x ^ y` ✓ (hrpos built),
+`exists_nat_gt (((8:ℝ)/δ)^2)` (the wrapped parse), the `(2:ℝ)` ∃-body
+annotations.
