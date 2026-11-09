@@ -739,28 +739,62 @@ Landed on wip-hcount (not yet merged to main):
 
 ## Build receipts
 * M2a: green 8927 jobs. M2b: green 8927 jobs. M2b-fix: green 8927 jobs.
-* Package sorries: Statements 2 (the M2c targets), Proofs 1 (hprim tail).
-* Axioms freshly measured (M2c session): central_four_split and
-  mid_factorization_eq_zero on [propext, Classical.choice, Quot.sound]
-  (house triple ✓); mid_prod_le carries sorryAx for the named hprim tail.
+  M2c: green 8928 jobs (module target) / FULL PACKAGE green 8956 jobs
+  (umbrella `SubsetSumL25` built).
+* Package sorries: **0** (Statements 0, Proofs 0 — the entire ladder is
+  sorry-free; grep of `sorry` in SubsetSumL25/ hits only prose comments
+  about the M1 placeholders).
+* Axioms freshly measured (M2c closure, /tmp/axioms_m2c.lean):
+  - `erdos_dyadic_primes`: [propext, Classical.choice, Quot.sound] ✓
+  - `L2_5_prime_collision_unconditional`: [propext, Classical.choice,
+    Quot.sound] ✓
+  - `mid_prod_le`: [propext, Classical.choice, Quot.sound] ✓ (the hprim
+    sorryAx tail is GONE — fully proved)
+  - `central_four_split`: house triple ✓
+  - `twelve_le_half`, `two_pow_ge_42_add`: [propext, Quot.sound] ✓
+  - `L2_5_prime_collision`: house triple ✓
 
-## M2c state (post M2b-fix, for the next session)
-The hprim block inside mid_prod_le: the hppos, hmono, hsub, hstep pieces
-are PROVED. The remaining piece is ONLY the log-cast bridge:
-  θ (2*n/3) = ∑ p ∈ primesLE (2*n/3), log p   [theta_eq_sum_primesLE_log
-  — the primesLE n = primesUpTo n defeq verified]
-  ≤ log 4 * ↑(2*n/3)                            [theta_le_log4_mul_x]
-bridged to ∏ p ∈ primesUpTo (2*n/3), p ≤ 4^(2*n/3) via Real.log_prod
-(h : ∀ x ∈ s, f x ≠ 0 — the ≠-form, NOT 0<) + Real.log_le_log_iff + the
-Nat.cast_ne_zero / Nat.cast_prod / Nat.cast_pow cast-chain. The verified
-hlogprod (Nat.cast_prod + Real.log_prod with cast_ne_zero) and h4log
-(Real.log_pow (4:ℝ) (2*n/3)) pieces are in the git history at 187:43's
-pre-revert state (commit range a8b4541^..8719a64's successor experiments)
-— the next session can recover them from the reflog of the wip-hcount
-branch (the exact hlogprod/h4log/hkey/hpos2/hypos/hprimr block was
-elaborating with only ONE goal left: the IFF-slot cast-bridge).
+## M2c CLOSED (this session) — the `hcount` premise is unconditional
+The three named pieces, all landed on wip-hcount:
+1. **hprim log-bridge (mid_prod_le)**: θ-route via
+   `Chebyshev.theta_eq_sum_primesLE_log` + `theta_le_log4_mul_x`; the
+   product bridge via `Nat.cast_prod` + `Real.log_prod` (hypothesis is the
+   NE-form `f x ≠ 0`, NOT `0 <`) + `Real.log_le_log_iff` at HOISTED typed
+   hypotheses (hpos2/hypos BEFORE the iff) + the final
+   `Nat.cast_le.1 ... exact_mod_cast` bridge. Probes that kept failing:
+   `Real.log_le_iff` (doesn't exist), `Real.log_pow` signature is (x)(n)
+   with NO hypothesis — the `(by norm_num)` hx-form leaves a dangling ℝ-mvar.
+2. **twelve_le exponent lemmas**: `12(L+1) ≤ 2^((L+1)/2)` for L ≥ 24 via
+   twelve_le_odd (`12(2m+1) ≤ 2^m`, m ≥ 12) + twelve_le_even (`12(2m+2) ≤
+   2^(m+1)`, m ≥ 12), induction with conditional IH + `interval_cases`
+   for the small cases (`first | omega | decide` — decide alone fails on
+   contradictory contexts). NOTE: the draft's `have hkm : 12 ≤ k := by
+   omega` was UNSOUND (12 ≤ k+1 only gives 11 ≤ k) — the case split is
+   load-bearing. Plus `two_pow_ge_42_add : 42(L+2) ≤ 2^L` for L ≥ 9.
+3. **Assembly `erdos_dyadic_primes`** (c₀ = 1/12, L₀ = 24): full Erdős
+   accounting in ℕ-exponent form —
+   `central_four_split` → strip = 1 → small ≤ (2n)^{c_small} with
+   c_small ≤ 3·2^{(L+1)/2} (smallSet ⊆ range(√(2n)+1), √(2n) ≤ 2^{(L+2)/2}
+   ≤ 2·2^{(L+1)/2}) → (L+1)·c_small ≤ n/2 (from 12(L+1) ≤ 2^{(L+1)/2} times
+   2^{(L+1)/2}) → mid ≤ 4^{2n/3} → largeSet ⊆ primesInterval L (endpoints
+   n = 2^L and 2n = 2^{L+1} not prime: `Nat.not_prime_mul`) →
+   large ≤ (2n)^k → `2^(2n) ≤ 2^((L+2)+((L+1)(c_small+k)+2(2n/3)))` via
+   pow-injectivity → omega (with 42(L+2) ≤ n) gives `n ≤ 7(L+1)k` →
+   `n ≤ 12·L·k` (7(L+1) ≤ 12L for L ≥ 2) → cast to ℝ.
+   E1 in ℕ form (hbb2) re-derived from the row-sum argument directly
+   (Nat.sum_range_choose + choose_le_middle) — the cast-injection of the
+   real-form central_binom_big kept stalling typeclass resolution.
+4. **Corollary `L2_5_prime_collision_unconditional`**: obtain the witnesses
+   from erdos_dyadic_primes, feed `L2_5_prime_collision c₀ hc₀ (max L₀ 1)`
+   (L* = max L₀ 1 so 0 < L is derivable for the hpos premise), done in one
+   refine + two lines.
 
-## Gotchas banked (M2b)
+**Verdict: `hcount` CLOSED.** O3 (`L2_5_prime_collision`) and O6 (L5.2) now
+run on unconditional number theory — the last named premise of the O-cluster
+is discharged. The cluster's remaining named condition is V1 (jv1000 sine
+extension, O4's machinery, ~1–2k lines per BRIDGE.md).
+
+## Gotchas banked (M2b)## Gotchas banked (M2b)
 * Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
   level goes through Finset.mem_filter.1 (the And-projections are safe).
 * Nat.cast_pos vs Nat.cast_ne_zero: Real.log_prod's hypothesis is the

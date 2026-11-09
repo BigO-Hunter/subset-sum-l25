@@ -40,7 +40,9 @@ K = 1/c₀, L* = L₀, so the existence theorem below instantiates it (and the
 L5.2 union bound, which consumes L2.5's statement) unconditionally — the
 corollary `L2_5_prime_collision_unconditional` is the closed artifact.
 
-`sorry`: E3–E7 are M1 placeholders — proof target `Proofs/PrimeCount.lean` (M2).
+E3–E7 are PROVED in `Proofs/PrimeCount.lean` (M2a+M2b+M2c): the accounting
+split is closed and `erdos_dyadic_primes` / `L2_5_prime_collision_unconditional`
+live there too (they must not be redeclared here — Proofs imports this file).
 -/
 import SubsetSumL25.Statements.Defs
 import SubsetSumL25.Statements.PrimeCollision
@@ -105,22 +107,5 @@ theorem prime_divides_central_binom (n p : ℕ) (hp : p.Prime) (hn : n < p)
     simp only [Finset.filter_singleton, pow_one, Nat.mod_eq_of_lt hn]
     rw [if_pos (by omega), Finset.card_singleton]
   exact Nat.dvd_of_factorization_pos (by rw [hfac]; simp)
-
-/-- E6/E7 (the hcount premise): the dyadic interval `[2^L, 2^{L+1})` holds
-≥ `c₀·2^L/L` primes for all large `L`, for some absolute `0 < c₀` and `L₀`. -/
-theorem erdos_dyadic_primes :
-    ∃ (c₀ : ℝ) (L₀ : ℕ), 0 < c₀ ∧ ∀ L, L₀ ≤ L →
-      c₀ * (2 : ℝ) ^ L / L ≤ ((primesInterval L).card : ℝ) := by
-  sorry
-
-/-- Discharge: the collision bound O3 without the `hcount`/`hpos` hypotheses —
-`erdos_dyadic_primes` supplies the witnesses (K = 1/c₀, L* = L₀), so O3 and the
-L5.2 union bound become unconditional number theory. -/
-theorem L2_5_prime_collision_unconditional :
-    ∃ (K : ℝ) (Lstar : ℕ), 0 < K ∧ ∀ L, Lstar ≤ L → ∀ (D : ℤ) (B : ℕ),
-      D ≠ 0 → 1 ≤ B → ((D.natAbs : ℝ) < (2 : ℝ) ^ B) →
-      (badPrimes L D : ℝ) / (primesInterval L).card
-        ≤ K * (B : ℝ) * (L : ℝ) / (2 : ℝ) ^ L := by
-  sorry
 
 end SubsetSumL25

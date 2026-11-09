@@ -19,6 +19,7 @@ M2b: the 4-way factorization split
 Credit chain: Base → Bills → us.
 -/
 import SubsetSumL25.Statements.PrimeCount
+import SubsetSumL25.Proofs.PrimeCollision
 
 namespace SubsetSumL25
 
@@ -383,5 +384,250 @@ theorem mid_prod_le (n : ℕ) (hn : 0 < n) :
       exact hprimr
     exact le_trans hstep (le_trans hmono hprim)
   exact hmidchain
+
+/-! ### M2c — the assembly (E6/E7) -/
+
+/-- M2c assembly (E6/E7, the `hcount` premise): Erdos's binomial accounting
+specialized to the dyadic interval. Chain (n = 2^L ≥ 2^24):
+`4^n/(2n+1) ≤ C(2n,n) = P_small·P_mid·P_large` (the strip is 1, E3);
+`P_small ≤ (2n)^{c_small}` with `c_small ≤ 3·2^{(L+1)/2}` and `12(L+1) ≤
+2^{(L+1)/2}` (`twelve_le_half`), so the small primes eat at most half the
+2-exponent budget; `P_mid ≤ 4^{2n/3}` (Chebyshev's θ); `P_large = ∏_{n<p≤2n} p
+≤ (2n)^k` with `k = (primesInterval L).card` (the sets differ only at the
+non-prime endpoints `n = 2^L`, `2n = 2^{L+1}`). Injectivity of `2^·` turns
+the product inequality into an exponent inequality; `omega` with the
+`42·(L+2) ≤ 2^L` slack finishes at `c₀ = 1/12`, `L₀ = 24`. -/
+theorem erdos_dyadic_primes :
+    ∃ (c₀ : ℝ) (L₀ : ℕ), 0 < c₀ ∧ ∀ L, L₀ ≤ L →
+      c₀ * (2 : ℝ) ^ L / L ≤ ((primesInterval L).card : ℝ) := by
+  refine ⟨1 / 12, 24, by norm_num, ?_⟩
+  intro L hL
+  have hL1 : 0 < L := by omega
+  set k := (primesInterval L).card with hk_def
+  set n := 2 ^ L with hn_def
+  have hn0 : 0 < n := Nat.two_pow_pos L
+  have h2A : 2 ^ (L + 1) = 2 * n := by rw [hn_def, Nat.pow_succ]; ring
+  -- the small-prime share: (L+1)·c_small ≤ n/2 via 12(L+1) ≤ 2^((L+1)/2)
+  have hY1 : 12 * (L + 1) ≤ 2 ^ ((L + 1) / 2) := twelve_le_half L hL
+  have hYsq : (2 ^ ((L + 1) / 2)) ^ 2 ≤ 2 * n := by
+    have e1 : (2 ^ ((L + 1) / 2)) ^ 2 = 2 ^ (((L + 1) / 2) * 2) :=
+      (Nat.pow_mul 2 ((L + 1) / 2) 2).symm
+    have e2 : ((L + 1) / 2) * 2 ≤ L + 1 := by omega
+    calc (2 ^ ((L + 1) / 2)) ^ 2 = 2 ^ (((L + 1) / 2) * 2) := e1
+      _ ≤ 2 ^ (L + 1) := Nat.pow_le_pow_right (by norm_num) e2
+      _ = 2 * n := h2A
+  have hVY : 2 ^ ((L + 2) / 2) ≤ 2 * 2 ^ ((L + 1) / 2) := by
+    have e1 : (L + 2) / 2 ≤ (L + 1) / 2 + 1 := by omega
+    calc 2 ^ ((L + 2) / 2) ≤ 2 ^ ((L + 1) / 2 + 1) := Nat.pow_le_pow_right (by norm_num) e1
+      _ = 2 * 2 ^ ((L + 1) / 2) := by rw [Nat.pow_succ]; ring
+  have hsqrtV : Nat.sqrt (2 * n) ≤ 2 ^ ((L + 2) / 2) := by
+    have e1 : ((L + 2) / 2) * 2 ≤ L + 2 := by omega
+    have e2 : (2 ^ ((L + 2) / 2)) ^ 2 = 2 ^ (((L + 2) / 2) * 2) :=
+      (Nat.pow_mul 2 ((L + 2) / 2) 2).symm
+    have e4 : 2 * n ≤ (2 ^ ((L + 2) / 2)) ^ 2 := by
+      calc 2 * n = 2 ^ (L + 1) := h2A.symm
+        _ ≤ 2 ^ (((L + 2) / 2) * 2) := Nat.pow_le_pow_right (by norm_num) (by omega)
+        _ = (2 ^ ((L + 2) / 2)) ^ 2 := e2.symm
+    by_contra hcon
+    push_neg at hcon
+    have hsq : (2 ^ ((L + 2) / 2)) ^ 2 < 2 * n := by
+      have h5 := Nat.sqrt_le' (2 * n)
+      have h8 : (2 ^ ((L + 2) / 2)) ^ 2 < (Nat.sqrt (2 * n)) ^ 2 :=
+        Nat.pow_lt_pow_left hcon (by norm_num)
+      calc (2 ^ ((L + 2) / 2)) ^ 2 < (Nat.sqrt (2 * n)) ^ 2 := h8
+        _ ≤ 2 * n := h5
+    omega
+  have hcardS : (smallSet n).card ≤ 3 * 2 ^ ((L + 1) / 2) := by
+    have e0 : smallSet n ⊆ Finset.range (Nat.sqrt (2 * n) + 1) := by
+      intro p hmem
+      have hm := Finset.mem_filter.1 hmem
+      exact Finset.mem_range.2 (by omega)
+    have e1 := Finset.card_le_card e0
+    rw [Finset.card_range] at e1
+    omega
+  have f2 : (L + 1) * (smallSet n).card * 4 ≤ 2 * n := by
+    have t1 : (L + 1) * (smallSet n).card ≤ 3 * ((L + 1) * 2 ^ ((L + 1) / 2)) := by
+      have h := Nat.mul_le_mul_right (L + 1) hcardS
+      calc (L + 1) * (smallSet n).card = (smallSet n).card * (L + 1) := Nat.mul_comm _ _
+        _ ≤ 3 * 2 ^ ((L + 1) / 2) * (L + 1) := h
+        _ = 3 * ((L + 1) * 2 ^ ((L + 1) / 2)) := by ring
+    have t2 : 12 * ((L + 1) * 2 ^ ((L + 1) / 2))
+        ≤ 2 ^ ((L + 1) / 2) * 2 ^ ((L + 1) / 2) := by
+      have h := Nat.mul_le_mul hY1 (Nat.le_refl (2 ^ ((L + 1) / 2)))
+      calc 12 * ((L + 1) * 2 ^ ((L + 1) / 2)) = (12 * (L + 1)) * 2 ^ ((L + 1) / 2) := by ring
+        _ ≤ 2 ^ ((L + 1) / 2) * 2 ^ ((L + 1) / 2) := h
+    calc (L + 1) * (smallSet n).card * 4 = 4 * ((L + 1) * (smallSet n).card) := by ring
+      _ ≤ 4 * (3 * ((L + 1) * 2 ^ ((L + 1) / 2))) := Nat.mul_le_mul_left _ t1
+      _ = 12 * ((L + 1) * 2 ^ ((L + 1) / 2)) := by ring
+      _ ≤ 2 ^ ((L + 1) / 2) * 2 ^ ((L + 1) / 2) := t2
+      _ = (2 ^ ((L + 1) / 2)) ^ 2 := (pow_two _).symm
+      _ ≤ 2 * n := hYsq
+  -- the four-way accounting chain, in ℕ
+  have hsplit := central_four_split n hn0
+  rw [strip_prod_eq_one n hn0, one_mul] at hsplit
+  rw [large_prod_eq n hn0] at hsplit
+  -- hsplit : C = P_small * (P_mid * ∏ largeSet p)
+  have hb1 := small_prod_le n hn0
+  have hb2 := mid_prod_le n hn0
+  have hch : Nat.choose (n + n) n = Nat.choose (2 * n) n := by
+    rw [show n + n = 2 * n from by ring]
+  rw [hch] at hsplit hb1 hb2
+  have hlarge_le2n : ∀ p ∈ largeSet n, p ≤ 2 * n := by
+    intro p hmem
+    have hm := Finset.mem_filter.1 hmem
+    have hm2 := Finset.mem_filter.1 hm.1
+    have hm3 := Finset.mem_filter.1 hm2.1
+    exact Nat.le_of_lt_succ (Finset.mem_range.1 (Finset.mem_filter.1 hm3.1).1)
+  have hb3 : ∏ p ∈ largeSet n, p ≤ (2 * n) ^ (largeSet n).card :=
+    Finset.prod_le_pow_card _ _ _ hlarge_le2n
+  have hsub : largeSet n ⊆ primesInterval L := by
+    intro p hmem
+    have hm := Finset.mem_filter.1 hmem
+    have hnlt : n < p := hm.2
+    have hprime : p.Prime :=
+      (Finset.mem_filter.1 (Finset.mem_filter.1 (Finset.mem_filter.1 hm.1).1).1).2
+    have hle : p ≤ 2 * n := hlarge_le2n p hmem
+    have h2ge2 : (2:ℕ) ≤ 2 ^ L := by
+      calc (2:ℕ) = 2 ^ 1 := rfl
+        _ ≤ 2 ^ L := Nat.pow_le_pow_right (by norm_num) (by omega)
+    have hnot2n : ¬(2 * n).Prime := by
+      have e1 : 2 * n = 2 * 2 ^ L := by rw [← h2A, Nat.pow_succ]
+      rw [e1]
+      exact Nat.not_prime_mul (by norm_num) (by have := h2ge2; omega)
+    have hlt : p < 2 * n := by
+      rcases Nat.lt_or_ge p (2 * n) with h | h
+      · exact h
+      · have hEq : p = 2 * n := le_antisymm hle h
+        exact absurd (hEq ▸ hprime) hnot2n
+    simp only [primesInterval, Finset.mem_filter, Finset.mem_Ico]
+    rw [h2A]
+    refine ⟨⟨?_, hlt⟩, hprime⟩
+    first
+      | exact hnlt.le
+      | (rw [← hn_def]; exact hnlt.le)
+  have hcl : (largeSet n).card ≤ k := Finset.card_le_card hsub
+  have hb34 : ∏ p ∈ largeSet n, p ≤ (2 * n) ^ k := by
+    refine le_trans hb3 ?_
+    exact Nat.pow_le_pow_right (by omega) hcl
+  have hchain : Nat.choose (2 * n) n
+      ≤ (2 * n) ^ (smallSet n).card * ((4 : ℕ) ^ (2 * n / 3) * (2 * n) ^ k) := by
+    calc Nat.choose (2 * n) n
+        = (∏ p ∈ smallSet n, p ^ (Nat.choose (2 * n) n).factorization p)
+            * ((∏ p ∈ midSet n, p ^ (Nat.choose (2 * n) n).factorization p)
+            * (∏ p ∈ largeSet n, p)) := hsplit
+      _ ≤ (2 * n) ^ (smallSet n).card
+            * ((∏ p ∈ midSet n, p ^ (Nat.choose (2 * n) n).factorization p)
+            * (∏ p ∈ largeSet n, p)) := Nat.mul_le_mul_right _ hb1
+      _ ≤ (2 * n) ^ (smallSet n).card
+            * ((4 : ℕ) ^ (2 * n / 3) * (∏ p ∈ largeSet n, p)) :=
+            Nat.mul_le_mul_left _ (Nat.mul_le_mul_right _ hb2)
+      _ ≤ (2 * n) ^ (smallSet n).card * ((4 : ℕ) ^ (2 * n / 3) * (2 * n) ^ k) :=
+            Nat.mul_le_mul_left _ (Nat.mul_le_mul_left _ hb34)
+  -- E1's ℕ-core: the row-sum argument directly (central_binom_big is its
+  -- real-form shadow; here we stay in ℕ to avoid cast bridges)
+  have hbb2 : ((4:ℕ) ^ n : ℕ) ≤ (2 * n + 1) * (Nat.choose (2 * n) n) := by
+    have hle : ∀ k ∈ Finset.range (2 * n + 1), Nat.choose (2 * n) k ≤ Nat.choose (2 * n) n :=
+      fun k _ => by
+        have h := Nat.choose_le_middle k (2 * n)
+        rwa [Nat.mul_div_cancel_left _ (show (0:ℕ) < 2 by norm_num)] at h
+    have hsum : (2:ℕ) ^ (2 * n) ≤ (2 * n + 1) * Nat.choose (2 * n) n := by
+      have h1 : ∑ k ∈ Finset.range (2 * n + 1), Nat.choose (2 * n) k = 2 ^ (2 * n) :=
+        Nat.sum_range_choose (2 * n)
+      calc (2:ℕ) ^ (2 * n) = ∑ k ∈ Finset.range (2 * n + 1), Nat.choose (2 * n) k := h1.symm
+        _ ≤ ∑ _k ∈ Finset.range (2 * n + 1), Nat.choose (2 * n) n :=
+            Finset.sum_le_sum fun k hk => hle k hk
+        _ = (2 * n + 1) * Nat.choose (2 * n) n := by
+            rw [Finset.sum_const, smul_eq_mul]; simp
+    have hp4 : ((4:ℕ) ^ n : ℕ) = (2:ℕ) ^ (2 * n) := by
+      rw [show (4:ℕ) = 2 ^ 2 from rfl, Nat.pow_mul]
+    rw [hp4]
+    exact hsum
+  have hnat : ((4:ℕ) ^ n : ℕ) ≤ (2 * n + 1)
+      * ((2 * n) ^ (smallSet n).card * ((4 : ℕ) ^ (2 * n / 3) * (2 * n) ^ k)) := by
+    calc ((4:ℕ) ^ n : ℕ) ≤ (2 * n + 1) * (Nat.choose (2 * n) n) := hbb2
+      _ ≤ (2 * n + 1) * ((2 * n) ^ (smallSet n).card
+            * ((4 : ℕ) ^ (2 * n / 3) * (2 * n) ^ k)) :=
+            Nat.mul_le_mul_left _ hchain
+  -- powers of two
+  have hpow4 : ((4:ℕ) ^ n : ℕ) = 2 ^ (2 * n) := by
+    rw [Nat.pow_mul]
+  have hterm : (2 * n) ^ (smallSet n).card * ((4 : ℕ) ^ (2 * n / 3) * (2 * n) ^ k)
+      = 2 ^ ((L + 1) * ((smallSet n).card + k) + 2 * (2 * n / 3)) := by
+    have e1 : (2 * n) ^ (smallSet n).card = 2 ^ ((L + 1) * (smallSet n).card) := by
+      rw [← h2A, ← Nat.pow_mul]
+    have e2 : (2 * n) ^ k = 2 ^ ((L + 1) * k) := by
+      rw [← h2A, ← Nat.pow_mul]
+    have e3 : (4 : ℕ) ^ (2 * n / 3) = 2 ^ (2 * (2 * n / 3)) := by
+      have h4 : (4 : ℕ) = 2 ^ 2 := rfl
+      rw [h4, ← Nat.pow_mul]
+    rw [e1, e2, e3, ← Nat.pow_add, ← Nat.pow_add]
+    congr 1
+    ring
+  have hbound : (2 * n + 1) ≤ 2 ^ (L + 2) := by
+    have e1 : 2 ^ (L + 2) = 2 * n * 2 := by rw [Nat.pow_succ, h2A]
+    omega
+  have hexact : 2 ^ (2 * n)
+      ≤ 2 ^ ((L + 2) + ((L + 1) * ((smallSet n).card + k) + 2 * (2 * n / 3))) := by
+    calc 2 ^ (2 * n) = (4:ℕ) ^ n := hpow4.symm
+      _ ≤ (2 * n + 1) * ((2 * n) ^ (smallSet n).card
+            * ((4 : ℕ) ^ (2 * n / 3) * (2 * n) ^ k)) := hnat
+      _ ≤ (2 ^ (L + 2)) * ((2 * n) ^ (smallSet n).card
+            * ((4 : ℕ) ^ (2 * n / 3) * (2 * n) ^ k)) := Nat.mul_le_mul_right _ hbound
+      _ ≤ (2 ^ (L + 2)) * (2 ^ ((L + 1) * ((smallSet n).card + k)
+            + 2 * (2 * n / 3))) := by rw [hterm]
+      _ = 2 ^ ((L + 2) + ((L + 1) * ((smallSet n).card + k) + 2 * (2 * n / 3))) := by
+          rw [← Nat.pow_add (2:ℕ) (L + 2)
+            (((L + 1) * ((smallSet n).card + k) + 2 * (2 * n / 3)))]
+  have hexp : 2 * n ≤ (L + 2) + ((L + 1) * ((smallSet n).card + k) + 2 * (2 * n / 3)) := by
+    rcases Nat.lt_or_ge ((L + 2) + ((L + 1) * ((smallSet n).card + k) + 2 * (2 * n / 3)))
+        (2 * n) with h | h
+    · exact absurd (Nat.pow_lt_pow_right (by norm_num : (1:ℕ) < 2) h)
+        (Nat.not_lt.2 hexact)
+    · exact h
+  -- the count bound
+  have hsplit2 : (L + 1) * ((smallSet n).card + k)
+      = (L + 1) * (smallSet n).card + (L + 1) * k := by ring
+  have hQ : n ≤ 7 * ((L + 1) * k) := by
+    have f3 : 42 * (L + 2) ≤ n := two_pow_ge_42_add L (by omega)
+    omega
+  have hfinal : n ≤ 12 * (L * k) := by
+    calc n ≤ 7 * ((L + 1) * k) := hQ
+      _ = (7 * (L + 1)) * k := by ring
+      _ ≤ (12 * L) * k := Nat.mul_le_mul_right k (by omega)
+      _ = 12 * (L * k) := by ring
+  -- cast into ℝ
+  have hfin2 : ((n : ℕ) : ℝ) ≤ (12:ℝ) * ((L:ℝ) * (k:ℝ)) := by
+    have h : ((n : ℕ) : ℝ) ≤ (((12 * (L * k) : ℕ) : ℝ)) := Nat.cast_le.2 hfinal
+    rw [Nat.cast_mul, Nat.cast_mul, Nat.cast_ofNat] at h
+    exact h
+  have hcastn : ((n : ℕ) : ℝ) = (2 : ℝ) ^ L := by
+    rw [hn_def]
+    exact Nat.cast_pow 2 L
+  rw [hcastn] at hfin2
+  first
+    | rw [div_le_iff₀ (Nat.cast_pos.2 hL1)]
+    | skip
+  have hr : (1:ℝ)/12 * (12 * ((L:ℝ) * (k:ℝ))) = (L:ℝ) * (k:ℝ) := by ring
+  have hr2 : (1:ℝ)/12 * (12 * ((k:ℝ) * (L:ℝ))) = (k:ℝ) * (L:ℝ) := by ring
+  linarith [hfin2, hr, hr2]
+
+/-- The discharge: the collision bound O3 without the `hcount`/`hpos`
+hypotheses — `erdos_dyadic_primes` supplies the witnesses (K = 1/c₀, L* = L₀),
+so O3 and the L5.2 union bound become unconditional number theory. -/
+theorem L2_5_prime_collision_unconditional :
+    ∃ (K : ℝ) (Lstar : ℕ), 0 < K ∧ ∀ L, Lstar ≤ L → ∀ (D : ℤ) (B : ℕ),
+      D ≠ 0 → 1 ≤ B → ((D.natAbs : ℝ) < (2 : ℝ) ^ B) →
+      (badPrimes L D : ℝ) / (primesInterval L).card
+        ≤ K * (B : ℝ) * (L : ℝ) / (2 : ℝ) ^ L := by
+  obtain ⟨c₀, L₀, hc₀, hcount⟩ := erdos_dyadic_primes
+  refine L2_5_prime_collision c₀ hc₀ (max L₀ 1) ?_ ?_
+  · intro L hL
+    exact hcount L (le_trans (Nat.le_max_left L₀ 1) hL)
+  · intro L hL
+    have hL1 : 0 < L := lt_of_lt_of_le (by norm_num) (le_trans (Nat.le_max_right L₀ 1) hL)
+    have h1 : (0:ℝ) < c₀ * (2:ℝ)^L / L :=
+      div_pos (mul_pos hc₀ (by positivity)) (Nat.cast_pos.2 hL1)
+    exact Nat.cast_pos.1 (lt_of_lt_of_le h1
+      (hcount L (le_trans (Nat.le_max_left L₀ 1) hL)))
 
 end SubsetSumL25
