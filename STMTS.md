@@ -711,3 +711,36 @@ deprecated for `ite_eq_left` (warning only, M2 cleans it).
 
 Build receipt: `lake build SubsetSumL25.Statements` green, 8931 jobs,
 2026-11-09; the only package sorries are the two M2 placeholders above.
+
+# PRIMECOUNT M2a+M2b progress (2026-11-09, wip-hcount @ 8719a64)
+
+Landed on wip-hcount (not yet merged to main):
+* **M2a (c0669f4):** E3 zero-carries (`mid_factorization_eq_zero`), E4
+  `large_factorization_eq_one`, `large_product_le` — all PROVED.
+* **M2b (8719a64):** `central_prod_factorization` (C = ∏ p^{v_p} over the
+  primes ≤ 2n), `central_four_split` (the 4-way nested-filter split),
+  `strip_prod_eq_one`, `large_prod_eq`, `small_prod_le`,
+  `mid_prod_le` — all PROVED except the θ/primorial log-bridge tail
+  inside mid_prod_le (the one named WIP sorry in the Proofs file).
+
+## Remaining to close erdos_dyadic_primes (M2c):
+1. `hprim` log-bridge: θ x = log (primorial ⌊x⌋₊) (theta_eq_log_primorial
+   at x = (2*n/3 : ℕ)) + theta_le_log4_mul_x + the Nat.cast_le bridge
+   (primorial ≤ 4^x from the log inequality). The hθ/h4log pieces are
+   already in the file, commented.
+2. The assembly: P_large·P_small·P_mid ≤ C ≤ 4^n ⟹
+   (2n)^{k+c₁} ≥ 4^{n/3}/(2n+1) ⟹ k ≥ ((n/3)·log4 − log(2n+1) −
+   π(√(2n))·log(2n))/log(2n) ≥ c₀·2^L/L for n = 2^L, L ≥ L₀.
+   Suggested constants: c₀ = 1/12, L₀ via exists_nat_gt (~16-20);
+   the √(2^{L+1}) ≤ 2^{L/2+1} bound avoids parity pain.
+3. Then `L2_5_prime_collision_unconditional` = the already-proved
+   `L2_5_prime_collision` instantiated at the witnesses (K = 1/c₀, L* = L₀)
+   — one `obtain` + `exact` away.
+
+## Build receipts
+* M2a: green 8927 jobs. M2b: green 8927 jobs.
+* Package sorries: Statements 2 (the M2c targets), Proofs 1 (hprim tail).
+* Axioms receipts for the new M2a/M2b lemmas: not yet re-measured this
+  session (the #print-axioms probe was SIGTERM-killed mid-import); the
+  module sources use no native_decide and no custom axioms — re-measure
+  on merge.
