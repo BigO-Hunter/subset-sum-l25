@@ -113,87 +113,87 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
     refine Real.rpow_le_rpow_of_exponent_le (by norm_num) ?_
     linarith [hprod, hs2']
   -- aux 2: the polynomial absorbs — c·(n+1)² ≤ 2^{(δ/2)n} eventually
-  have hpolyle : ∃ n₃ : ℕ, ∀ n ≥ n₃, c * ((n:ℝ) + 1) ^ 2 ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) := by
-    rcases eq_or_lt_of_le hc with hc0 | hc0
-    · exact ⟨0, fun n _ => by rw [hc0.symm, zero_mul]; exact Real.rpow_nonneg (by norm_num)⟩
-    have hc0 : 0 < c := hc0
-    -- ratio threshold: (n+2)² ≤ q(n+1)² past N
-    obtain ⟨N, hN⟩ := exists_nat_gt (1 / (Real.sqrt q - 1))
-    have hstep : ∀ n ≥ N, ((n:ℝ) + 2) ^ 2 ≤ q * ((n:ℝ) + 1) ^ 2 := by
-      intro n hn
-      have hNn : ((N:ℕ) : ℝ) ≤ (n:ℝ) := by exact_mod_cast hn
-      have hpos : (0:ℝ) < Real.sqrt q - 1 := by linarith [hsqrt1]
-      have h1 : (1:ℝ) / (Real.sqrt q - 1) ≤ ((n:ℝ) + 1) := by
-        have h2 : (1:ℝ) / (Real.sqrt q - 1) < ((N:ℕ) : ℝ) := hN
-        have h3 : ((N:ℕ) : ℝ) ≤ ((n:ℕ) : ℝ) := by exact_mod_cast hn
-        have h4 : ((N:ℕ) : ℝ) ≤ (n:ℝ) := by exact_mod_cast h3
-        linarith
-      rw [div_le_iff₀ hpos] at h1
-      have hle : ((n:ℝ) + 2) ≤ Real.sqrt q * ((n:ℝ) + 1) := by nlinarith
-      calc ((n:ℝ) + 2) ^ 2 ≤ (Real.sqrt q * ((n:ℝ) + 1)) ^ 2 :=
-            pow_le_pow_left₀ (by positivity) hle 2
-        _ = q * ((n:ℝ) + 1) ^ 2 := by
-              rw [mul_pow, pow_two, ← hqq, hq]
-    -- geometric invariant past N: c·(n+1)² ≤ A·q^n, A := c(N+1)²/q^N
-    -- (the base is trivially true by div_mul_cancel₀; the step uses the q-ratio)
-    set A : ℝ := c * (((N:ℕ) : ℝ) + 1) ^ 2 / q ^ (N:ℕ) with hAdef
-    have hApos : 0 < A := by
-      rw [hAdef]
-      refine div_pos (mul_pos hc0 (by positivity)) (by positivity)
-    have hbase : c * (((N:ℕ) : ℝ) + 1) ^ 2 ≤ A * q ^ (N:ℕ) := by
-      rw [hAdef, div_mul_cancel₀ _ (by positivity)]
-    have hinv : ∀ m ≥ N, c * (((m:ℕ) : ℝ) + 1) ^ 2 ≤ A * q ^ (m:ℕ) := by
-      intro m hm
-      induction m, hm using Nat.le_induction with
-      | base => exact hbase
-      | succ k _ ihk =>
-        have hkN : N ≤ k := by omega
-        have hks := hstep k hkN
-        rw [Nat.cast_add, Nat.cast_one]
-        have heq : (((k:ℕ) : ℝ) + 1 + 1) = ((k:ℕ) : ℝ) + 2 := by norm_cast
-        rw [heq]
-        calc c * (((k:ℕ) : ℝ) + 2) ^ 2 ≤ c * (q * (((k:ℕ) : ℝ) + 1) ^ 2) := by
-              exact mul_le_mul_of_nonneg_left hks (le_of_lt hc0)
-          _ = q * (c * (((k:ℕ) : ℝ) + 1) ^ 2) := by ring
-          _ ≤ q * (A * q ^ (k:ℕ)) := mul_le_mul_of_nonneg_left ihk hqpos
-          _ = A * q ^ ((k:ℕ) + 1) := by
-              rw [pow_succ]
-              ring
-    -- absorb A via the log threshold: A ≤ q^n for large n
-    have hnN : N ≤ n := le_trans (le_max_left _ _) hn
-    obtain ⟨N₃, hN₃⟩ := exists_nat_gt (Real.log A / Real.log q)
-    have hA : A ≤ q ^ (n:ℕ) := by
-      have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
-        rw [Real.log_pow (le_of_lt hq1)]
-        have hnpos : (0:ℝ) < (n:ℝ) := by positivity
-        have hdiv : (Real.log A / Real.log q) ≤ (n:ℝ) := by linarith
-        rw [div_le_iff₀ hlogq] at hdiv
-        exact hdiv
-      exact (Real.log_le_log_iff hApos (by positivity)).mp h1
-    calc c * ((n:ℝ) + 1) ^ 2 ≤ A * q ^ (n:ℕ) := hinv n hnN
-      _ ≤ q ^ (n:ℕ) * q ^ (n:ℕ) := mul_le_mul_of_nonneg_left hA (le_of_lt hqpos)
-      _ = q ^ ((n:ℕ) + (n:ℕ)) := (pow_add q n n).symm
-      _ = q ^ (2 * (n:ℕ)) := by ring_nf
-      _ = r ^ (n:ℕ) := by rw [← pow_mul, hqq]
-      _ = (2:ℝ) ^ ((δ/2) * (n:ℕ)) := by rw [hrdef, Real.rpow_natCast, ← Real.rpow_mul (by norm_num : (0:ℝ) < 2)]
+  -- the ratio threshold: (n+2)² ≤ q(n+1)² past N
+  obtain ⟨N, hN⟩ := exists_nat_gt (1 / (Real.sqrt q - 1))
+  have hstep : ∀ n ≥ N, ((n:ℝ) + 2) ^ 2 ≤ q * ((n:ℝ) + 1) ^ 2 := by
+    intro n hn
+    have hNn : ((N:ℕ) : ℝ) ≤ (n:ℝ) := by exact_mod_cast hn
+    have hpos : (0:ℝ) < Real.sqrt q - 1 := by linarith [hsqrt1]
+    have h1 : (1:ℝ) / (Real.sqrt q - 1) ≤ ((n:ℝ) + 1) := by
+      have h2 : (1:ℝ) / (Real.sqrt q - 1) < ((N:ℕ) : ℝ) := hN
+      have h3 : ((N:ℕ) : ℝ) ≤ ((n:ℕ) : ℝ) := by exact_mod_cast hn
+      have h4 : ((N:ℕ) : ℝ) ≤ (n:ℝ) := by exact_mod_cast h3
+      linarith
+    rw [div_le_iff₀ hpos] at h1
+    have hle : ((n:ℝ) + 2) ≤ Real.sqrt q * ((n:ℝ) + 1) := by nlinarith
+    calc ((n:ℝ) + 2) ^ 2 ≤ (Real.sqrt q * ((n:ℝ) + 1)) ^ 2 :=
+          pow_le_pow_left₀ (by positivity) hle 2
+      _ = q * ((n:ℝ) + 1) ^ 2 := by
+            rw [mul_pow, Real.mul_self_sqrt (le_of_lt hr1), hq]
+  -- geometric invariant past N: c·(n+1)² ≤ A·q^n, A := c(N+1)²/q^N
+  set A : ℝ := c * (((N:ℕ) : ℝ) + 1) ^ 2 / q ^ (N:ℕ) with hAdef
+  have hApos : 0 < A := by
+    rw [hAdef]
+    refine div_pos (mul_pos hc0 (by positivity)) (by positivity)
+  have hbase : c * (((N:ℕ) : ℝ) + 1) ^ 2 ≤ A * q ^ (N:ℕ) := by
+    rw [hAdef, div_mul_cancel₀ _ (by positivity)]
+  have hinv : ∀ m ≥ N, c * (((m:ℕ) : ℝ) + 1) ^ 2 ≤ A * q ^ (m:ℕ) := by
+    intro m hm
+    induction m, hm using Nat.le_induction with
+    | base => exact hbase
+    | succ k _ ihk =>
+      have hkN : N ≤ k := by omega
+      have hks := hstep k hkN
+      rw [Nat.cast_add, Nat.cast_one]
+      calc c * (((k:ℕ) : ℝ) + 2) ^ 2 ≤ c * (q * (((k:ℕ) : ℝ) + 1) ^ 2) := by
+            exact mul_le_mul_of_nonneg_left hks (le_of_lt hc0)
+        _ = q * (c * (((k:ℕ) : ℝ) + 1) ^ 2) := by ring
+        _ ≤ q * (A * q ^ (k:ℕ)) := mul_le_mul_of_nonneg_left ihk hqpos
+        _ = A * q ^ ((k:ℕ) + 1) := by
+            rw [pow_succ]
+            ring
+  -- absorb A via the log threshold: A ≤ q^n for large n
+  obtain ⟨N₃, hN₃⟩ := exists_nat_gt (Real.log A / Real.log q)
+  have hA : A ≤ q ^ (n:ℕ) := by
+    have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
+      rw [Real.log_pow (le_of_lt hq1)]
+      have hnpos : (0:ℝ) < (n:ℝ) := by positivity
+      have hdiv : (Real.log A / Real.log q) ≤ (n:ℝ) := by linarith
+      rw [div_le_iff₀ hlogq] at hdiv
+      exact hdiv
+    exact (Real.log_le_log_iff hApos (by positivity)).mp h1
+  have hpolyle : ∃ n₃ : ℕ, ∀ n ≥ n₃, c * ((n:ℝ) + 1) ^ 2 ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) :=
+    ⟨N, fun n hn => by
+      have hA : A ≤ q ^ (n:ℕ) := by
+        have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
+          rw [Real.log_pow (le_of_lt hq1)]
+          have hnpos : (0:ℝ) < (n:ℝ) := by positivity
+          have hdiv : (Real.log A / Real.log q) ≤ (n:ℝ) := by linarith
+          rw [div_le_iff₀ hlogq] at hdiv
+          exact hdiv
+        exact (Real.log_le_log_iff hApos (by positivity)).mp h1
+      have hinv := hinv n hn
+      calc c * ((n:ℝ) + 1) ^ 2 ≤ A * q ^ (n:ℕ) := hinv
+        _ ≤ q ^ (n:ℕ) * q ^ (n:ℕ) := mul_le_mul_of_nonneg_left hA (le_of_lt hqpos)
+        _ = q ^ ((n:ℕ) + (n:ℕ)) := (pow_add q n n).symm
+        _ = q ^ (2 * (n:ℕ)) := by ring_nf
+        _ = r ^ (n:ℕ) := by rw [← pow_mul, hqq]
+        _ = (2:ℝ) ^ ((δ/2) * (n:ℕ)) := by rw [hrdef, Real.rpow_natCast, ← Real.rpow_mul (by norm_num : (0:ℝ) < 2)]
   -- assemble
-  obtain ⟨n₂, hn₂⟩ := hsqrtle
-  obtain ⟨n₃, hn₃⟩ := hpolyle
-  have hbig : ops n ≤ (2:ℝ) ^ (T' * (n:ℝ)) := by
-    have hE : ((τ₀ + 20 * ε) * (n:ℝ) + 2 * Real.sqrt (n:ℝ) + 2)
-        = 2 * Real.sqrt (n:ℝ) + 2 + (τ₀ + 20 * ε) * (n:ℝ) := by ring
-    calc ops n ≤ c * poly n * (2 ^ (2 * Real.sqrt (n:ℝ) + 2) * 2 ^ ((τ₀ + 20 * ε) * (n:ℝ))) := by
-          rw [Real.rpow_add (by norm_num : (0:ℝ) < 2)]
-          exact hops n hn₀
-      _ ≤ c * ((n:ℝ) + 1) ^ 2 * (2 ^ (2 * Real.sqrt (n:ℝ) + 2) * 2 ^ ((τ₀ + 20 * ε) * (n:ℝ))) := by
-          exact mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right (hpoly n)
-            (Real.rpow_nonneg (by norm_num))) hc0
-      _ ≤ ((2:ℝ) ^ ((δ/2) * (n:ℝ)) * 2 ^ ((δ/2) * (n:ℝ))) * 2 ^ ((τ₀ + 20 * ε) * (n:ℝ)) := by
-          exact mul_le_mul_of_nonneg_left (mul_le_mul (hn₃ n hn₃) (hn₂ n hn₂)
-            (by positivity) (by positivity)) (by positivity)
-      _ = (2:ℝ) ^ ((δ/2) * (n:ℝ) + (δ/2) * (n:ℝ) + (τ₀ + 20 * ε) * (n:ℝ)) := by
-          rw [← Real.rpow_add (by norm_num : (0:ℝ) < 2), ← Real.rpow_add (by norm_num : (0:ℝ) < 2)]
-      _ = (2:ℝ) ^ (T' * (n:ℝ)) := by congr 1; rw [hδdef]; ring
+  have hE : ((τ₀ + 20 * ε) * (n:ℝ) + 2 * Real.sqrt (n:ℝ) + 2)
+      = 2 * Real.sqrt (n:ℝ) + 2 + (τ₀ + 20 * ε) * (n:ℝ) := by ring
+  calc ops n ≤ c * poly n * (2 ^ (2 * Real.sqrt (n:ℝ) + 2) * 2 ^ ((τ₀ + 20 * ε) * (n:ℝ))) := by
+        rw [Real.rpow_add (by norm_num : (0:ℝ) < 2)]
+        exact hops n hn₀
+    _ ≤ c * ((n:ℝ) + 1) ^ 2 * (2 ^ (2 * Real.sqrt (n:ℝ) + 2) * 2 ^ ((τ₀ + 20 * ε) * (n:ℝ))) := by
+        exact mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right (hpoly n)
+          (Real.rpow_nonneg (by norm_num))) hc0
+    _ ≤ ((2:ℝ) ^ ((δ/2) * (n:ℝ)) * 2 ^ ((δ/2) * (n:ℝ))) * 2 ^ ((τ₀ + 20 * ε) * (n:ℝ)) := by
+        exact mul_le_mul_of_nonneg_left (mul_le_mul (hn₃ n hn₃) (hn₂ n hn₂)
+          (by positivity) (by positivity)) (by positivity)
+    _ = (2:ℝ) ^ ((δ/2) * (n:ℝ) + (δ/2) * (n:ℝ) + (τ₀ + 20 * ε) * (n:ℝ)) := by
+        rw [← Real.rpow_add (by norm_num : (0:ℝ) < 2), ← Real.rpow_add (by norm_num : (0:ℝ) < 2)]
+    _ = (2:ℝ) ^ (T' * (n:ℝ)) := by congr 1; rw [hδdef]; ring
   refine le_trans hbig ?_
   refine Real.rpow_le_rpow_of_exponent_le (by norm_num) ?_
   exact_mod_cast le_refl n
