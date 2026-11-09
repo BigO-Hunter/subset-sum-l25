@@ -671,3 +671,43 @@ stay in the papers' own counters.
   (`o7_union_le` consumes B3's `cor_A6_per_alias` — the wired consumer).
   Build green, 8953 jobs; package sorries 2 (the pre-existing L2.5 pair
   only).
+
+# PRIMECOUNT — the `hcount` premise (statements M1, 2026-11-09)
+
+The dyadic prime-count input of the PROVED collision lemmas O3
+(`L2_5_prime_collision`) and O6 (`L5_2_sparse_distinctions`), named so far
+as the paper's own external input (setup.tex lem:prime-collision proof:
+«The prime number theorem gives at least c₀·2^L/L primes … Rosser and
+Schoenfeld»). Closing it makes the whole O1–O3+O6 cluster unconditional
+number theory.
+
+**Measured (this Mathlib, d13f23b):** Chebyshev-grade constants ANNIHILATE in
+the interval difference — `pi_ge` ≈0.69·x/log x below vs
+`pi_le_log4_mul_div` ≈2.77·x/log x above gives π(2^{L+1}) − π(2^L) ≥
+(2/(L+1) − 4/L)·2^L < 0; and there is NO PNT asymptotic in the pin (grep of
+`IsEquivalent … primeCounting`: no hits). The route is therefore Erdős's
+binomial accounting; the pin holds all three anchors
+(`Chebyshev.theta_le_log4_mul_x`, `Chebyshev.pi_le_log4_mul_div`,
+`Nat.factorization_choose'`).
+
+## Statement file `Statements/PrimeCount.lean` (M1, module builds green)
+
+| Step | Lean | Status |
+|---|---|---|
+| E1 geometric mass `4^n/(2n+1) ≤ C(2n,n)` | `central_binom_big` | **PROVED** (sum_range_choose + choose_le_middle + cast bridge) |
+| E2 one carry: prime `n < p ≤ 2n` divides `C(2n,n)` | `prime_divides_central_binom` | **PROVED** (factorization_choose' carry-set over `Ico 1 2`; `p ≤ n+n < p²`; ⌊2n/p⌋=1, ⌊n/p⌋=0) |
+| E3 zero carries for `2n/3 < p ≤ n` | (M2, inside assembly) | M1 plan only |
+| E4 small-prime part O(√n log n) | (M2) | M1 plan only |
+| E5 mid-strip product ≤ 4^{2n/3} (theta) | (M2) | M1 plan only |
+| E6/E7 assembly + dyadic specialization | `erdos_dyadic_primes` | `sorry` (M2) |
+| Discharge of O3/O6 (K = 1/c₀, L* = L₀) | `L2_5_prime_collision_unconditional` | `sorry` (M2, consumes the proved `L2_5_prime_collision`) |
+
+Gotchas banked: `Nat.choose_le_middle (r n : ℕ)` — r FIRST, row SECOND, no
+hypothesis, and it lands on `choose n (n/2)` (needs `2*n/2 = n` closed);
+`Nat.mul_pow` closes `2^n * 2^n = 4^n` with the rfl that follows; push_cast's
+output shape on `↑((2n+1)*C)` is the pushed product — rewrite it back with an
+explicit `← h2`-style bridge rather than trusting the form; `if_pos` is
+deprecated for `ite_eq_left` (warning only, M2 cleans it).
+
+Build receipt: `lake build SubsetSumL25.Statements` green, 8931 jobs,
+2026-11-09; the only package sorries are the two M2 placeholders above.
