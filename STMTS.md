@@ -656,3 +656,21 @@ stay in the papers' own counters.
   (`o7_union_le` consumes B3's `cor_A6_per_alias` — the wired consumer).
   Build green, 8953 jobs; package sorries 2 (the pre-existing L2.5 pair
   only).
+
+# ROWS — the three conditional board rows (statements M1)
+
+The bridge from «the ladder proves the pieces» to «the rows the board cares
+about».  rev8g Thm 1 (0.4875755) is stated in `Statements/Rows.lean` with
+the still-named conditions as opaque Props (O1/O2/O3/O6 cluster, V1 sine
+extension, SumCheck/AliasExt procedures, CertNum numerics) — everything the
+ladder kernel-checked is NOT a hypothesis (it is theorems of this package).
+`hops` is the assembled per-stage bound (the o8/o5 budget shape); the
+theorem is the T′-absorption tail: for every fixed T′ > τ₀ + 20ε, the bound
+is O(2^{T′n}) — WIP sorry (1), the row work's first proof obligation (the
+2√n+2+poly = 2^{o(n)} absorption into the fixed gap T′ − (τ₀+20ε)).
+
+Pointer rows (external, NOT restated — data-not-restated discipline):
+JoshuaQFEX 0.487676 (statement source: their paper, to fetch) and Bills
+0.4876723 (subset-sum-conditional-refinement v1.1.0 @ 590bb68; local at
+`subset-sum-subclassic/yannouli-ss/`).  rev8g Theorem 3 (0.4873408,
+ternary) needs open [S] — excluded per BRIDGE note (i).

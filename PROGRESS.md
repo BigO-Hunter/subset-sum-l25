@@ -709,3 +709,24 @@ machinery (B4), the finite-circle data (O4), the word-RAM accounting (O8),
 and the checksum/alias-extraction cores (O5+O7) — with the procedures and
 certified numerics as named data, exactly the staged-ladder architecture
 BRIDGE milestone 1 prescribed. Three conditional rows inherit every rung.
+
+---
+
+# ROWS opened (conditional board rows) — M1 2026-11-08
+
+`Statements/Rows.lean`: rev8g Thm 1 (0.4875755) stated with the hypothesis
+map (kernel-checked ladder = theorems, still-named = opaque Props); the
+T′-absorption tail is the row's first WIP obligation.  JoshuaQFEX/Bills
+rows are pointer entries (external sources).  rev8g source verified:
+paper_2026-11-06_rev8g.tex sha256 18899a6e… (PROVENANCE_rev8g.md).
+
+## Next actions (ROWS lane)
+
+1. **M2**: the absorption tail (2√n+2+poly = 2^{o(n)} into the fixed gap
+   T′ − (τ₀+20ε)) — then the full row composition (instantiate the named
+   procedures, compose the ladder lemmas under the hypotheses).
+2. Fetch JoshuaQFEX's paper + Bills' supplement statement verbatim for
+   their rows.
+3. The merge landed: main @ 3692143 (merge 603ed2e + the O-rung import
+   fixup) — base-core's whole ladder is on main, 0 sorries, receipts
+   spot-checked (B3/B4/O8/O4/O5+O7 + the formerly-sorry L2.5 pair).
