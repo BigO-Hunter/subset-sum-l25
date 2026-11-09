@@ -853,3 +853,22 @@ every step Mathlib-grounded. Plus the verified-from-this-round forms:
 `Real.rpow_pos_of_pos (h : 0 < x) (y) : (0:ℝ) < x ^ y` ✓ (hrpos built),
 `exists_nat_gt (((8:ℝ)/δ)^2)` (the wrapped parse), the `(2:ℝ)` ∃-body
 annotations.
+
+## ROWS M2 — plan v4: PLAN-ONLY (2026-11-08, per the binding stop rule)
+
+The Asymptotics-route draft reached the build with **known gaps of my own
+making** (piece 3's c<1/c≥1 case split unfinished, an unverified
+`Real.log_neg_iff`, an undefined reference) — a fourth distinct trap family
+(draft-incompleteness under budget pressure). Rolled back per the binding
+stop rule. **Plan v4 = the Asymptotics route (previous entry) + the
+piece-3 completion:** the log c ≤ (δ/8)n·ln2 piece splits `rcases lt_or_le
+c 1` — for c < 1: `Real.log_neg_iff`-family (probe) gives log c < 0 ≤ the
+budget; for c ≥ 1: `Real.log_le_self`-family (probe) gives log c ≤ c ≤
+(δ/8)n·ln2 for n ≥ 8c/(δ·ln2) (exists_nat_gt ✓). Everything else in the
+previous entry stands (the transport ✓ verified in two probe rounds, the
+isLittleO_iff extraction form ✓ verified: `(isLittleO_iff.mp hlittle) ε
+hεpos`, the four-piece log-budget ✓ arithmetically closed).
+
+**The row's WIP sorry stands, precisely reported.** Next session: execute
+v4 mechanically (~90 lines, the transport verified, the piece-3 split
+specified above).
