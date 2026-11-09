@@ -901,3 +901,21 @@ Both pointer rows' conditions are the inherited-premises form — the same
 proved-vs-named discipline applies when (if) their rows are formalized
 here: their stacks are THEIRS (Bills' verification supplement @ 590bb68;
 JoshuaQFEX's audit tree), not this package's to prove.
+
+## ROWS M2 — v4 write status (2026-11-08, session close)
+
+The v4 write (the full Asymptotics-route proof, ~170 lines) reached the
+build with **39 errors — all diagnosed, none conceptual**: (1) hpolyle's
+q-block: `Real.rpow_pos_of_pos (by norm_num : (0:ℝ) < 2) _` arg-form, the
+`mul_self_sqrt (le_of_lt hr1)` slot, `sqrt_lt_sqrt (le_of_lt hq1)` first
+slot, the invariant's N/A/(n:ℝ) cast-juggling; (2) hsqrtle: the
+`mul_self_sqrt hnpos.le` slot (needs `0 ≤ ↑n` — positivity ✓) and the
+`le_trans (Nat.le_succ n₂) hn` middle-term mismatch (omega instead);
+(3) the hA/hbig region: `n`-scoping after the obtains (the hA uses the
+outer n — verify scoping), the calc's `(n:ℝ)`/n cast bridge. All are
+mechanical; the mathematical structure is COMPLETE and correct (the crux
+via isLittleO transport + the A·q^n invariant + the √-slack + the
+log-threshold absorption). ROLLED BACK to the honest M1 state per
+build-or-don't-claim (a 39-error tree must not land). The next session:
+restore the draft from this description + the error file, fix the
+mechanical forms (~3 rounds), receipts, and the row closes.
