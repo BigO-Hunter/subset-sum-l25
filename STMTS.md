@@ -650,5 +650,9 @@ stay in the papers' own counters.
   the O8 pattern), `o7Cap`'s `.toNat` (the paper's τn ≥ 0).
 * **Identifier note:** `X̄` (combining macron) is not a valid Lean identifier
   — the Lean name is `Xbar` (the `Ŝ`-class gotcha, second occurrence).
-* M1 sorries: 5, exactly the five theorems (`o5Cap`, `o7Cap` are defs),
-  build green at 8924 jobs.
+* **M2 status (2026-11-08): ALL PROVED.** `Proofs/O57.lean` is the
+  statement-of-record; `Statements/O57.lean` holds quotes only. Receipts,
+  freshly measured: all five `[propext, Classical.choice, Quot.sound]`
+  (`o7_union_le` consumes B3's `cor_A6_per_alias` — the wired consumer).
+  Build green, 8953 jobs; package sorries 2 (the pre-existing L2.5 pair
+  only).

@@ -632,3 +632,80 @@ green. `X̄` gotcha: combining macron → `Xbar` (the `Ŝ`-class, second hit).
    o7_records_le_cap = o8_trials_le_cap shape; o7_union_le consumes
    `cor_A6_per_alias` (import Proofs.A5). All names pre-verified.
 2. Receipts, commit, push; then the LADDER CLOSE-OUT summary.
+
+# O5+O7 COMPLETE + LADDER CLOSE-OUT — 2026-11-08
+
+All five O5+O7 theorems PROVED (`Proofs/O57.lean`; quotes-only pointer in
+`Statements/O57.lean`). Build green 8953 jobs; receipts all
+[propext, Classical.choice, Quot.sound]. **The BRIDGE attack order items
+3–7 are now all banked on base-core: O8, B4, B5, O4, O5+O7.**
+
+## M2 notes
+
+* o5_mse_le needed an μ = 0 case split (positivity cannot give 0 < μ from
+  0 ≤ μ) and eq_or_lt_of_le gives the REVERSED equation (0 = μ, so rw needs
+  ←); `0 / b = 0` is zero_div, not div_zero (second occurrence of the
+  div-lemma-name trap).
+* Full-build vs module-target caching: an interrupted build can leave the
+  trace claiming built while the olean is missing — the FULL lake build is
+  the receipt of record (hit twice this rung).
+
+## LADDER CLOSE-OUT — proved-vs-named across the campaign
+
+**Proved on base-core (all receipts [propext, Classical.choice,
+Quot.sound] unless noted; zero sorries in any lane file; no
+native_decide; source sha256 b397531c… re-verified per rung):**
+
+* **L2.5 cluster (pre-existing, two sorries remain there by design:**
+  `L2_3_halfVariance`, `L5_2_sparse_distinctions` — the OpenAI-side
+  variance/sparse-distinction inputs, owned by the main lane).
+* **B1** L3.1 covering (counted form), L3.2 sampling (counted form), L3.3
+  good layer + density, layerSupport complement.
+* **B2** Corollary D (both branches + the nested-averaging and
+  complement-transfer lemmas; the C(σ,k)C(v,k) ≤ 2^v hypothesis used only
+  in the t < k branch, as in the paper).
+* **B3** Lemma A5 spine (Steps 1, 3, 4, 6 + Cor A6 per-alias) — 14
+  declarations; Step 2/Step 5 named; consumes the B1 L2.5 prime-collision
+  formalization as (F4).
+* **B4** Theorem B region machinery (band order, region trio, the a_Γ ≤ 3/4
+  guard, Lemma B2 domination); the 430 certificate rows = certified data.
+* **B5** Prop P chain: chebyshev_fraction_le, prop_p_chebyshev,
+  cap_fit_lt, continue_prob_le, prop_p_op_absorb, a7_envelope — 6/6.
+* **O8** word-RAM accounting: o8Cap, o8_cap_absorb (hyp. 2 ≤ n^0.7 — the
+  paper's «sufficiently large n» explicit), o8_cap_envelope,
+  o8_time_bound, o8_trial_count_bound, o8_trials_le_cap, o8_draws_le —
+  Base's own word-op counters; D7 (bit-cost → Light-step) not imported.
+* **O4** L3.2 finite-circle core: o4Avg, o4P₀, o4_avg_err_le (the
+  2π‖∂H‖_∞/P Riemann estimate), o4_gibbs (finite order 3.3),
+  o4_finite_from_continuous (the strict-slack assembly),
+  o4_log_abs_le/o4_div_le/o4_le_div. Approximability procedure named.
+* **O5+O7** Thm 4.1 + 5.1 cores: o5Cap/o5_cap_absorb/o5_time_bound (the
+  (τ+20ε)n+O(√n) budget with the O(√n) explicit as 2√n+2 — unconditional,
+  unlike O8), o5_mse_le (MSE ≤ 1/8), o7Cap/o7_records_le_cap,
+  o7_union_le (completeness union bound consuming B3's cor_A6_per_alias).
+
+**Named/external (never axioms — the honest boundary):** every procedure
+(D_s, the checksum tables/patterns/phases, alias extraction + dedup +
+subtraction, the L3.2 approximability routine); per-category op counts and
+word-cost polys; certified numerics (Prop B's 430 rows, the 0.5168/0.5169
+quadrature pair); the PNT/Rosser-Schoenfeld count input (hcount); the o(1)
+ratios; Base's (F1)-(F8) external inputs as documented per rung.
+
+**Corrections table (all caught-by-proving, disclosed in ledgers):**
+1. B3: C(m,σ)2^{−m} ≥ 1/(m+1) stated at the middle layer (arbitrary σ was
+   false); good_hit_expect_ge gained σ ≤ |M| (empty-expect trap).
+2. B3: collisionPairs_expect_le gained 0 ≤ K₀ (diagonal pairs' zero).
+3. B5: prop_p_op_absorb gained 0 ≤ n (rpow negative-base junk).
+4. O8: o8_cap_absorb/o8_time_bound gained 2 ≤ n^{0.7} («sufficiently large
+   n» explicit — false below 2^{10/7}).
+5. O4: the quotient-boundedness pair restated (M1 directions false) with
+   0 < d explicit; log-divergence hypotheses ≠ 0 at this pin.
+6. O5+O7: none — statements landed clean (first rung with zero
+   corrections; the pattern is mature).
+
+**What the bridge now proves:** the full conditional chain from the L2.5
+cluster through Base's combinatorial core (B1–B5), Theorem B's region
+machinery (B4), the finite-circle data (O4), the word-RAM accounting (O8),
+and the checksum/alias-extraction cores (O5+O7) — with the procedures and
+certified numerics as named data, exactly the staged-ladder architecture
+BRIDGE milestone 1 prescribed. Three conditional rows inherit every rung.
