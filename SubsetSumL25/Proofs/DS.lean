@@ -191,11 +191,19 @@ transports fought the unifier past budget.  Battle-notes for the next
 session: the A-side transport needs `Disjoint.mono_left hAL hlz` FIRST
 (composing the A-narrowing before the t-widening); the B-side is
 `(hrz.mono_left hBR).symm`; the t-widening subset is
-`(Finset.subset_union_left : Z ⊆ Z ∪ B)` with its type ascription EXACTLY
-`Z ⊆ Z ∪ B` (the unifier determines the t'-slot from the outer hχ only
-after the Disjoint-arg is pinned).  After the per-term split: the
+`(Finset.subset_union_left : Z ⊆ Z ∪ B)` with its ascription EXACTLY
+`Z ⊆ Z ∪ B`.  NEW (this round): the pinning via a typed `have hAzB :
+Disjoint A (Z ∪ B)` STILL stalls — the term-form posts an unresolved
+`DecidableEq ?m` and the tactic-form `refine (...).mono_right ?_` posts the
+same, with the expected type showing `Disjoint A (Z ∪ B ∪ ?m.62)` — an
+EXTRA union-slot, i.e. the elaborator unifies the t'-slot against the
+UNION-ASSOC-bridge's term rather than the ascription.  Next-session shape:
+state `hAzB : Disjoint A (Z ∪ B)` with the subset built from
+`Finset.disjoint_union_left`-style MEMBER-lemmas (intro/rinto on the
+members) instead of mono transports, or pass the whole hAzB as an explicit
+hypothesis of a helper whose Disjoint-arg is fully concrete.  Then the
 `Finset.sum_product` assembly over the pair-set with the union-map's
-injectivity (recover `A = (I \ Z) ∩ L`), then the D_s closure corollary.
+injectivity (recover `A = (I \\ Z) ∩ L`), then the D_s closure corollary..
 
 -/
 
