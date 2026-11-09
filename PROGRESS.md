@@ -872,3 +872,32 @@ hεpos`, the four-piece log-budget ✓ arithmetically closed).
 **The row's WIP sorry stands, precisely reported.** Next session: execute
 v4 mechanically (~90 lines, the transport verified, the piece-3 split
 specified above).
+
+## POINTER ROWS — verbatim statements fetched (2026-11-08)
+
+**Bills 0.4876723** (`subset-sum-subclassic/yannouli-ss` @ 590bb68 ✓ the
+supplement commit; paper.tex sha256 c116de491a401af943e3): «Assume the
+inherited algorithmic claims specified above and the original moment
+inequalities (eq:oldmom). The fixed rational construction parameters in
+Section (sec:admissible), with the filter-3 certificate boundary rule of
+Lemma (lem:new), yield a single randomized classical word-RAM program that
+halts on every input and is correct with probability at least 2/3. For
+each fixed positive integer c, there are C_c,N_c>0 such that every random
+execution on n ≥ N_c, b ≤ n^c, uses at most C_c·2^{0.4876723n} word
+operations in the stated model. The program does not depend on c.»
+
+**JoshuaQFEX 0.487676** (`audit-joshuaqfex` paper.tex sha256
+e480f374cefccd6e368a): «Assume these inherited premises of Base are valid.
+There is a single uniform randomised classical word-RAM program which
+halts on every input and is correct with probability at least 2/3. For
+each fixed positive integer c, there are constants C_c,N_c>0 such that,
+for every input with n ≥ N_c and b ≤ n^c, every random execution uses at
+most C_c·2^{0.487676n} word operations. Here b is the largest bit length
+of an input integer or the target, with the conventions of Base, and the
+word length is w_RAM = ⌈4(n+b+log₂(n+2))⌉. The program does not depend on
+c.»
+
+Both pointer rows' conditions are the inherited-premises form — the same
+proved-vs-named discipline applies when (if) their rows are formalized
+here: their stacks are THEIRS (Bills' verification supplement @ 590bb68;
+JoshuaQFEX's audit tree), not this package's to prove.
