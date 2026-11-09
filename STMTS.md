@@ -852,6 +852,17 @@ the full write did not close this session.  After the four recoveries:
 partition machinery on top.  The chi_split per-term split IS proved
 (previous commit).
 
+## DS-M1.6's recovery-lemma datapoint (build-or-don't-claim honored)
+The four recovery lemmas' member-level proofs fought the raw-Finset-mem
+rcases: `rcases h with h | h | h` on `h : i ∈ A` (a plain Finset-membership)
+fails with "Quot.lift ... is not an inductive datatype" — Finset.Mem is not
+an inductive and the sim-only unfolding did not expose the Or to the
+rcases.  Next session: bind the union-memberships via
+`rcases Finset.mem_union.1 h with h | h` (the mem.mp-first route that WORKED
+everywhere else in this campaign) or `Finset.mem_union.mp`-haves, one
+recovery per build round.  The tree was reverted to the green M1.5 state
+(recovery proofs deferred, zero sorry landed).
+
 ## Gotchas banked (M2b)## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
 Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
 pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
@@ -909,6 +920,17 @@ the full write did not close this session.  After the four recoveries:
 `chi_split.symm` per-term close (5.2), and the closure corollary needs the
 partition machinery on top.  The chi_split per-term split IS proved
 (previous commit).
+
+## DS-M1.6's recovery-lemma datapoint (build-or-don't-claim honored)
+The four recovery lemmas' member-level proofs fought the raw-Finset-mem
+rcases: `rcases h with h | h | h` on `h : i ∈ A` (a plain Finset-membership)
+fails with "Quot.lift ... is not an inductive datatype" — Finset.Mem is not
+an inductive and the sim-only unfolding did not expose the Or to the
+rcases.  Next session: bind the union-memberships via
+`rcases Finset.mem_union.1 h with h | h` (the mem.mp-first route that WORKED
+everywhere else in this campaign) or `Finset.mem_union.mp`-haves, one
+recovery per build round.  The tree was reverted to the green M1.5 state
+(recovery proofs deferred, zero sorry landed).
 
 ## Gotchas banked (M2b)
 * Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
