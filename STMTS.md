@@ -886,6 +886,19 @@ draft is preserved at /tmp/DS_draft_53.lean.  The tree reverted to the
 green M1.5+recoveries state; the (5.2) assembly remains DS-M1's sole
 residual.  Full build green 8960 jobs; package sorries 0.
 
+## DS-M1's (5.2) pole — the FOURTH variant's datapoint; hand-off to a fresh session
+The kappa-form (`(kappa := fun p => p.1 union Z union p.2)` named-arg, the
+InjOn-proof positional) posts `expected Type ?u.50` for the map-term — the
+sum_image's kappa-name binds a TYPE-variable at elaboration-order, not the
+map.  Four variants tried: bare-hinj, (g := chi), (f := chi), (kappa := ...).
+All stall on the f/kappa/g slot-unification against the goal's sum-body.
+The drafts are preserved at /tmp/DS_draft_53.lean (the reordered-rws form,
+the closest) and /tmp/DS_draft_54_kappa_form.lean (the kappa-form).  The
+aux-unroll precedent applies: hand the lane to a FRESH session with the
+drafts + the four datapoints; fresh eyes closed an identical naming pole in
+one pass.  The tree stays at the green M1.5+M1.6+chi_split state — zero
+sorry landed.  Full build green 8960 jobs; package sorries 0.
+
 ## Gotchas banked (M2b)## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
 Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
 pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
@@ -977,6 +990,19 @@ The sum_image-rw's named-arg form `Finset.sum_image (f := chi) (by ...)`
 draft is preserved at /tmp/DS_draft_53.lean.  The tree reverted to the
 green M1.5+recoveries state; the (5.2) assembly remains DS-M1's sole
 residual.  Full build green 8960 jobs; package sorries 0.
+
+## DS-M1's (5.2) pole — the FOURTH variant's datapoint; hand-off to a fresh session
+The kappa-form (`(kappa := fun p => p.1 union Z union p.2)` named-arg, the
+InjOn-proof positional) posts `expected Type ?u.50` for the map-term — the
+sum_image's kappa-name binds a TYPE-variable at elaboration-order, not the
+map.  Four variants tried: bare-hinj, (g := chi), (f := chi), (kappa := ...).
+All stall on the f/kappa/g slot-unification against the goal's sum-body.
+The drafts are preserved at /tmp/DS_draft_53.lean (the reordered-rws form,
+the closest) and /tmp/DS_draft_54_kappa_form.lean (the kappa-form).  The
+aux-unroll precedent applies: hand the lane to a FRESH session with the
+drafts + the four datapoints; fresh eyes closed an identical naming pole in
+one pass.  The tree stays at the green M1.5+M1.6+chi_split state — zero
+sorry landed.  Full build green 8960 jobs; package sorries 0.
 
 ## Gotchas banked (M2b)
 * Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
