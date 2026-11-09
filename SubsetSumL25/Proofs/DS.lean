@@ -181,30 +181,24 @@ theorem isAliasClass_of_mem_alias (L R Z : Finset (Fin n)) (hlz : Disjoint L Z)
   · rw [hJc, ← hIc, hJb, ← hIb]; exact hIA.2.1
   · rw [hJc, ← hIc]; exact hIA.2.2
 
-/-! ### (5.2) — the class-sum identity (DS-M1's closing piece)
+/-! ### (5.2) — the class-sum identity (DS-M1's closing piece) -/
 
-The per-term χ-split (χ (A ∪ Z ∪ B) = χ A · χ Z · χ B for A ⊆ L, B ⊆ R,
-from the χ-multiplicativity + the pairwise disjointness) was this session's
-target: the `Finset.union_assoc` reassociation + the two hχ-instantiations
-land, but the mono_right/mono_left slot-elaboration on the disjointness
-transports fought the unifier past budget.  Battle-notes for the next
-session: the A-side transport needs `Disjoint.mono_left hAL hlz` FIRST
-(composing the A-narrowing before the t-widening); the B-side is
-`(hrz.mono_left hBR).symm`; the t-widening subset is
-`(Finset.subset_union_left : Z ⊆ Z ∪ B)` with its ascription EXACTLY
-`Z ⊆ Z ∪ B`.  NEW (this round): the pinning via a typed `have hAzB :
-Disjoint A (Z ∪ B)` STILL stalls — the term-form posts an unresolved
-`DecidableEq ?m` and the tactic-form `refine (...).mono_right ?_` posts the
-same, with the expected type showing `Disjoint A (Z ∪ B ∪ ?m.62)` — an
-EXTRA union-slot, i.e. the elaborator unifies the t'-slot against the
-UNION-ASSOC-bridge's term rather than the ascription.  Next-session shape:
-state `hAzB : Disjoint A (Z ∪ B)` with the subset built from
-`Finset.disjoint_union_left`-style MEMBER-lemmas (intro/rinto on the
-members) instead of mono transports, or pass the whole hAzB as an explicit
-hypothesis of a helper whose Disjoint-arg is fully concrete.  Then the
-`Finset.sum_product` assembly over the pair-set with the union-map's
-injectivity (recover `A = (I \\ Z) ∩ L`), then the D_s closure corollary..
-
--/
+/-- The per-term χ-split: for `A ⊆ L`, `B ⊆ R`, the phase of `A ∪ Z ∪ B`
+factors as `χ A · χ Z · χ B` (phases add over disjoint unions). -/
+theorem chi_split (hlz : Disjoint L Z) (hrz : Disjoint R Z)
+    (hlr : Disjoint L R) {χ : Finset (Fin n) → ℂ}
+    (hχ : ∀ A B : Finset (Fin n), Disjoint A B → χ (A ∪ B) = χ A * χ B)
+    {A B : Finset (Fin n)} (hAL : A ⊆ L) (hBR : B ⊆ R) :
+    χ (A ∪ Z ∪ B) = χ A * χ Z * χ B := by
+  have hAzB : Disjoint A (Z ∪ B) := by
+    rw [Finset.disjoint_left]
+    intro x hx hb
+    rcases Finset.mem_union.1 hb with h | h
+    · exact Finset.disjoint_left.mp hlz (hAL hx) h
+    · exact Finset.disjoint_left.mp hlr (hAL hx) (hBR h)
+  rw [show A ∪ Z ∪ B = A ∪ (Z ∪ B) from Finset.union_assoc A Z B,
+    hχ A (Z ∪ B) hAzB,
+    hχ Z B (hrz.mono_left hBR).symm]
+  ring
 
 end SubsetSumL25
