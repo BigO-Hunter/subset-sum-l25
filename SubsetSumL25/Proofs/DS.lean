@@ -201,4 +201,40 @@ theorem chi_split (hlz : Disjoint L Z) (hrz : Disjoint R Z)
     hχ Z B (hrz.mono_left hBR).symm]
   ring
 
+/-! ### The union-map recoveries (DS-M1.6) -/
+
+/-- Recovery A: `A` is recoverable from the union-map's value by the
+pairwise disjointness — the `A`-side of the injectivity. -/
+theorem recovery_A {A B L R Z : Finset (Fin n)} (hlz : Disjoint L Z)
+    (hlr : Disjoint L R) (hAL : A ⊆ L) (hBR : B ⊆ R) :
+    A = ((A ∪ Z ∪ B) \ Z) ∩ L := by
+  refine Finset.ext fun i => ⟨fun h => ?_, fun h => ?_⟩
+  · refine Finset.mem_inter.mpr ⟨Finset.mem_sdiff.mpr ⟨?_, ?_⟩, hAL h⟩
+    · exact Finset.mem_union.mpr (Or.inl (Finset.mem_union.mpr (Or.inl h)))
+    · exact Finset.disjoint_left.mp hlz (hAL h)
+  · obtain ⟨h₁, h₃⟩ := Finset.mem_inter.mp h
+    obtain ⟨h₄, h₅⟩ := Finset.mem_sdiff.mp h₁
+    rcases Finset.mem_union.mp h₄ with h' | h'
+    · rcases Finset.mem_union.mp h' with h'' | h''
+      · exact h''
+      · exact absurd h'' (Finset.disjoint_left.mp hlz h₃)
+    · exact absurd (hBR h') (Finset.disjoint_left.mp hlr h₃)
+
+/-- Recovery B: `B` is recoverable from the union-map's value by the
+pairwise disjointness — the `B`-side of the injectivity. -/
+theorem recovery_B {A B L R Z : Finset (Fin n)} (hlz : Disjoint L Z)
+    (hrz : Disjoint R Z) (hlr : Disjoint L R) (hAL : A ⊆ L) (hBR : B ⊆ R) :
+    B = ((A ∪ Z ∪ B) \ Z) ∩ R := by
+  refine Finset.ext fun i => ⟨fun h => ?_, fun h => ?_⟩
+  · refine Finset.mem_inter.mpr ⟨Finset.mem_sdiff.mpr ⟨?_, ?_⟩, hBR h⟩
+    · exact Finset.mem_union.mpr (Or.inr h)
+    · exact Finset.disjoint_left.mp hrz (hBR h)
+  · obtain ⟨h₁, h₃⟩ := Finset.mem_inter.mp h
+    obtain ⟨h₄, h₅⟩ := Finset.mem_sdiff.mp h₁
+    rcases Finset.mem_union.mp h₄ with h' | h'
+    · rcases Finset.mem_union.mp h' with h'' | h''
+      · exact (Finset.disjoint_left.mp hlr (hAL h'') h₃).elim
+      · exact absurd h'' h₅
+    · exact h'
+
 end SubsetSumL25
