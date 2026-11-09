@@ -302,4 +302,172 @@ theorem class_sum_eq (hlz : Disjoint L Z) (hrz : Disjoint R Z)
   rw [← Finset.sum_mul_sum _ _ (fun A => χ A * χ Z) χ, ← Finset.sum_mul]
   ring
 
+/-! ### The partition machinery and the D_s closure -/
+
+/-- The key-triple of a class is unique: the pairwise disjointness of
+`L`, `R`, `Z ⊆ M`, `M ⊥ L`, `M ⊥ R` makes the union-map canonical
+(`A = I ∩ L`, `B = I ∩ R`, `Z = I \ (L ∪ R)`), so the same `I` cannot lie
+in two classes with distinct keys. -/
+theorem mem_cls_key_unique (hlr : Disjoint L R) (hLm : Disjoint L M)
+    (hRm : Disjoint R M) {c b : Fin n → ℤ} {Z Z' : Finset (Fin n)}
+    (hZm : Z ⊆ M) (hZ'm : Z' ⊆ M)
+    {κL κR κL' κR' : ℤ × ℤ} {I : Finset (Fin n)}
+    (hI : I ∈ cls c b L R κL κR Z) (hI' : I ∈ cls c b L R κL' κR' Z') :
+    κL = κL' ∧ κR = κR' ∧ Z = Z' := by
+  classical
+  rw [cls, Finset.mem_image] at hI hI'
+  obtain ⟨p, hp⟩ := hI
+  obtain ⟨q, hq⟩ := hI'
+  obtain ⟨hA₁, hB₁⟩ := Finset.mem_product.mp hp.1
+  obtain ⟨hA₂, hB₂⟩ := Finset.mem_product.mp hq.1
+  obtain ⟨hA₁p, hA₁c⟩ := Finset.mem_filter.mp hA₁
+  obtain ⟨hB₁p, hB₁c⟩ := Finset.mem_filter.mp hB₁
+  obtain ⟨hA₂p, hA₂c⟩ := Finset.mem_filter.mp hA₂
+  obtain ⟨hB₂p, hB₂c⟩ := Finset.mem_filter.mp hB₂
+  have hAL₁ : p.1 ⊆ L := Finset.mem_powerset.mp hA₁p
+  have hBR₁ : p.2 ⊆ R := Finset.mem_powerset.mp hB₁p
+  have hAL₂ : q.1 ⊆ L := Finset.mem_powerset.mp hA₂p
+  have hBR₂ : q.2 ⊆ R := Finset.mem_powerset.mp hB₂p
+  have hIeq : I = p.1 ∪ Z ∪ p.2 := hp.2.symm
+  have hIeq' : I = q.1 ∪ Z' ∪ q.2 := hq.2.symm
+  have hZlr : Disjoint Z (L ∪ R) := by
+    rw [Finset.disjoint_left]
+    intro i hi hmem
+    rcases Finset.mem_union.mp hmem with h | h
+    · exact Finset.disjoint_left.mp hLm h (hZm hi)
+    · exact Finset.disjoint_left.mp hRm h (hZm hi)
+  have hZlr' : Disjoint Z' (L ∪ R) := by
+    rw [Finset.disjoint_left]
+    intro i hi hmem
+    rcases Finset.mem_union.mp hmem with h | h
+    · exact Finset.disjoint_left.mp hLm h (hZ'm hi)
+    · exact Finset.disjoint_left.mp hRm h (hZ'm hi)
+  have hAL : p.1 = I ∩ L := by
+    refine Finset.ext fun i => ⟨fun h => Finset.mem_inter.mpr ⟨?_, hAL₁ h⟩, fun h => ?_⟩
+    · rw [hIeq]; exact Finset.mem_union.mpr (Or.inl (Finset.mem_union.mpr (Or.inl h)))
+    · obtain ⟨hIbig, hIL⟩ := Finset.mem_inter.mp h
+      rw [hIeq] at hIbig
+      rcases Finset.mem_union.mp hIbig with h | h
+      · rcases Finset.mem_union.mp h with h | h
+        · exact h
+        · exact (Finset.disjoint_left.mp hLm hIL (hZm h)).elim
+      · exact (Finset.disjoint_left.mp hlr hIL (hBR₁ h)).elim
+  have hAL' : q.1 = I ∩ L := by
+    refine Finset.ext fun i => ⟨fun h => Finset.mem_inter.mpr ⟨?_, hAL₂ h⟩, fun h => ?_⟩
+    · rw [hIeq']; exact Finset.mem_union.mpr (Or.inl (Finset.mem_union.mpr (Or.inl h)))
+    · obtain ⟨hIbig, hIL⟩ := Finset.mem_inter.mp h
+      rw [hIeq'] at hIbig
+      rcases Finset.mem_union.mp hIbig with h | h
+      · rcases Finset.mem_union.mp h with h | h
+        · exact h
+        · exact (Finset.disjoint_left.mp hLm hIL (hZ'm h)).elim
+      · exact (Finset.disjoint_left.mp hlr hIL (hBR₂ h)).elim
+  have hBL : p.2 = I ∩ R := by
+    refine Finset.ext fun i => ⟨fun h => Finset.mem_inter.mpr ⟨?_, hBR₁ h⟩, fun h => ?_⟩
+    · rw [hIeq]; exact Finset.mem_union.mpr (Or.inr h)
+    · obtain ⟨hIbig, hIR⟩ := Finset.mem_inter.mp h
+      rw [hIeq] at hIbig
+      rcases Finset.mem_union.mp hIbig with h | h
+      · rcases Finset.mem_union.mp h with h | h
+        · exact (Finset.disjoint_left.mp hlr (hAL₁ h) hIR).elim
+        · exact (Finset.disjoint_left.mp hRm hIR (hZm h)).elim
+      · exact h
+  have hBL' : q.2 = I ∩ R := by
+    refine Finset.ext fun i => ⟨fun h => Finset.mem_inter.mpr ⟨?_, hBR₂ h⟩, fun h => ?_⟩
+    · rw [hIeq']; exact Finset.mem_union.mpr (Or.inr h)
+    · obtain ⟨hIbig, hIR⟩ := Finset.mem_inter.mp h
+      rw [hIeq'] at hIbig
+      rcases Finset.mem_union.mp hIbig with h | h
+      · rcases Finset.mem_union.mp h with h | h
+        · exact (Finset.disjoint_left.mp hlr (hAL₂ h) hIR).elim
+        · exact (Finset.disjoint_left.mp hRm hIR (hZ'm h)).elim
+      · exact h
+  have hZeq : Z = I \ (L ∪ R) := by
+    refine Finset.ext fun i => ⟨fun h => Finset.mem_sdiff.mpr ⟨?_, ?_⟩, fun h => ?_⟩
+    · rw [hIeq]; exact Finset.mem_union.mpr (Or.inl (Finset.mem_union.mpr (Or.inr h)))
+    · exact fun hmem => Finset.disjoint_left.mp hZlr h hmem
+    · obtain ⟨hIi, hLR⟩ := Finset.mem_sdiff.mp h
+      rw [hIeq] at hIi
+      rcases Finset.mem_union.mp hIi with h | h
+      · rcases Finset.mem_union.mp h with h | h
+        · exact absurd (Finset.mem_union.mpr (Or.inl (hAL₁ h))) hLR
+        · exact h
+      · exact absurd (Finset.mem_union.mpr (Or.inr (hBR₁ h))) hLR
+  have hZeq' : Z' = I \ (L ∪ R) := by
+    refine Finset.ext fun i => ⟨fun h => Finset.mem_sdiff.mpr ⟨?_, ?_⟩, fun h => ?_⟩
+    · rw [hIeq']; exact Finset.mem_union.mpr (Or.inl (Finset.mem_union.mpr (Or.inr h)))
+    · exact fun hmem => Finset.disjoint_left.mp hZlr' h hmem
+    · obtain ⟨hIi, hLR⟩ := Finset.mem_sdiff.mp h
+      rw [hIeq'] at hIi
+      rcases Finset.mem_union.mp hIi with h | h
+      · rcases Finset.mem_union.mp h with h | h
+        · exact absurd (Finset.mem_union.mpr (Or.inl (hAL₂ h))) hLR
+        · exact h
+      · exact absurd (Finset.mem_union.mpr (Or.inr (hBR₂ h))) hLR
+  have hPQ : p.1 = q.1 := hAL.trans hAL'.symm
+  have hPQ2 : p.2 = q.2 := hBL.trans hBL'.symm
+  refine ⟨?_, ?_, hZeq.trans hZeq'.symm⟩
+  · have hkrw : keyOf c b p.1 = keyOf c b q.1 := by rw [hPQ]
+    exact (hA₁c.symm.trans hkrw).trans hA₂c
+  · have hkrw : keyOf c b p.2 = keyOf c b q.2 := by rw [hPQ2]
+    exact (hB₁c.symm.trans hkrw).trans hB₂c
+
+/-- Distinct key-triples give disjoint classes (the partition property of the
+class dictionary, on `Z ⊆ M` keys). -/
+theorem cls_disjoint_of_key_ne (hlr : Disjoint L R) (hLm : Disjoint L M)
+    (hRm : Disjoint R M) {c b : Fin n → ℤ}
+    {k k' : (ℤ × ℤ) × (ℤ × ℤ) × Finset (Fin n)}
+    (hZm : k.2.2 ⊆ M) (hZ'm : k'.2.2 ⊆ M) (hk : k ≠ k') :
+    Disjoint (cls c b L R k.1 k.2.1 k.2.2) (cls c b L R k'.1 k'.2.1 k'.2.2) := by
+  rw [Finset.disjoint_left]
+  rintro I hI hI'
+  obtain ⟨e₁, e₂, e₃⟩ :=
+    mem_cls_key_unique hlr hLm hRm hZm hZ'm hI hI'
+  exact hk (Prod.ext e₁ (Prod.ext e₂ e₃))
+
+instance IsAlias.instDecidablePred (P : ℕ) (T ts : ℤ) {n : ℕ} (c b : Fin n → ℤ) :
+    DecidablePred (IsAlias P T ts c b) := fun I => inferInstanceAs
+      (Decidable (subsum b I = T ∧ subsum c I % P = subsum b I % P ∧ subsum c I ≠ ts))
+
+/-- The alias set `A_s(P)`: all key-subsets that are aliases of the target. -/
+def aliasSet (P : ℕ) (T ts : ℤ) (c b : Fin n → ℤ) : Finset (Finset (Fin n)) :=
+  Finset.univ.filter (IsAlias P T ts c b)
+
+/-- The D_s closure — the dictionary's content (§5.3: «if D_s contains every
+alias class of t_s, then the exact output sum equals Σ_{I∈A_s(P)} χ(I)»):
+over a sound (Lemma A1) and complete (Corollary A6's coverage, as a
+hypothesis) dictionary of `Z ⊆ M` key-triples, the class-sums assemble to
+the alias-set sum.  The exec machinery stays abstracted behind `dict`
+(the D7 boundary). -/
+theorem ds_closure (hlr : Disjoint L R) (hLm : Disjoint L M) (hRm : Disjoint R M)
+    {c b : Fin n → ℤ} {P : ℕ} {T ts : ℤ} {χ : Finset (Fin n) → ℂ}
+    (dict : Finset ((ℤ × ℤ) × (ℤ × ℤ) × Finset (Fin n)))
+    (hZm : ∀ k ∈ dict, k.2.2 ⊆ M)
+    (hcover : ∀ I ∈ aliasSet P T ts c b,
+      ∃ k ∈ dict, I ∈ cls c b L R k.1 k.2.1 k.2.2)
+    (hsound : ∀ k ∈ dict, ∀ J ∈ cls c b L R k.1 k.2.1 k.2.2,
+      IsAlias P T ts c b J) :
+    ∑ k ∈ dict, ∑ I ∈ cls c b L R k.1 k.2.1 k.2.2, χ I
+      = ∑ I ∈ aliasSet P T ts c b, χ I := by
+  classical
+  have hpw : ((dict : Set ((ℤ × ℤ) × (ℤ × ℤ) × Finset (Fin n)))).PairwiseDisjoint
+      (fun k : (ℤ × ℤ) × (ℤ × ℤ) × Finset (Fin n) =>
+        cls c b L R k.1 k.2.1 k.2.2) := by
+    intro k hk k' hk' hne
+    exact cls_disjoint_of_key_ne hlr hLm hRm (hZm k hk) (hZm k' hk') hne
+  have hunion : dict.biUnion
+      (fun k : (ℤ × ℤ) × (ℤ × ℤ) × Finset (Fin n) =>
+        cls c b L R k.1 k.2.1 k.2.2)
+      = aliasSet P T ts c b := by
+    ext I
+    rw [Finset.mem_biUnion, aliasSet, Finset.mem_filter]
+    constructor
+    · rintro ⟨k, hk, hIk⟩
+      exact ⟨Finset.mem_univ I, hsound k hk I hIk⟩
+    · rintro ⟨huniv, halias⟩
+      obtain ⟨k, hk, hIk⟩ :=
+        hcover I (Finset.mem_filter.mpr ⟨Finset.mem_univ I, halias⟩)
+      exact ⟨k, hk, hIk⟩
+  rw [← Finset.sum_biUnion hpw, hunion]
+
 end SubsetSumL25

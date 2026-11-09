@@ -1040,6 +1040,29 @@ B-dependent right factor dangles) — replaced by
 ring`.  Landed: finset_product_eq_sprod + cls_union_injOn + class_sum_eq in
 Proofs/DS.lean.  Full build receipt recorded at commit; package sorries 0.
 
+## DS-M1 — COMPLETE (the same session; the closure corollary landed)
+The pole's session continued past (5.2) through the closure corollary.
+Landed in Proofs/DS.lean:
+* `mem_cls_key_unique` — the canonical-key partition lemma: under
+  `L ⊥ R`, `M ⊥ L`, `M ⊥ R`, `Z ⊆ M`, `Z' ⊆ M`, a member `I` of two classes
+  forces `κL = κL' ∧ κR = κR' ∧ Z = Z'` — the triple is recovered as
+  `A = I ∩ L`, `B = I ∩ R`, `Z = I \ (L ∪ R)` (a third recovery, of Z, via
+  the M-disjointness — recovery_C in spirit, proven inline).
+* `cls_disjoint_of_key_ne` — distinct key-triples give disjoint classes.
+* `aliasSet` + a DecidablePred instance for IsAlias.
+* `ds_closure` — THE DICTIONARY'S CONTENT (§5.3: «if D_s contains every
+  alias class of t_s, then the exact output sum equals Σ_{I∈A_s(P)} χ(I)»):
+  sound (Lemma A1) + complete (A6's coverage, as hypothesis) ⇒
+  `∑ k ∈ dict, ∑ I ∈ cls .. k .., χ I = ∑ I ∈ aliasSet .., χ I` — via
+  PairwiseDisjoint + Finset.sum_biUnion + the set-equality of the union
+  with the alias filter.  The dictionary is `Finset ((ℤ×ℤ) × (ℤ×ℤ) ×
+  Finset (Fin n))` — the D7 boundary (balanced trees, sorting, op-counting
+  stay named).
+The ledger's DS-M1 list (defs + (5.1) + class machinery + (5.2) + Lemma A1
++ the closure corollary) is now fully in Proofs/DS.lean.  Full build green;
+package sorries 0.  DS-M2 (Lemma A2 key/class counts + the §5.4 trial
+count, mathlib Chebyshev) is the next milestone — no blockers.
+
 ## Gotchas banked (M2b)
   level goes through Finset.mem_filter.1 (the And-projections are safe).
 * Nat.cast_pos vs Nat.cast_ne_zero: Real.log_prod's hypothesis is the
