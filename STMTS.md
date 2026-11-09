@@ -839,6 +839,19 @@ DS-M1's remaining piece: (5.2) the class-sum identity via `Finset.sum_product`
 (the map (A,B) ↦ A∪Z∪B is injective by the pairwise disjointness — the
 injectivity is the long pole). Then DS-M2 per the ladder.
 
+## DS-M1's (5.2) residual — the assembly designed, the injectivity is the pole
+The (5.2) assembly was attempted: the union-map injectivity decomposes into
+FOUR recovery-lemmas (`A = ((A∪Z∪B) \ Z) ∩ L`, `A' = ... ∩ L` via heq-routing,
+`B = ... ∩ R`, `B' = ... ∩ R`), each ~10 lines of per-point Finset-set-algebra
+with the disjointness-contradictions via `Finset.disjoint_left/right.mp`.  The
+heq-routing (the A'/B' forwards go through `heq.symm ▸` to the union) plus the
+three-slot union-splits (A ✓ / Z ✗-hlz / B ✗-hlr per point) are the design;
+the full write did not close this session.  After the four recoveries:
+`Finset.sum_image` + `Finset.sum_product'` + `Finset.sum_mul` ×2 +
+`chi_split.symm` per-term close (5.2), and the closure corollary needs the
+partition machinery on top.  The chi_split per-term split IS proved
+(previous commit).
+
 ## Gotchas banked (M2b)## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
 Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
 pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
@@ -883,6 +896,19 @@ full package green 8960, package sorries 0.
 DS-M1's remaining piece: (5.2) the class-sum identity via `Finset.sum_product`
 (the map (A,B) ↦ A∪Z∪B is injective by the pairwise disjointness — the
 injectivity is the long pole). Then DS-M2 per the ladder.
+
+## DS-M1's (5.2) residual — the assembly designed, the injectivity is the pole
+The (5.2) assembly was attempted: the union-map injectivity decomposes into
+FOUR recovery-lemmas (`A = ((A∪Z∪B) \ Z) ∩ L`, `A' = ... ∩ L` via heq-routing,
+`B = ... ∩ R`, `B' = ... ∩ R`), each ~10 lines of per-point Finset-set-algebra
+with the disjointness-contradictions via `Finset.disjoint_left/right.mp`.  The
+heq-routing (the A'/B' forwards go through `heq.symm ▸` to the union) plus the
+three-slot union-splits (A ✓ / Z ✗-hlz / B ✗-hlr per point) are the design;
+the full write did not close this session.  After the four recoveries:
+`Finset.sum_image` + `Finset.sum_product'` + `Finset.sum_mul` ×2 +
+`chi_split.symm` per-term close (5.2), and the closure corollary needs the
+partition machinery on top.  The chi_split per-term split IS proved
+(previous commit).
 
 ## Gotchas banked (M2b)
 * Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
