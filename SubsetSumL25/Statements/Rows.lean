@@ -54,8 +54,12 @@ T = 0.4875754036), the bound is `O(2^{T′n})`: the `2√n` slack and the
 polynomial factor are `2^{o(n)}`, absorbed by the fixed gap `T′ − (τ₀ +
 20ε) > 0` for all large `n`.
 
-WIP: the absorption tail is this row's first proof obligation (precisely
-reported sorry; M2 next session). -/
+**PROVED (this file):** the T′-absorption tail itself — the exponential
+`2^{o(n)}` slack (`2√n + 2` and the polynomial factor) is absorbed by the
+fixed gap `T′ − (τ₀+20ε) > 0` past an explicit threshold, so the row's
+per-stage bound `hops` gives `ops n ≤ 2^{T'·n}` for all large n.  The
+row's named conditions remain hypotheses (the procedures, the certified
+numerics, the O-cluster and V1 lemmas). -/
 theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
     (_hO1 : O1) (_hO2 : O2) (_hO3 : O3) (_hO6 : O6) (_hV1 : V1)
     (_hSum : SumCheck) (_hAlias : AliasExt) (_hCert : CertNum)
@@ -67,21 +71,146 @@ theorem rev8g_thm1_time {O1 O2 O3 O6 V1 SumCheck AliasExt CertNum : Prop}
       * 2 ^ ((τ₀ + 20 * ε) * n + 2 * Real.sqrt n + 2))
     (T' : ℝ) (hT : τ₀ + 20 * ε < T') :
     ∃ n₁ : ℕ, ∀ n ≥ n₁, ops n ≤ 2 ^ (T' * n) := by
-  sorry
-
-/- Pointer rows (external, NOT restated — their own sources stand):
-* **JoshuaQFEX 0.487676** — «a retuning of Base by JoshuaQFEX» (rev8g
-  abstract/results table); conditional on the OpenAI proof.  Statement
-  source: JoshuaQFEX's paper (Big O Speedrun listing).  Not in this
-  package's sources; fetching its verbatim statement is the first task of
-  that row's verification work.
-* **Bills 0.4876723** — subset-sum-conditional-refinement, conditional
-  0.4876723 (v1.0.0, 21 Oct; v1.1.0 verification supplement, commit
-  590bb68, 22 Oct), Claimed/rank 1 on Big O Speedrun.  Local source:
-  `subset-sum-subclassic/yannouli-ss/` (the B4 entry decision examined its
-  Regions/RowMargins template).  Its 430 enclosures are the ones Base's
-  status row references («430 premises certified here and in [13]»).
-* **rev8g Theorem 3** (0.4873408, ternary) needs the open statement [S] —
-  not one of the three conditional rows; excluded per BRIDGE note (i). -/
-
-end SubsetSumL25
+  classical
+  have hδ0 : 0 < T' - (τ₀ + 20 * ε) := by linarith
+  set δ : ℝ := T' - (τ₀ + 20 * ε) with hδdef
+  have hδpos : 0 < δ := hδ0
+  have hlog2pos : (0:ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  -- the q-block (hoisted: the √-slack's linarith needs hsqrt1)
+  set r : ℝ := 2 ^ (δ/2) with hrdef
+  have hrpos : 0 < r := Real.rpow_pos_of_pos (by norm_num : (0:ℝ) < 2) _
+  have hr1 : 1 < r := Real.one_lt_rpow (by norm_num) (by positivity)
+  set q : ℝ := Real.sqrt r with hq
+  have hqpos : 0 ≤ q := Real.sqrt_nonneg r
+  have hqq : q * q = r := Real.mul_self_sqrt (by linarith)
+  have hq1 : (1:ℝ) < q := by nlinarith [hqq, hr1, hqpos]
+  have hlogq : 0 < Real.log q := Real.log_pos hq1
+  have hsqrt1 : (1:ℝ) < Real.sqrt q := by
+    have h1 : Real.sqrt (1:ℝ) < Real.sqrt q := Real.sqrt_lt_sqrt (by norm_num) hq1
+    rwa [Real.sqrt_one] at h1
+  -- aux 1: the √-slack absorbs — 2^{2√n+2} ≤ 2^{(δ/2)n} past ⌈(8/δ)²⌉+1
+  have hsqrtle : ∃ n₂ : ℕ, ∀ n ≥ n₂, (2:ℝ) ^ (2 * Real.sqrt (n:ℝ) + 2) ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) := by
+    obtain ⟨n₂, hn₂⟩ := exists_nat_gt (((8:ℝ)/δ)^2)
+    refine ⟨n₂ + 4, fun n hn => ?_⟩
+    have hnδ : 0 < δ := hδ0
+    have h4n : (4:ℕ) ≤ n := by omega
+    have hnpos : (4:ℝ) ≤ (n:ℝ) := by exact_mod_cast h4n
+    have hge : ((8:ℝ)/δ)^2 ≤ (n:ℝ) := by
+      have h1 : ((8:ℝ)/δ)^2 < ((n₂:ℕ) : ℝ) := hn₂
+      have h2 : ((n₂:ℕ) : ℝ) ≤ (n:ℝ) := by exact_mod_cast (by omega : (n₂:ℕ) ≤ n)
+      linarith
+    have hsqrt8 : (8:ℝ)/δ ≤ Real.sqrt (n:ℝ) := Real.le_sqrt_of_sq_le hge
+    have hs2 : (2:ℝ) ≤ Real.sqrt (n:ℝ) := Real.le_sqrt_of_sq_le (by linarith)
+    have h8 : (8:ℝ) ≤ δ * Real.sqrt (n:ℝ) := by
+      have h1 : (8:ℝ)/δ ≤ Real.sqrt (n:ℝ) := hsqrt8
+      rw [div_le_iff₀ hnδ] at h1
+      linarith
+    have hprod : (8:ℝ) * Real.sqrt (n:ℝ) ≤ δ * (n:ℝ) := by
+      have h1 : (8:ℝ) * Real.sqrt (n:ℝ) ≤ (δ * Real.sqrt (n:ℝ)) * Real.sqrt (n:ℝ) := by
+        exact mul_le_mul_of_nonneg_right h8 (Real.sqrt_nonneg n)
+      rw [mul_assoc, Real.mul_self_sqrt (show (0:ℝ) ≤ (n:ℝ) by linarith)] at h1
+      exact h1
+    have hs2' : (2:ℝ) + 2 * Real.sqrt (n:ℝ) ≤ (4:ℝ) * Real.sqrt (n:ℝ) := by nlinarith
+    refine Real.rpow_le_rpow_of_exponent_le (by norm_num) ?_
+    rw [div_mul_eq_mul_div]
+    linarith [hprod, hs2']
+  -- aux 2: the polynomial absorbs — c·(n+1)² ≤ 2^{(δ/2)n} eventually
+  rcases eq_or_lt_of_le hc with hc0 | hc0
+  · exact ⟨n₀, fun n hn => by
+      have h1 := hops n hn
+      rw [hc0.symm, zero_mul, zero_mul] at h1
+      exact le_trans h1 (Real.rpow_nonneg (by norm_num) _)⟩
+  have hc0 : 0 < c := hc0
+  -- the ratio threshold: (n+2)² ≤ q(n+1)² past N
+  obtain ⟨N, hN⟩ := exists_nat_gt (1 / (Real.sqrt q - 1))
+  have hstep : ∀ n ≥ N, ((n:ℝ) + 2) ^ 2 ≤ q * ((n:ℝ) + 1) ^ 2 := by
+    intro n hn
+    have hNn : ((N:ℕ) : ℝ) ≤ (n:ℝ) := by exact_mod_cast hn
+    have hpos : (0:ℝ) < Real.sqrt q - 1 := by linarith [hsqrt1]
+    have h1 : (1:ℝ) / (Real.sqrt q - 1) ≤ ((n:ℝ) + 1) := by
+      have h2 : (1:ℝ) / (Real.sqrt q - 1) < ((N:ℕ) : ℝ) := hN
+      have h3 : ((N:ℕ) : ℝ) ≤ ((n:ℕ) : ℝ) := by exact_mod_cast hn
+      have h4 : ((N:ℕ) : ℝ) ≤ (n:ℝ) := by exact_mod_cast h3
+      linarith
+    rw [div_le_iff₀ hpos] at h1
+    have hle : ((n:ℝ) + 2) ≤ Real.sqrt q * ((n:ℝ) + 1) := by nlinarith
+    calc ((n:ℝ) + 2) ^ 2 ≤ (Real.sqrt q * ((n:ℝ) + 1)) ^ 2 :=
+          pow_le_pow_left₀ (by positivity) hle 2
+      _ = q * ((n:ℝ) + 1) ^ 2 := by
+            rw [mul_pow, pow_two, Real.mul_self_sqrt hqpos]
+  -- geometric invariant past N: c·(n+1)² ≤ A·q^n, A := c(N+1)²/q^N
+  -- (the base is trivially true by div_mul_cancel₀; the step uses the q-ratio)
+  set A : ℝ := c * (((N:ℕ) : ℝ) + 1) ^ 2 / q ^ (N:ℕ) with hAdef
+  have hApos : 0 < A := by
+    rw [hAdef]
+    refine div_pos (mul_pos hc0 (by positivity)) (by positivity)
+  have hbase : c * (((N:ℕ) : ℝ) + 1) ^ 2 ≤ A * q ^ (N:ℕ) := by
+    rw [hAdef, div_mul_cancel₀ _ (by positivity)]
+  have hinv : ∀ m ≥ N, c * (((m:ℕ) : ℝ) + 1) ^ 2 ≤ A * q ^ (m:ℕ) := by
+    intro m hm
+    induction m, hm using Nat.le_induction with
+    | base => exact hbase
+    | succ k _ ihk =>
+      have hkN : N ≤ k := by omega
+      have hks := hstep k hkN
+      rw [pow_succ]
+      have hcast : (((k:ℕ) + 1 : ℕ) : ℝ) + 1 = ((k:ℕ) : ℝ) + 2 := by push_cast; ring
+      rw [hcast]
+      calc c * (((k:ℕ) : ℝ) + 2) ^ 2 ≤ c * (q * (((k:ℕ) : ℝ) + 1) ^ 2) :=
+            mul_le_mul_of_nonneg_left hks (le_of_lt hc0)
+        _ = q * (c * (((k:ℕ) : ℝ) + 1) ^ 2) := by ring
+        _ ≤ q * (A * q ^ (k:ℕ)) := mul_le_mul_of_nonneg_left ihk hqpos
+        _ = A * (q ^ (k:ℕ) * q) := by ring
+  -- absorb A via the log threshold: A ≤ q^n for large n
+  obtain ⟨N₃, hN₃⟩ := exists_nat_gt (Real.log A / Real.log q)
+  have hAabs : ∀ n ≥ N₃, A ≤ q ^ (n:ℕ) := by
+    intro n hn
+    have hq1' : (0:ℝ) < q := by linarith
+    have h1 : Real.log A ≤ Real.log (q ^ (n:ℕ)) := by
+      rw [Real.log_pow q n]
+      have h2 : ((N₃:ℕ):ℝ) ≤ ((n:ℕ):ℝ) := by exact_mod_cast hn
+      have hdiv : (Real.log A / Real.log q) ≤ ((n:ℕ):ℝ) := by linarith
+      rw [div_le_iff₀ hlogq] at hdiv
+      exact hdiv
+    exact (Real.log_le_log_iff hApos (pow_pos hq1' n)).mp h1
+  have hpolyle : ∃ n₃ : ℕ, ∀ n ≥ n₃, c * ((n:ℝ) + 1) ^ 2 ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) := by
+    refine ⟨max N N₃, fun n hn => ?_⟩
+    have hNle : N ≤ n := le_trans (le_max_left N N₃) hn
+    have hN₃le : N₃ ≤ n := le_trans (le_max_right N N₃) hn
+    have hAn := hAabs n hN₃le
+    have h2 := hinv n hNle
+    calc c * ((n:ℝ) + 1) ^ 2 ≤ A * q ^ (n:ℕ) := h2
+      _ ≤ q ^ (n:ℕ) * q ^ (n:ℕ) := mul_le_mul_of_nonneg_right hAn (pow_nonneg hqpos n)
+      _ = q ^ ((n:ℕ) + (n:ℕ)) := (pow_add q n n).symm
+      _ = q ^ (2 * (n:ℕ)) := by rw [two_mul]
+      _ = r ^ (n:ℕ) := by rw [pow_mul, pow_two, hqq, hrdef]
+      _ = (2:ℝ) ^ ((δ/2) * (n:ℝ)) := by rw [Real.rpow_mul_natCast (by norm_num : (0:ℝ) ≤ 2)]
+  -- assemble: past max(n₀, n₄, N₃-threshold) both absorptions hold simultaneously
+  obtain ⟨n₄, hn₄⟩ := hsqrtle
+  obtain ⟨n₅, hn₅⟩ := hpolyle
+  refine ⟨max (max n₀ n₄) n₅, fun n hn => ?_⟩
+  have hn₀ : n₀ ≤ n := le_trans (le_max_left n₀ n₄) (le_trans (le_max_left (max n₀ n₄) n₅) hn)
+  have h₄ := hn₄ n (le_trans (le_max_right n₀ n₄) (le_trans (le_max_left (max n₀ n₄) n₅) hn))
+  have h₅ := hn₅ n (le_trans (le_max_right (max n₀ n₄) n₅) hn)
+  have h2nn : ∀ e : ℝ, (0:ℝ) ≤ (2:ℝ) ^ e := fun e => Real.rpow_nonneg (show (0:ℝ) ≤ 2 by norm_num) e
+  have hE : ((τ₀ + 20 * ε) * (n:ℝ) + 2 * Real.sqrt (n:ℝ) + 2)
+      = (2 * Real.sqrt (n:ℝ) + 2) + (τ₀ + 20 * ε) * (n:ℝ) := by ring
+  calc ops n ≤ c * poly n * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ) + 2 * Real.sqrt (n:ℝ) + 2) :=
+        hops n hn₀
+    _ = c * poly n * ((2:ℝ) ^ (2 * Real.sqrt (n:ℝ) + 2) * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ))) := by
+        rw [hE, Real.rpow_add (by norm_num : (0:ℝ) < 2)]
+    _ ≤ c * ((n:ℝ) + 1) ^ 2 * ((2:ℝ) ^ (2 * Real.sqrt (n:ℝ) + 2) * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ))) :=
+        mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left (hpoly n) hc0.le)
+          (mul_nonneg (h2nn _) (h2nn _))
+    _ ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) * ((2:ℝ) ^ (2 * Real.sqrt (n:ℝ) + 2) * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ))) :=
+        mul_le_mul_of_nonneg_right h₅ (mul_nonneg (h2nn _) (h2nn _))
+    _ ≤ (2:ℝ) ^ ((δ/2) * (n:ℝ)) * ((2:ℝ) ^ ((δ/2) * (n:ℝ)) * (2:ℝ) ^ ((τ₀ + 20 * ε) * (n:ℝ))) :=
+        mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right h₄ (h2nn _)) (h2nn _)
+    _ = (2:ℝ) ^ ((δ/2) * (n:ℝ) + ((δ/2) * (n:ℝ) + (τ₀ + 20 * ε) * (n:ℝ))) := by
+        rw [← Real.rpow_add (by norm_num : (0:ℝ) < 2) ((δ/2) * (n:ℝ)) ((τ₀ + 20 * ε) * (n:ℝ)),
+            ← Real.rpow_add (by norm_num : (0:ℝ) < 2) ((δ/2) * (n:ℝ))
+              ((δ/2) * (n:ℝ) + (τ₀ + 20 * ε) * (n:ℝ))]
+    _ = (2:ℝ) ^ (T' * (n:ℝ)) := by
+        congr 1
+        rw [hδdef]
+        ring
