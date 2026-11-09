@@ -826,6 +826,19 @@ mathematical content — items 1 + 3 + the discrete form of item 2). The
 O-cluster conditions now stand: hcount ✓, V1 ✓ (ledger-documented residuals
 are integration items, not new mathematics).
 
+## DS-M1.5 CLOSED — (5.1) + the member-shared-key lemma + the A1 transfer
+Proofs/DS.lean: `subsum_sgnW_eq` ((5.1) `w^F(Z) = w(Z △ F) − w(F)` — the
+conv-bridge landed; the pin's symmDiff notation is `scoped[symmDiff]` and
+uses U+2206, NOT U+25B3), `subsum_eq_of_mem_cls` (members share their
+(c,b)-sums through the class key — the Finset obtain-chain:
+`Finset.mem_product.mp` returns PROJECTION-form `p.1 ∈ s ∧ p.2 ∈ t`, not the
+∃-form), `isAliasClass_of_mem_alias` (Lemma A1's class-level transfer).
+All three on [propext, Classical.choice, Quot.sound]; module green 8926,
+full package green 8960, package sorries 0.
+DS-M1's remaining piece: (5.2) the class-sum identity via `Finset.sum_product`
+(the map (A,B) ↦ A∪Z∪B is injective by the pairwise disjointness — the
+injectivity is the long pole). Then DS-M2 per the ladder.
+
 ## Gotchas banked (M2b)## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
 Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
 pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
@@ -857,6 +870,19 @@ Verdict: **V1 CLOSED at the level the BRIDGE row names** (the sine extension's
 mathematical content — items 1 + 3 + the discrete form of item 2). The
 O-cluster conditions now stand: hcount ✓, V1 ✓ (ledger-documented residuals
 are integration items, not new mathematics).
+
+## DS-M1.5 CLOSED — (5.1) + the member-shared-key lemma + the A1 transfer
+Proofs/DS.lean: `subsum_sgnW_eq` ((5.1) `w^F(Z) = w(Z △ F) − w(F)` — the
+conv-bridge landed; the pin's symmDiff notation is `scoped[symmDiff]` and
+uses U+2206, NOT U+25B3), `subsum_eq_of_mem_cls` (members share their
+(c,b)-sums through the class key — the Finset obtain-chain:
+`Finset.mem_product.mp` returns PROJECTION-form `p.1 ∈ s ∧ p.2 ∈ t`, not the
+∃-form), `isAliasClass_of_mem_alias` (Lemma A1's class-level transfer).
+All three on [propext, Classical.choice, Quot.sound]; module green 8926,
+full package green 8960, package sorries 0.
+DS-M1's remaining piece: (5.2) the class-sum identity via `Finset.sum_product`
+(the map (A,B) ↦ A∪Z∪B is injective by the pairwise disjointness — the
+injectivity is the long pole). Then DS-M2 per the ladder.
 
 ## Gotchas banked (M2b)
 * Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
