@@ -4,5 +4,6 @@ import SubsetSumL25.Statements.Deficiency
 import SubsetSumL25.Statements.RandomRestrictions
 import SubsetSumL25.Statements.PrimeCollision
 import SubsetSumL25.Statements.PrimeCount
+import SubsetSumL25.Statements.JV1000
 import SubsetSumL25.Statements.SparseDistinctions
 

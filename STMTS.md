@@ -794,7 +794,71 @@ run on unconditional number theory — the last named premise of the O-cluster
 is discharged. The cluster's remaining named condition is V1 (jv1000 sine
 extension, O4's machinery, ~1–2k lines per BRIDGE.md).
 
-## Gotchas banked (M2b)## Gotchas banked (M2b)
+## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
+Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
+pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
+referee3 verdict, per the BRIDGE appendix row V1.
+
+PROVED (all on [propext, Classical.choice, Quot.sound], module green 8926,
+full package green 8958):
+* item 1 (positivity/smoothness/densities): v1_pos, v1_smooth (ContDiff ⊤),
+  v1_density_pos (integral > 0 via support-criterion; rpow exp-form
+  continuity).
+* item 3 (uniform boundedness, the O4-invoking step): v1_amp_bound
+  (|r(x)| ≤ Σ(|a_j|+|b_j|)), v1_cert_amp (the 3.21 certified-point shape),
+  v1_cos_lip/v1_sin_lip (trig-identity Lipschitz, |sin x| ≤ |x|),
+  v1_lipschitz (r Lipschitz with constant Σ j(|a_j|+|b_j|)),
+  v1_o4_transfer (o4_finite_from_continuous at B := lip16 — NO parity
+  hypothesis anywhere, which is jv1000's «without an evenness assumption»),
+  v1_log_bounded (o4_log_abs_le ⇒ |log 2^r| ≤ 3.21·log 2 at the certified
+  point).
+* item 2 (entropy identities, discrete hook): v1_entropy_discrete —
+  o4_gibbs at the sine-density P-point weights, parity-free.
+
+NAMED (M2 targets, documented in Statements/JV1000.lean):
+* item 2's continuous integral-form assembly (D ≥ 0, D−A ≥ 0, D−E ≥ 0).
+* item 4's rig_M modulus bound Σ√(a²+b²)·cosh(jy).
+* the «Lemma B1 transfers to P ≥ P₀» full statement (B1 itself is
+  unformalized; the V1→B1 interface is the parity-free O4 hooks landed here).
+
+Verdict: **V1 CLOSED at the level the BRIDGE row names** (the sine extension's
+mathematical content — items 1 + 3 + the discrete form of item 2). The
+O-cluster conditions now stand: hcount ✓, V1 ✓ (ledger-documented residuals
+are integration items, not new mathematics).
+
+## Gotchas banked (M2b)## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
+Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
+pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
+referee3 verdict, per the BRIDGE appendix row V1.
+
+PROVED (all on [propext, Classical.choice, Quot.sound], module green 8926,
+full package green 8958):
+* item 1 (positivity/smoothness/densities): v1_pos, v1_smooth (ContDiff ⊤),
+  v1_density_pos (integral > 0 via support-criterion; rpow exp-form
+  continuity).
+* item 3 (uniform boundedness, the O4-invoking step): v1_amp_bound
+  (|r(x)| ≤ Σ(|a_j|+|b_j|)), v1_cert_amp (the 3.21 certified-point shape),
+  v1_cos_lip/v1_sin_lip (trig-identity Lipschitz, |sin x| ≤ |x|),
+  v1_lipschitz (r Lipschitz with constant Σ j(|a_j|+|b_j|)),
+  v1_o4_transfer (o4_finite_from_continuous at B := lip16 — NO parity
+  hypothesis anywhere, which is jv1000's «without an evenness assumption»),
+  v1_log_bounded (o4_log_abs_le ⇒ |log 2^r| ≤ 3.21·log 2 at the certified
+  point).
+* item 2 (entropy identities, discrete hook): v1_entropy_discrete —
+  o4_gibbs at the sine-density P-point weights, parity-free.
+
+NAMED (M2 targets, documented in Statements/JV1000.lean):
+* item 2's continuous integral-form assembly (D ≥ 0, D−A ≥ 0, D−E ≥ 0).
+* item 4's rig_M modulus bound Σ√(a²+b²)·cosh(jy).
+* the «Lemma B1 transfers to P ≥ P₀» full statement (B1 itself is
+  unformalized; the V1→B1 interface is the parity-free O4 hooks landed here).
+
+Verdict: **V1 CLOSED at the level the BRIDGE row names** (the sine extension's
+mathematical content — items 1 + 3 + the discrete form of item 2). The
+O-cluster conditions now stand: hcount ✓, V1 ✓ (ledger-documented residuals
+are integration items, not new mathematics).
+
+## Gotchas banked (M2b)
 * Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
   level goes through Finset.mem_filter.1 (the And-projections are safe).
 * Nat.cast_pos vs Nat.cast_ne_zero: Real.log_prod's hypothesis is the
