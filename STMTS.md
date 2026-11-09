@@ -879,6 +879,13 @@ interfere with the unifier's display).  Everything else is in place: the
 mem_product-projection obtain-chain, the four-recovery-fed Prod.ext
 injectivity, the chi_split per-term, and the sum_mul x2/ring tail.
 
+## DS-M1's (5.2) — the (f := chi)-form datapoint (build-or-don't-claim honored)
+The sum_image-rw's named-arg form `Finset.sum_image (f := chi) (by ...)`
+(the positional-InjOn-proof LAST, after the phi-rws-skip reorder) — the
+draft is preserved at /tmp/DS_draft_53.lean.  The tree reverted to the
+green M1.5+recoveries state; the (5.2) assembly remains DS-M1's sole
+residual.  Full build green 8960 jobs; package sorries 0.
+
 ## Gotchas banked (M2b)## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
 Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
 pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
@@ -963,6 +970,13 @@ pairs-let via `set`), or `simp only [Finset.sum_image]`, or `rw
 interfere with the unifier's display).  Everything else is in place: the
 mem_product-projection obtain-chain, the four-recovery-fed Prod.ext
 injectivity, the chi_split per-term, and the sum_mul x2/ring tail.
+
+## DS-M1's (5.2) — the (f := chi)-form datapoint (build-or-don't-claim honored)
+The sum_image-rw's named-arg form `Finset.sum_image (f := chi) (by ...)`
+(the positional-InjOn-proof LAST, after the phi-rws-skip reorder) — the
+draft is preserved at /tmp/DS_draft_53.lean.  The tree reverted to the
+green M1.5+recoveries state; the (5.2) assembly remains DS-M1's sole
+residual.  Full build green 8960 jobs; package sorries 0.
 
 ## Gotchas banked (M2b)
 * Finset.Mem's raw .1/.2 projections UNFOLD to List.Mem and break — every
