@@ -620,3 +620,35 @@ rows.
   `Real.log_div` takes `≠ 0` (not `0 <`); `norm_integral_le_of_norm_le_const`
   takes `uIoc` membership and concludes `C * |b - a|`; `neg_le_abs_self` is
   absent — derive via `le_abs_self (-a)` + `abs_neg` + linarith.
+
+# O5+O7 — OpenAI Thm 4.1 + Thm 5.1: statements + proved-vs-named ledger
+
+Sources: OpenAI preprint `sections/checksum.tex` (Thm 4.1 =
+`thm:checksum`), `sections/aliases.tex` (Thm 5.1 = `thm:aliases`),
+`sections/implementation.tex`; Base `PROOF_0.4877.tex` §2.2 (F8)
+(sha re-verified `b397531c…`). Cross-checked against BRIDGE rows O5/O7.
+**Credit: Thm 4.1 and Thm 5.1 are OpenAI's; this package formalizes the
+mathematical core.** **D7 boundary:** the procedures stay named; op counts
+stay in the papers' own counters.
+
+## Proved-vs-named ledger
+
+| Paper piece | Lean | Kind |
+|---|---|---|
+| Thm 4.1's budget `2^{(τ+20ε)n+O(√n)}poly(n+\|T\|)` — ceilings | `o5Cap` + `o5_cap_absorb` | PROVED; the two ceilings absorb unconditionally into the explicit `2√n+2` slack (unlike O8's absorption, no «sufficiently large n» needed — the budget's own slack covers the two units) |
+| Thm 4.1's per-execution op bound (categories ≤ cap·poly) | `o5_time_bound` | PROVED (o8_time_bound consumer; ten counted categories; 16 = 2⁴ absorbs them; P = named per-category cost) |
+| Thm 4.1's accuracy \|V̂_ρ − V_ρ\| ≤ 1/8 (MSE form) | `o5_mse_le` | PROVED skeleton; μ (per-table MSE, the L3.2/filtering input) and N (repetition count) named; the independence decomposition enters as the named `hMSE` |
+| Thm 5.1's «stores and visits ≤ 2^{⌈τn⌉}poly(n) records» | `o7Cap` + `o7_records_le_cap` | PROVED (o8_trials_le_cap consumer: per-round ≥ 1 counted step + prefix ≤ cap ⟹ K ≤ cap); FAIL rule named |
+| Thm 5.1's completeness «lists equal A_s(P) simultaneously, prob 1−o(1)» | `o7_union_le` | PROVED union-bound skeleton consuming B3's `cor_A6_per_alias`: total failure ≤ \|A\|·e^{−1}; the o(1) ratio is named external |
+| The checksum/alias-extraction procedures (tables, patterns, phases, dedup, alias subtraction) | — | algorithm, named (the D_s boundary) |
+| Per-table MSE μ, repetition count N, per-pair miss m, trial count Tp ≥ 1 | — | external inputs, named (the L3.2/filtering and B3 A5/A6 chains' outputs) |
+
+## Statement hygiene (the standing audits)
+
+* **Empty-expect audit:** `o5_mse_le` is the only expect-touching statement;
+  `Ω.Nonempty` stated. Junk guards: `o5Cap`'s ℤ-ceilings (zpow bridging per
+  the O8 pattern), `o7Cap`'s `.toNat` (the paper's τn ≥ 0).
+* **Identifier note:** `X̄` (combining macron) is not a valid Lean identifier
+  — the Lean name is `Xbar` (the `Ŝ`-class gotcha, second occurrence).
+* M1 sorries: 5, exactly the five theorems (`o5Cap`, `o7Cap` are defs),
+  build green at 8924 jobs.

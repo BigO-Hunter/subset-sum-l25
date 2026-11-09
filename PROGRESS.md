@@ -611,3 +611,24 @@ B5 Chebyshev chain. Source: OpenAI §5 (flat enumeration) + Base §5 context.
 The named-boundary pattern (procedure = named, arithmetic = proved) is now
 established across B1–B5, O4, O8 — O5's statement work should open with the
 same ledger table.
+
+---
+
+# O5+O7 (OpenAI Thm 4.1 + 5.1) — M1 banked 2026-11-08
+
+The tail rung. Statements verbatim: Thm 4.1 (checksum estimator: 1/8
+accuracy + every-run `2^{(τ+20ε)n+O(√n)}poly` op bound) and Thm 5.1 (alias
+extraction: complete lists w.p. 1−o(1) + `2^{⌈τn⌉}poly(n)` records every
+run). Ledger in STMTS.md §O5/§O7. Consumers wired per the handoff: O8's
+cap/envelope/running-below-cap pattern, B3's cor_A6_per_alias for O7's
+union bound. Five theorems + two defs (`o5Cap`, `o7Cap`); 5 sorries, build
+green. `X̄` gotcha: combining macron → `Xbar` (the `Ŝ`-class, second hit).
+
+## Next actions (O5+O7 lane)
+
+1. **M2** `Proofs/O57.lean`: o5_cap_absorb via the O8 zpow bridge
+   (`Real.rpow_intCast`) + `Int.ceil_lt_add_one` twice; o5_time_bound =
+   o8_time_bound pattern; o5_mse_le = div arithmetic + empty-expect guard;
+   o7_records_le_cap = o8_trials_le_cap shape; o7_union_le consumes
+   `cor_A6_per_alias` (import Proofs.A5). All names pre-verified.
+2. Receipts, commit, push; then the LADDER CLOSE-OUT summary.
