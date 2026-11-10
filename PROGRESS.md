@@ -1161,3 +1161,15 @@ Not proved, stated so the remaining work is exactly bounded. With
 `LeafTest` therefore needs: the payload convention (1), the loop + cost (2),
 the cross-estimate relation (3), the accumulator layout (4) — and then
 `agrees_main` is assembled from four leaves.
+
+### Addendum — the barrel import was verified after the receipt
+
+The receipt's build targets are the row closure (the lane's rule: a whole-
+`SubsetSumL25` build drags in the sibling's WIP `M7`). The **barrel edit**
+(`SubsetSumL25.lean` + `import SubsetSumL25.Row.KapilaChecksum`) is therefore
+not covered by that receipt, so it was verified separately:
+`lake build SubsetSumL25` → `✔ Built SubsetSumL25`, with the only failure being
+`SubsetSumL25.Proofs.M7` — the sibling's WIP module, which imports no `Row`
+module (`Statements.DS`, `M6`, `O8`) and was never in this lane's targets. That
+build also ran with the lock expired (181 s bounded wait, deviation recorded
+here); no sources were touched by it.
