@@ -1498,3 +1498,85 @@ almost certainly loose, and a loose exponent is a weaker absorption than the row
 have. Establish the tight bound first, then `scan_cost_absorbed` follows by the same
 argument `withinEnvelope_wordop_absorb` runs with the factor's exponent abstracted
 (and the `K + 7` re-derived, not assumed).
+
+## Row lane 2026-11-10 (4) — the cost pair, at its **true** degree: quartic, `K + 4` (LANDED)
+
+The residual's last piece was "the cost pair only", and its first job was to find the
+scan's *true* exponent instead of inheriting the residual's `^7`. It is **four**.
+
+### 1. The true exponent: quartic, not septic
+
+`scanWordOps n blockLen = blockLen·(2·wordOpFactor n + 3)` with `wordOpFactor n = n²+1`.
+The missing hypothesis is §6.2's own layout fact, `blockLen = ⌈n²/w⌉ + 1 ≤ n² + 1 =
+wordOpFactor n` — **the same factor that charges one dyadic operation**. Substituting:
+
+    scanWordOps ≤ w·(2w+3) ≤ 5w² = 5(n²+1)² ≤ 5(n+b+2)⁴
+
+with `2n⁴ + 7n² + 5` at the extremal `blockLen = w`, so the growth is `≈ 2n⁴` — quartic.
+
+**The residual's stated `scanWordOps_le` was also ill-formed**, not merely loose: without
+`blockLen ≤ wordOpFactor n` it is *false* (`n = 2, b = 1, blockLen = 10⁹` violates it).
+That hypothesis is exactly where §6.2's payload layout enters the cost model, so the
+lemma could never have been proved from the statement as written.
+
+**Where `7` came from.** `n³` prime candidates × quartic scan = septic: the `7` is the
+*composed* degree, and the `n³` is *already* a summand of `Routines.cost`. Charging it
+again inside the scan's own lemma double-counts. `scanWordOps_composed_le` proves the
+composition (`n³·scanWordOps ≤ 5·(n+b+2)⁷`), so the `3 + 4` provenance is a theorem and
+not a remark about round (9)'s intent — whose own split was `1 + 5 + 1`, a different and
+never-checked derivation.
+
+### 2. The absorption, with the degree abstracted, at `K + 4`
+
+`withinEnvelope_add_absorb` is the **additive twin** of `withinEnvelope_wordop_absorb`:
+given §7's envelope for `R.cost`, `cost + charge` obeys it with the exponent raised by the
+*charge's own degree* `d` and `K₀` by its constant `C` — `(C, d)` abstracted, so the
+linear charge's `+3` and this scan's `+4` are one theorem at two instantiations. That is
+what "abstract the factor's exponent" should have meant; abstracting `wordOpFactor`'s
+exponent was the wrong variable, because the scan's charge is additive where the older
+lemma is multiplicative.
+
+Constant re-derived, not assumed: `scan_cost_absorbed` gives **`K + 4`** with `K₀ + 5`.
+The residual's `K + 7` is discharged too (`scan_cost_absorbed_pow7`) *as the loose
+statement it is*, so nothing in the record claims the residual was skipped by convenience.
+
+### 3. Piece 3's verdict: absorption proved, application seam named
+
+The absorption is a theorem now. The **application cannot close from this file**, and not
+for want of a lemma:
+
+* the scan's charge is not a summand of `Routines.cost` (whose last summand, `n³·(n+b+2)`,
+  is the prime-draw bullet); folding it in edits `KapilaAlgo.cost`, which moves what
+  `R.WithinEnvelope c` *asserts* at every consumer — `kapila_row` takes
+  `henv : ∀ c, R.WithinEnvelope c` as a hypothesis, so that edit rewrites a hypothesis
+  rather than discharging one;
+* `Routines.cost` is simultaneously §7's word-op count **and** `D7.agrees`'s instruction
+  horizon (`kapila_row` counts over `2 ^ (wordLength n x.bits * R.cost n x)`), so adding
+  word-operations to it crosses the very unit seam `D7` exists to translate.
+
+Named seam: **`Routines.cost`'s summand list + `D7.agrees`'s step horizon.** Whoever
+wires the segment's charge into §7's total reads `scan_cost_absorbed` (or
+`withinEnvelope_add_absorb` at the summand's degree) to keep the exponent.
+
+### Receipts
+
+**Final: `receipts/kapila-20261110T214612Z`** — gate `swapouts_delta60=0 free_pct=67`
+(iter 3; iters 1–2 correctly *waited* on `delta60=36` then `2244` — the load-bearing half
+of the gate, working as documented). Lock: **DEVIATION, proceeded UNLOCKED after 241 s**,
+the fleet lock held by `weil-verify-lane/closure_supervisor.py`; recorded in
+`lock.acquired` and `summary.json` per the lane's hard-expiry rule. Build exit 0 in 42.4 s,
+`KapilaLoop.olean` rebuilt this run; axiom banner exit 0,
+`axiom_banner_house_triple_only: true` — the eight new declarations report
+`[propext, Classical.choice, Quot.sound]` (`scanWordOps`, a def, only `[propext]`); no
+`sorryAx`. `Statement.lean` still hashes `3dc6567e…34aa`.
+
+**Superseded: `receipts/kapila-20261110T214238Z`** — the same tree **before**
+`scanWordOps_composed_le` was added (gate `delta60=0 free_pct=69`, lock acquired after 0 s,
+build exit 0 in 42.9 s). Kept: it is the receipt for the seven-lemma version, and the
+difference between the two runs is exactly that one declaration.
+
+Next single action: the residual is now **`LeafTest`'s items 3 and 4** — the estimates'
+arithmetic relation, then the multi-word accumulator layout. Item 3 is the lever: state
+the relation between the two stored `n²`-bit estimate blocks and the `ℚ` values
+`PayloadConvention.dAt` reads, so that `payloadBlock_memOf`'s word-level agreement
+becomes a claim about the *accumulators* rather than about pre-agreed memory.

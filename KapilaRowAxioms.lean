@@ -121,3 +121,15 @@ open SubsetSumL25.Row
 #print axioms scan_prologue
 #print axioms scan_run
 #print axioms scan_run_eq_rowTest
+
+-- §L9: the scan's word-operation charge at its true degree (quartic), the
+-- additive absorption twin with the degree abstracted, and the tight `K + 4`
+-- (the residual's loose `^7` / `K + 7` kept beside it, discharged and labelled)
+#print axioms scanWordOps
+#print axioms wordOpFactor_le_sq
+#print axioms scanWordOps_le
+#print axioms scanWordOps_le_pow7
+#print axioms scanWordOps_composed_le
+#print axioms withinEnvelope_add_absorb
+#print axioms scan_cost_absorbed
+#print axioms scan_cost_absorbed_pow7

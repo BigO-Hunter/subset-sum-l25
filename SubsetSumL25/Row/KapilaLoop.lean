@@ -42,34 +42,40 @@ This file lands the loop:
    instructions) + `scan_loop` at `m = N` + `scan_epilogue`, one statement at
    fuel `12·N + 6` — so `scan_run_eq_rowTest` is a statement about the *whole*
    program on `memOf w f0`, not about a suffix of it.
-5. **The word-operation cost model** (§L8, closing comment), in §6.2's
+5. **The word-operation cost model** (§L8's step count, §L9's charge), in §6.2's
    `n²`-fractional-bits vocabulary: the single-word regime's exact `Instr`-step
    count (`12·blockLen + 6`), the multi-word charge (`wordOpFactor` per iteration,
    since a comparison of two `n²`-bit dyadics is itself a loop of `⌈n²/w⌉ + 1 ≤
    wordOpFactor n` word-visits), and the absorption — `scan_cost_absorbed` shows
    the whole charge lands inside §7's envelope with the existential `K` raised by
-   seven, so the loop does not move the row's `2^{(τ₀+20ε)n}` exponent.  This is
-   the same argument as the `wordOpFactor`/`withinEnvelope_wordop_absorb`
-   machinery of `KapilaAlgo`, at a larger exponent (the scan's charge carries
-   `wordOpFactor` squared), applied to a segment that actually exists.  **Stated,
-   not proved** — see §L8's closing comment for the exact call site and why the
-   `+3` lemma cannot be cited directly.
+   **four** (the charge is quartic, `≤ 5·(n²+1)²`), so the loop does not move the
+   row's `2^{(τ₀+20ε)n}` exponent.  This is the additive twin of the
+   `wordOpFactor`/`withinEnvelope_wordop_absorb` machinery of `KapilaAlgo`
+   (`withinEnvelope_add_absorb`, with the added degree abstracted), applied to a
+   segment that actually exists.  **Proved in §L9**; the residual's septic `^7`
+   sketch is kept beside it as a loose corollary.  The *application* — folding the
+   summand into `Routines.cost` — is the named seam in §L9's closing comment.
 
 What is *not* here, stated so the residual is bounded and exact:
 
 1. **The word-operation cost model** (piece 3 of the original trio; pieces 1 and 2
    landed in §L8).  The exact `Instr`-step count *is* landed — it is `scan_run`'s
-   fuel `12·N + 6`.  What remains is the multi-word charge: §6.2's `n²`-bit dyadic
+   fuel `12·N + 6`.  What was open was the multi-word charge: §6.2's `n²`-bit dyadic
    comparison is itself a loop of `⌈n²/w⌉ + 1 ≤ wordOpFactor n` word-visits, so the
    per-pair word-op charge is `2·wordOpFactor n + 3` and the total is
-   `blockLen·(2·wordOpFactor n + 3)`.  The absorption is then
-   `KapilaAlgo.withinEnvelope_wordop_absorb`'s argument with the polynomial
-   exponent raised by seven (one `wordOpFactor²` from the nested loop, five from
-   `wordOpFactor ≤ (n+b+2)^3` squared times the constant `5`), i.e. `K + 7` rather
-   than `K + 3`.  **Not landed**: the two lemmas
-   (`scanWordOps_le : blockLen·(2·wordOpFactor n + 3) ≤ (n+b+2)^7` and
-   `scan_cost_absorbed : (R.cost + scanWordOps ≤ K₀·2^E·P^(K+7))`) — stated
-   precisely, proved not yet.
+   `scanWordOps n blockLen = blockLen·(2·wordOpFactor n + 3)`.  **§L9 now proves it,
+   at its true degree.**  Because §6.2's layout gives `blockLen ≤ wordOpFactor n`,
+   the charge is `≤ 5·(n²+1)² ≤ 5·(n+b+2)⁴` — quartic, not septic — and
+   `scan_cost_absorbed` absorbs it with `K + 4`.  The residual's `^7`/`K + 7` is the
+   *composed* degree (`n³` prime candidates × quartic scan), which belongs to
+   `Routines.cost`, not to the scan; it is kept as `scanWordOps_le_pow7`/
+   `scan_cost_absorbed_pow7`, true and labelled loose.  The absorption's twin
+   (`withinEnvelope_add_absorb`) abstracts the added charge's degree and constant,
+   which is why the `+3` of the linear charge and the `+4` here are one theorem.
+   The *application* — folding the summand into `Routines.cost` — cannot close from
+   this file: `cost` is both §7's word-op count and `D7.agrees`'s step horizon, so
+   the seam is named in §L9's closing comment rather than pretended closed.
+
 2. **The multi-word accumulator layout** (`LeafTest`'s item 4) and **the
    estimates' arithmetic relation** (item 3) are untouched, as before.
 
@@ -1134,9 +1140,10 @@ theorem scan_run_eq_rowTest {f0 : Nat → Nat} {N baseA baseV fracBits : Nat}
   rw [hstep, ← payloadBlock_memOf (f := f0) hfit0 fracBits baseA N,
     ← payloadBlock_memOf (f := f0) hfit0 fracBits baseV N]
 
-/-! ### The cost pair's absorption call site (residual piece 3, still stated)
+/-! ### The cost pair's absorption — round (9)'s sketch, kept as the record of what
+§L9 corrected
 
-The exact `Instr`-step count is now a theorem rather than a hope: `scan_run`'s fuel is
+The exact `Instr`-step count is a theorem rather than a hope: `scan_run`'s fuel is
 `12·N + 6`, i.e. `12·blockLen + 6` steps in the single-word regime.  The multi-word
 charge replaces each per-pair step's cost by a **nested** measure: §6.2's comparison
 of two `n²`-bit dyadics is itself a loop of `⌈n²/w⌉ + 1 ≤ wordOpFactor n`
@@ -1145,26 +1152,286 @@ word-visits (`KapilaAlgo.wordOpFactor`, `n² + 1`), so one pair costs
 
     scanWordOps n blockLen = blockLen · (2 · wordOpFactor n + 3).
 
-The two lemmas this section will state, in the shape the absorption needs:
+Round (9) stated the target as
 
     scanWordOps_le      : blockLen · (2 · wordOpFactor n + 3) ≤ (n + b + 2) ^ 7
     scan_cost_absorbed  : (R.cost + scanWordOps : ℕ) ≤ K₀ · 2^E · P^(K + 7)
 
+Both are now proved in §L9 below — `scanWordOps_le_pow7`, `scan_cost_absorbed_pow7`
+— but they are *loose by three*: the scan's own degree is four, and the tight pair
+is `scanWordOps_le` at `^4` and `scan_cost_absorbed` at `K + 4`.  §L9 also records
+that the residual's `^7` was never the scan's degree at all: it is `n³` prime
+candidates times the quartic scan, a composition that belongs to `Routines.cost`
+and not to this segment's own charge.
+
+The paragraph below is round (9)'s own reasoning, quoted so the correction is
+auditable rather than silent.  Two of its claims are now known to be wrong in a
+specific way: the `+7` split was never an arithmetic derivation (it is not one
+now either — the true decomposition is `3 + 4`, not `1 + 5 + 1`), and "abstract
+`wordOpFactor`'s exponent" turned out to be the wrong variable to abstract — what
+the scan's charge needs abstracted is the *added term's degree and constant*
+(`withinEnvelope_add_absorb`), because the charge is additive where
+`withinEnvelope_wordop_absorb` is multiplicative.
+
 **The call site is `KapilaAlgo.withinEnvelope_wordop_absorb`, and the exponent it
-raises is `K + 3` — the residual asks for `K + 7`.**  That `+3` is exactly
-`wordOpFactor n ≤ (n + b + 2) ^ 3` (`wordOpFactor_le_cube`), a *linear* charge.  The
-scan's charge carries `wordOpFactor` **squared** (a comparison loop nested inside an
-outer loop of `blockLen` iterations), so the same argument runs at a larger
-exponent: round (9) accounted the `+7` as *one* unit from the nested `wordOpFactor²`
-and *five* from `wordOpFactor ≤ (n+b+2)^3` squared times the constant `5`.  **That
-split is that residual's sketch, not a checked derivation** — no arithmetic lemma in
-this module backs it, `scanWordOps_le` has not been written, and the `^7` in the
-statement above is the residual's target, not a proved bound.  What *is* checked is
-only the reason `withinEnvelope_wordop_absorb` cannot be *applied*: it proves the
-absorption for `R.cost · wordOpFactor` with `K + 3`, and the scan's charge is a
-different function of `wordOpFactor`, so the lemma to write must abstract
-`wordOpFactor`'s exponent instead of quoting the `+3`.  That is why this stays a
-stated residual rather than a one-line citation — and why, once it is written, it
-will not weaken the row's `2^{(τ₀+20ε)n}` exponent: `K` is §7's to choose. -/
+raises is `K + 3`.**  That `+3` is exactly `wordOpFactor n ≤ (n + b + 2) ^ 3`
+(`wordOpFactor_le_cube`), a *linear* charge.  The scan's charge carries
+`wordOpFactor` **squared** (a comparison loop nested inside an outer loop of
+`blockLen` iterations).  Round (9) accounted the `+7` as *one* unit from the nested
+`wordOpFactor²` and *five* from `wordOpFactor ≤ (n+b+2)^3` squared times the
+constant `5`; that split was a sketch, not a checked derivation, and no arithmetic
+lemma in this module backed it.  What *was* checked, and still holds, is the reason
+the `+3` lemma cannot be *applied*: it proves the absorption for
+`R.cost · wordOpFactor` with `K + 3`, and the scan's charge is a different function
+of `wordOpFactor`, so the lemma to write must not quote the `+3`.  §L9 writes it.
+Either way the row's `2^{(τ₀+20ε)n}` exponent does not move: `K` is §7's to
+choose. -/
+
+/-! ### §L9: the scan's word-operation charge — the true degree, and the absorption
+
+`scanWordOps n blockLen = blockLen · (2 · wordOpFactor n + 3)` is what §7 step 7
+costs in word operations: `blockLen` pairs, each pair a comparison of two
+`n²`-bit dyadics (`2 · wordOpFactor n` word-visits) plus three word reads.
+
+**Its degree is four, not seven.**  §6.2's layout fixes `blockLen = ⌈n²/w⌉ + 1`,
+so `blockLen ≤ wordOpFactor n = n² + 1` — the *same* factor that charges one
+dyadic operation.  Substituting that bound gives
+
+    scanWordOps ≤ w · (2w + 3) ≤ 5w² = 5(n² + 1)² ≤ 5(n + b + 2)⁴,
+
+i.e. growth `≈ 2n⁴` (`2n⁴ + 7n² + 5` at the extremal `blockLen = w`), quartic in
+`n`.  The residual's `^7` — and its `K + 7` — is the *composed* degree: `n³`
+prime candidates (`Routines.cost`'s last summand) times the quartic
+per-candidate scan.  That composition belongs to `Routines.cost`, not to the
+scan: charging the `n³` again inside the scan's own lemma double-counts it.  So
+the tight pair is `^4` / `K + 4`, and the residual's `^7` / `K + 7` is true but
+loose by three — kept below as `scanWordOps_le_pow7` /
+`scan_cost_absorbed_pow7`, so the residual's stated target is *discharged*, and
+labelled, rather than silently replaced.
+
+**Why `withinEnvelope_wordop_absorb` still cannot be cited.**  That lemma is
+*multiplicative* (`R.cost · wordOpFactor`, `K + 3`); the scan's charge is
+*additive* (`R.cost + scanWordOps`).  `withinEnvelope_add_absorb` below is the
+additive twin, with the added polynomial's degree `d` and constant `C`
+*abstracted* — so the linear charge's `+3` and this scan's `+4` are one theorem
+at two instantiations, which is exactly what the residual asked for when it said
+the factor's exponent must be abstracted rather than quoted. -/
+
+/-- §7 step 7's scan charged in word operations: `blockLen` pairs, each pair a
+comparison of two `n²`-bit dyadics (`2 · wordOpFactor n` word-visits) plus three
+word reads. -/
+def scanWordOps (n blockLen : ℕ) : ℕ := blockLen * (2 * wordOpFactor n + 3)
+
+/-- `wordOpFactor` is inside the envelope's *quadratic* factor.  The cube bound
+`wordOpFactor_le_cube` is the loose companion, kept because the linear charge
+(`withinEnvelope_wordop_absorb`) wants the exponent three; the scan wants the
+true one, which is two. -/
+theorem wordOpFactor_le_sq (n b : ℕ) : wordOpFactor n ≤ (n + b + 2) ^ 2 := by
+  have h1 : wordOpFactor n ≤ (n + 2) ^ 2 := by
+    rw [wordOpFactor]
+    nlinarith [Nat.zero_le n]
+  exact le_trans h1 (Nat.pow_le_pow_left (by omega) 2)
+
+/-- **The scan's charge is quartic.**  `blockLen ≤ wordOpFactor n` is §6.2's own
+layout fact (`⌈n²/w⌉ + 1 ≤ n² + 1`), and it is *necessary*: the residual's
+statement without it is false for `blockLen` out of layout.  At the extremal
+`blockLen = n² + 1` the left side is `2n⁴ + 7n² + 5`, so the constant `5` here is
+the honest slack of `2w + 3 ≤ 5w`, nothing more. -/
+theorem scanWordOps_le (n b blockLen : ℕ) (hbl : blockLen ≤ wordOpFactor n) :
+    scanWordOps n blockLen ≤ 5 * (n + b + 2) ^ 4 := by
+  have hw1 : 1 ≤ wordOpFactor n := by
+    rw [wordOpFactor]
+    omega
+  have h1 : scanWordOps n blockLen ≤ wordOpFactor n * (2 * wordOpFactor n + 3) := by
+    rw [scanWordOps]
+    exact Nat.mul_le_mul_right (2 * wordOpFactor n + 3) hbl
+  have h2 : 2 * wordOpFactor n + 3 ≤ 5 * wordOpFactor n := by omega
+  have h3 : wordOpFactor n * (2 * wordOpFactor n + 3)
+      ≤ wordOpFactor n * (5 * wordOpFactor n) := Nat.mul_le_mul_left _ h2
+  have h4 : wordOpFactor n * (5 * wordOpFactor n) = 5 * wordOpFactor n ^ 2 := by ring
+  have h5 : wordOpFactor n ^ 2 ≤ ((n + b + 2) ^ 2) ^ 2 :=
+    Nat.pow_le_pow_left (wordOpFactor_le_sq n b) 2
+  calc scanWordOps n blockLen
+      ≤ wordOpFactor n * (2 * wordOpFactor n + 3) := h1
+    _ ≤ wordOpFactor n * (5 * wordOpFactor n) := h3
+    _ = 5 * wordOpFactor n ^ 2 := h4
+    _ ≤ 5 * ((n + b + 2) ^ 2) ^ 2 := Nat.mul_le_mul_left 5 h5
+    _ = 5 * (n + b + 2) ^ 4 := by rw [← pow_mul]
+
+/-- The residual's `^7` target, **discharged and labelled**: true, but three
+exponents beyond the quartic truth.  Kept as a theorem so nothing in the record
+claims the residual was left open by convenience. -/
+theorem scanWordOps_le_pow7 (n b blockLen : ℕ) (hbl : blockLen ≤ wordOpFactor n) :
+    scanWordOps n blockLen ≤ (n + b + 2) ^ 7 := by
+  have h4 := scanWordOps_le n b blockLen hbl
+  have hP2 : 2 ≤ n + b + 2 := by omega
+  have h5 : 5 ≤ (n + b + 2) ^ 3 :=
+    le_trans (by norm_num : 5 ≤ 2 ^ 3) (Nat.pow_le_pow_left hP2 3)
+  calc scanWordOps n blockLen ≤ 5 * (n + b + 2) ^ 4 := h4
+    _ ≤ (n + b + 2) ^ 3 * (n + b + 2) ^ 4 := Nat.mul_le_mul_right _ h5
+    _ = (n + b + 2) ^ 7 := by rw [← pow_add]
+
+/-- **Where the residual's `^7` actually comes from, as a theorem rather than a
+remark.**  Charging the scan once per prime candidate — `Routines.cost`'s `n³`
+bullet, which is already a summand there, so this is the *composition* and not a
+second charge — gives `n³ · scanWordOps ≤ 5·(n+b+2)^7`: three exponents from the
+candidate count and four from the scan.  Nothing in the scan's own charge
+produces a seven, which is why `scanWordOps_le` is stated at four. -/
+theorem scanWordOps_composed_le (n b blockLen : ℕ) (hbl : blockLen ≤ wordOpFactor n) :
+    n ^ 3 * scanWordOps n blockLen ≤ 5 * (n + b + 2) ^ 7 := by
+  have h4 := scanWordOps_le n b blockLen hbl
+  have h3 : n ^ 3 ≤ (n + b + 2) ^ 3 := Nat.pow_le_pow_left (by omega) 3
+  calc n ^ 3 * scanWordOps n blockLen
+      ≤ (n + b + 2) ^ 3 * (5 * (n + b + 2) ^ 4) := Nat.mul_le_mul h3 h4
+    _ = 5 * ((n + b + 2) ^ 3 * (n + b + 2) ^ 4) := by ring
+    _ = 5 * (n + b + 2) ^ 7 := by rw [← pow_add]
+
+/-- **Additive charges are absorbed, with the exponent raised by the charge's own
+degree.**  This is `withinEnvelope_wordop_absorb`'s twin on the other side of the
+`+`/`·` divide: given §7's word-operation envelope, `cost` *plus* any charge
+bounded by `C · (n + b + 2)^d` still obeys the envelope, with `K` raised by `d`
+and `K₀` by `C`.
+
+`d` and `C` are the abstraction the residual asked for: it is the *degree of the
+added charge*, not a number copied from a neighbouring lemma, that sets the new
+exponent.  Instantiating `C = 1, d = 3` reproduces the linear charge's `K + 3`
+shape; `C = 5, d = 4` is `scan_cost_absorbed` below. -/
+theorem withinEnvelope_add_absorb {R : Routines} {c : ℕ} (h : R.WithinEnvelope c)
+    (charge : (n : ℕ) → Instance n → ℕ) {C d : ℕ}
+    (hcharge : ∀ (n : ℕ) (x : Instance n), 2 ≤ n → x.bits ≤ n ^ c →
+      (charge n x : ℝ) ≤ (C : ℝ) * ((n : ℝ) + (x.bits : ℝ) + 2) ^ d) :
+    ∃ K₀ K : ℕ, ∀ (n : ℕ) (x : Instance n), 2 ≤ n → x.bits ≤ n ^ c →
+      ((R.cost n x + charge n x : ℕ) : ℝ)
+        ≤ (K₀ : ℝ) * (2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ))
+          * ((n : ℝ) + (x.bits : ℝ) + 2) ^ (K + d) := by
+  obtain ⟨K₀, K, hK⟩ := h
+  refine ⟨K₀ + C, K, fun n x hn hb => ?_⟩
+  set E : ℝ := (tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ) with hE
+  set P : ℝ := (n : ℝ) + (x.bits : ℝ) + 2 with hP
+  have h1 : (R.cost n x : ℝ) ≤ (K₀ : ℝ) * (2 : ℝ) ^ E * P ^ K := hK n x hn hb
+  have h2 : (charge n x : ℝ) ≤ (C : ℝ) * P ^ d := hcharge n x hn hb
+  have hE0 : (0 : ℝ) ≤ E := by
+    have hcoef : (0 : ℝ) ≤ tau0 + 20 * epsPat := by
+      unfold tau0 epsPat
+      norm_num
+    have hn0 : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
+    have hr : (0 : ℝ) ≤ (n : ℝ) ^ (0.7 : ℝ) := Real.rpow_nonneg hn0 _
+    rw [hE]
+    linarith [mul_nonneg hcoef hn0, hr]
+  have h2E : (1 : ℝ) ≤ (2 : ℝ) ^ E := Real.one_le_rpow (by norm_num) hE0
+  have hP1 : (1 : ℝ) ≤ P := by
+    have hn2 : (2 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+    have hb0 : (0 : ℝ) ≤ (x.bits : ℝ) := Nat.cast_nonneg _
+    rw [hP]
+    linarith
+  have hA : (K₀ : ℝ) * (2 : ℝ) ^ E * P ^ K
+      ≤ (K₀ : ℝ) * (2 : ℝ) ^ E * P ^ (K + d) := by
+    have hPK : P ^ K ≤ P ^ (K + d) := pow_le_pow_right₀ hP1 (by omega)
+    exact mul_le_mul_of_nonneg_left hPK (by positivity)
+  have hB : (C : ℝ) * P ^ d ≤ (C : ℝ) * (2 : ℝ) ^ E * P ^ (K + d) := by
+    have hPd : P ^ d ≤ (2 : ℝ) ^ E * P ^ (K + d) := by
+      have hPK : P ^ d ≤ P ^ (K + d) := pow_le_pow_right₀ hP1 (by omega)
+      calc P ^ d ≤ P ^ (K + d) := hPK
+        _ = 1 * P ^ (K + d) := (one_mul _).symm
+        _ ≤ (2 : ℝ) ^ E * P ^ (K + d) := by
+            exact mul_le_mul_of_nonneg_right h2E (by positivity)
+    calc (C : ℝ) * P ^ d ≤ (C : ℝ) * ((2 : ℝ) ^ E * P ^ (K + d)) :=
+          mul_le_mul_of_nonneg_left hPd (Nat.cast_nonneg C)
+      _ = (C : ℝ) * (2 : ℝ) ^ E * P ^ (K + d) := by ring
+  calc ((R.cost n x + charge n x : ℕ) : ℝ)
+      = (R.cost n x : ℝ) + (charge n x : ℝ) := by push_cast; ring
+    _ ≤ ((K₀ : ℝ) * (2 : ℝ) ^ E * P ^ K) + ((C : ℝ) * P ^ d) := by linarith
+    _ ≤ ((K₀ : ℝ) * (2 : ℝ) ^ E * P ^ (K + d))
+          + ((C : ℝ) * (2 : ℝ) ^ E * P ^ (K + d)) := by linarith
+    _ = (((K₀ + C : ℕ) : ℝ)) * (2 : ℝ) ^ E * P ^ (K + d) := by push_cast; ring
+
+/-- **The scan's charge is absorbed with `K + 4`, not `K + 7`.**  `R.cost` plus
+the whole scan's word-operations still obeys §7's envelope, with the
+existentially quantified exponent four larger — so §7 step 7's loop does not move
+the row's `2^{(τ₀+20ε)n}` exponent, and the constant three exponents of slack the
+residual carried are not needed.
+
+The `blockLen ≤ wordOpFactor n` hypothesis is §6.2's layout fact, and it is what
+makes the charge a *quadratic-in-`w`* (hence quartic-in-`n`) function rather than
+an arbitrary one: a charge linear in `blockLen` with `blockLen` unconstrained
+cannot be absorbed by any polynomial. -/
+theorem scan_cost_absorbed {R : Routines} {c : ℕ} (h : R.WithinEnvelope c) :
+    ∃ K₀ K : ℕ, ∀ (n : ℕ) (x : Instance n) (blockLen : ℕ), 2 ≤ n → x.bits ≤ n ^ c →
+      blockLen ≤ wordOpFactor n →
+      ((R.cost n x + scanWordOps n blockLen : ℕ) : ℝ)
+        ≤ (K₀ : ℝ) * (2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ))
+          * ((n : ℝ) + (x.bits : ℝ) + 2) ^ (K + 4) := by
+  obtain ⟨K₀, K, hK⟩ :=
+    withinEnvelope_add_absorb (R := R) (c := c) h (fun n x => 5 * (n + x.bits + 2) ^ 4)
+      (C := 5) (d := 4) (by
+        intro n x _ _
+        have : ((5 * (n + x.bits + 2) ^ 4 : ℕ) : ℝ)
+            = (5 : ℝ) * ((n : ℝ) + (x.bits : ℝ) + 2) ^ 4 := by push_cast; ring
+        rw [this]
+        norm_num)
+  refine ⟨K₀, K, fun n x blockLen hn hb hbl => ?_⟩
+  have hle : scanWordOps n blockLen ≤ 5 * (n + x.bits + 2) ^ 4 :=
+    scanWordOps_le n x.bits blockLen hbl
+  have hcast : ((R.cost n x + scanWordOps n blockLen : ℕ) : ℝ)
+      ≤ ((R.cost n x + 5 * (n + x.bits + 2) ^ 4 : ℕ) : ℝ) := by
+    exact_mod_cast Nat.add_le_add_left hle (R.cost n x)
+  exact le_trans hcast (hK n x hn hb)
+
+/-- The residual's `K + 7` target, discharged at its own exponent.  Its seven is
+`n³ · n⁴`: the composed charge's degree, with the `n³` supplied by
+`Routines.cost`'s prime-candidate summand, not by the scan.  Kept beside the tight
+`K + 4` so the record shows which one the row needs. -/
+theorem scan_cost_absorbed_pow7 {R : Routines} {c : ℕ} (h : R.WithinEnvelope c) :
+    ∃ K₀ K : ℕ, ∀ (n : ℕ) (x : Instance n) (blockLen : ℕ), 2 ≤ n → x.bits ≤ n ^ c →
+      blockLen ≤ wordOpFactor n →
+      ((R.cost n x + scanWordOps n blockLen : ℕ) : ℝ)
+        ≤ (K₀ : ℝ) * (2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ))
+          * ((n : ℝ) + (x.bits : ℝ) + 2) ^ (K + 7) := by
+  obtain ⟨K₀, K, hK⟩ :=
+    withinEnvelope_add_absorb (R := R) (c := c) h (fun n x => (n + x.bits + 2) ^ 7)
+      (C := 1) (d := 7) (by
+        intro n x _ _
+        have : (((n + x.bits + 2) ^ 7 : ℕ) : ℝ)
+            = (1 : ℝ) * ((n : ℝ) + (x.bits : ℝ) + 2) ^ 7 := by push_cast; ring
+        rw [this]
+        norm_num)
+  refine ⟨K₀, K, fun n x blockLen hn hb hbl => ?_⟩
+  have hle : scanWordOps n blockLen ≤ (n + x.bits + 2) ^ 7 :=
+    scanWordOps_le_pow7 n x.bits blockLen hbl
+  have hcast : ((R.cost n x + scanWordOps n blockLen : ℕ) : ℝ)
+      ≤ ((R.cost n x + (n + x.bits + 2) ^ 7 : ℕ) : ℝ) := by
+    exact_mod_cast Nat.add_le_add_left hle (R.cost n x)
+  exact le_trans hcast (hK n x hn hb)
+
+/-! ### §L9's verdict on residual piece 3: the absorption is proved, the
+application has a named seam, and they are different things
+
+The absorption is no longer a sketch: `scan_cost_absorbed` *is* the transfer
+"§7's envelope for `cost` ⟹ §7's envelope for `cost + scanWordOps`, `K` raised by
+four", proved, not stated.
+
+What cannot close here is the *application* to `Routines.cost`'s own definition,
+and the reason is structural rather than a missing lemma:
+
+1. **The scan's charge is not a summand of `Routines.cost`.**  `cost` is
+   `transformCost + prelimCost + aliasCost + checksumCost + n³·(n+b+2)`; §7 step
+   7's scan is charged by none of them (the `n³` summand is the prime-draw
+   bullet).  Folding `scanWordOps` in means editing `KapilaAlgo.cost`'s summand
+   list, which changes what `R.WithinEnvelope c` *asserts* at every consumer —
+   `kapila_row` takes `henv : ∀ c, R.WithinEnvelope c` as a hypothesis, so the
+   edit would move a hypothesis's meaning, not discharge one.
+2. **`Routines.cost` is simultaneously §7's word-op count and `D7`'s instruction
+   horizon.**  `kapila_row` runs `count … (2 ^ (wordLength n x.bits * R.cost n
+   x))` and `hD7.agrees` states the program halts within `R.cost n x` steps.  So
+   adding word-operations to `cost` crosses the very unit seam `D7` exists to
+   translate — `word operations ≠ Instr` steps — and that translation is `D7`'s
+   job, not this segment's.
+
+So the seam is named exactly: **`Routines.cost`'s summand list, together with
+`D7.agrees`'s step horizon**.  Whoever wires the segment's charge into §7's total
+adds the summand there and reads `scan_cost_absorbed` (or
+`withinEnvelope_add_absorb` at the summand's own degree) to keep the exponent.
+Nothing in this file can do it from outside, and pretending otherwise would be
+the `K + 3`-versus-`K + 7` mistake wearing a call site. -/
 
 end SubsetSumL25.Row
