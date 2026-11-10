@@ -34,20 +34,8 @@ def run(name: str, argv: list[str], cwd: Path = LANE, timeout: int = 7000) -> in
     return p.returncode
 
 
-# -- lock: exclusive for the whole run, wait up to 7200 s ---------------------
-lock_fh = open(LOCK, "w")
-deadline = time.time() + 7200
-while True:
-    try:
-        fcntl.flock(lock_fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        break
-    except OSError:
-        if time.time() > deadline:
-            log("fatal.txt", "flock timeout 7200s")
-            sys.exit(3)
-        time.sleep(10)
-
-# -- swap gate: sleep 300 s per loop until used <= 12288 MB, cap 12 loops -----
+# -- swap gate FIRST (no lock held while waiting — never block the fleet):
+# sleep 300 s per loop until used <= 12288 MB, cap 12 loops (60 min) ----------
 swap_lines = []
 for i in range(1, 13):
     out = subprocess.run(["sysctl", "vm.swapusage"], capture_output=True, text=True).stdout
@@ -61,6 +49,19 @@ for i in range(1, 13):
         log("fatal.txt", "swap gate not cleared in 60min")
         sys.exit(43)
     time.sleep(300)
+
+# -- lock: exclusive for the lean launch only, wait up to 7200 s ---------------
+lock_fh = open(LOCK, "w")
+deadline = time.time() + 7200
+while True:
+    try:
+        fcntl.flock(lock_fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        break
+    except OSError:
+        if time.time() > deadline:
+            log("fatal.txt", "flock timeout 7200s")
+            sys.exit(3)
+        time.sleep(10)
 
 # -- receipt 1: full build, exit 0 required ------------------------------------
 build_exit = run("build.log", ["lake", "build"])
