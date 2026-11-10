@@ -253,3 +253,55 @@ hypotheses, then discharge the four leaves against them (textbook-first:
 `mitm` is the snapshot's `prog2`, then `LeafTest`, then the three phases).
 Nothing else in the row is open: `CorrectAt` remains the documented correctness
 assumption, and it is now provably *vacuous* on the branch the guard isolates.
+
+## Row lane 2026-11-10 (3) — `Routines` reified: the first field's program landed, its seam field discharged, the multi-word charge proved absorbable (LANDED)
+
+The refinement named as the blocker is now in the structure, and its first field
+is *discharged* rather than merely named.
+
+* **`Routines` carries programs and agreements.** Each decision field gained its
+  instruction text and its agreement hypothesis: `mitmProg` + `mitm_agrees`,
+  `prelimProg` + `prelim_agrees`, `aliasProg` + `alias_agrees`, `checksumProg` +
+  `checksum_agrees`. The phase agreements are stated through `failToNo` (§7's
+  own «If it fails, return NO») so that each is a claim about **its phase's
+  verdict only** — which of `none`/`some false` happened is a control-flow fact
+  the leaves supply, not something a segment's accumulator can carry. That is
+  what makes each leaf have exactly one program premise.
+* **`agrees_fallback` is no longer an assumption.** `Routines.mitm_agrees` has
+  exactly the right-hand side of `fallback_agrees_iff`, so
+  `fallback_agrees_of_mitmProg` proves the seam's fallback field from it, and
+  `D7.ofMitmProg` assembles `D7` from `R.mitmProg` + the main branch alone. The
+  seam is **two obligations, not three**. It is a *port*, not a re-derivation:
+  `prog2`'s `smalln2_run2`/`smalln3_run2`/`bign_run2` are `mitm_agrees` at
+  `α = 1/2`. (`mitm_agrees` is unconditional — stronger than the branch needs —
+  because the fallback is deterministic and would halt on every input.)
+* **`LeafTest`'s loop rules now *characterise* the test.** `rowTest_eq_of_rules`:
+  any `f` satisfying nil/nil and cons/cons **is** `rowTest`. So an
+  instruction-level proof of §7 step 7 never reasons about `rowTest` itself — it
+  establishes three equations at the segment's exit. Verdict: `LeafTest` is
+  reduced to (i) those three rules, (ii) control flow (reach the segment's entry
+  with both estimate lists laid out at `n²` bits), and (iii) the multi-word
+  charge. It is **not** discharged: no segment text exists yet, and (ii)/(iii)
+  are the same seam the phases carry.
+* **The multi-word charge is now a theorem, and the seam names its side.**
+  `WithinEnvelope` speaks on the **word-operation** side (it counts `Routines.cost`,
+  the paper's unit); `D7` is the translation into `Instr` steps at
+  `w = wordLength n b`, and the two units meet only there. `wordOpFactor n = n²+1`
+  bounds the expansion `⌈n²/w⌉+1` per dyadic operation (covers both regimes: for
+  `b ≤ n`, `n ≥ 10` the word is narrower than `n²`, so the ratio exceeds 1; for
+  large `b` it is 1). `withinEnvelope_wordop_absorb` proves the expansion is
+  absorbed by raising the envelope's existentially quantified `K` by three — so
+  multi-word arithmetic does **not** move the row's `2^{(τ₀+20ε)n}` exponent.
+  (Correction recorded: the previous round's «`n²` stays ahead thereafter» is
+  only true at fixed `b`; with `b ≤ n^c` the word can exceed `n²`, which is why
+  the charge is stated as the uniform bound rather than as an always-on factor.)
+
+Receipt: `receipts/kapila-20261110T150641Z` (build exit 0, five named oleans,
+axiom banner ⊆ `[propext, Classical.choice, Quot.sound]` including the four new
+declarations). `Statement.lean` still `3dc6567e…34aa`.
+
+Next (single lever): **`prelimProg`** — Proposition P's instruction text, the
+first phase leaf with both a landed mathematical core (`prop_p_chebyshev`) and a
+landed program shape (`prog2`'s prologue/dispatch skeleton) to port. `LeafP` is
+its consumer; `aliasProg`/`checksumProg` follow the same pattern.
+

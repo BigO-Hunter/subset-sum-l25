@@ -40,3 +40,11 @@ open SubsetSumL25.Row
 #print axioms abs_ge_half_iff
 #print axioms agrees_main_iff_leaves
 #print axioms agrees_main_of_leaves
+
+-- the reification: the first field's program, the seam field it discharges,
+-- and the multi-word charge's absorption
+#print axioms fallback_agrees_of_mitmProg
+#print axioms D7.ofMitmProg
+#print axioms rowTest_eq_of_rules
+#print axioms wordOpFactor_le_cube
+#print axioms withinEnvelope_wordop_absorb

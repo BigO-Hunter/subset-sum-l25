@@ -82,18 +82,43 @@ instance (n b : ℕ) : Decidable (guardOk n b) := by unfold guardOk; infer_insta
 
 /-! ### The sub-procedures of §7, and the dispatch
 
-`Routines` is a *record of computable functions*: every field is a total
+`Routines` is a *record of computable functions*: every decision field is a total
 function, so `Routines.run` below is a genuine executable definition (no
 `noncomputable`, no `Classical.choice` in the data).  The randomness is a
 single stream `ω : ℕ → ℕ` of fresh independent uniform words — the paper's
-«a fresh independent uniform w-bit random word costs one operation», read
+«a fresh independent uniform word costs one operation», read
 one-way as the trusted statement's `rand` demands.  The transcription
 `ω r ↦ (ρ r).toNat` from the challenge's `ρ : ℕ → BitVec w` is the seam's job
-(`D7.agrees`), not this file's. -/
+(`D7.agrees`), not this file's.
+
+**Reification (per-field programs).**  Each decision field now carries *its
+instruction text* (`mitmProg`, `prelimProg`, `aliasProg`, `checksumProg`) and
+*its agreement hypothesis* — «that program, at that field's cost, halts with that
+field's verdict».  This is what makes `agrees_main` a proposition about specific
+instruction text rather than about an arbitrary total function: an arbitrary
+`Instance n → Draws → Option Bool` has no program, and no amount of proving
+changes that.  The first field is *discharged*, not merely named: `mitmProg`'s
+agreement has exactly the shape `fallback_agrees_iff` exhibits, so supplying it
+proves `D7.agrees_fallback` verbatim (`fallback_agrees_of_mitmProg`), and the
+reference package (`subsetsum-v2-snapshot`'s `prog2`) already proves a statement
+of that shape.  The three phase programs are **named obligations**: stated, with
+the exact hypothesis their leaf consumes, so the structure is complete and each
+leaf has precisely one program premise. -/
 
 /-- The procedure's view of the random tape: fresh uniform words, read
 one-way, indexed by draw number. -/
 abbrev Draws := ℕ → ℕ
+
+/-- §7's own reading of a phase's `FAIL`: «If it fails, return NO».  A phase field
+is `Option Bool` (`none` = `FAIL`); the *decision* it contributes is this map.  It
+is *not* injective (`none` and `some false` agree), and that is the point: which
+of the two happened is a fact about **control flow** — `LeafAnone`/`LeafBnone` say
+the run goes on to the next phase — not about the accumulator a segment leaves
+behind.  Stating per-field agreement through this map keeps each phase's program
+obligation a statement about *its own* verdict and nothing else. -/
+def failToNo : Option Bool → Bool
+  | some b => b
+  | none => false
 
 /-- §7's sub-procedures, each an executable function, each with the cost
 counter §7 charges it.  `none` is the paper's `FAIL`.
@@ -114,10 +139,33 @@ structure Routines where
   mitm : (n : ℕ) → Instance n → Bool
   /-- §7 step 1's cost (exact fallback). -/
   mitmCost : (n : ℕ) → Instance n → ℕ
+  /-- **§7 step 1's program.**  The exact meet-in-the-middle of §6.3 as
+  instruction text — one finite `List Instr` for every `n` and `b`, no advice, no
+  dependence on `c`.  This is the field the reference package supplies: the
+  verified `α = 1/2` row's `prog2` (`subsetsum-v2-snapshot`,
+  `Submission/Prog2Race.lean`, `Race.bound : SolvedInTime (1/2)`) is one such
+  program, proved segment by segment. -/
+  mitmProg : List Instr
+  /-- **The first field's agreement hypothesis** — the shape
+  `fallback_agrees_iff` (`SubsetSumL25.Row.KapilaRow`) proves is *exactly* the
+  D7 fallback branch: `mitmProg`, run at `mitmCost`, halts with `mitm`'s verdict.
+  Supplying this field discharges `D7.agrees_fallback` verbatim (see
+  `fallback_agrees_of_mitmProg`); the reference program proves a statement of
+  precisely this form, so the hypothesis is already *met* in the `α = 1/2` row and
+  only has to be re-instantiated here. -/
+  mitm_agrees : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    run mitmProg x ρ (mitmCost n x) = some (mitm n x)
   /-- §4's preliminary search (Proposition P): `some b` means it decided.
   Core: `SubsetSumL25.prop_p_chebyshev` (B5, measured axiom-clean). -/
   prelim : (n : ℕ) → Instance n → Draws → Option Bool
   prelimCost : (n : ℕ) → Instance n → ℕ
+  /-- **§4 / Proposition P's program** — a named obligation, stated not proved
+  (no in-tree instruction text yet).  `LeafP` consumes exactly this segment. -/
+  prelimProg : List Instr
+  /-- Proposition P's segment agreement, through §7's `FAIL` → NO reading. -/
+  prelim_agrees : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    (run prelimProg x ρ (prelimCost n x)).map failToNo
+      = some (failToNo (prelim n x (fun r => (ρ r).toNat)))
   /-- §2.2/§7 step 2: the tie weights and the transform `c_i = Ca_i + u_i`,
   `t_s = Ct + s` (the isolation transform).  Core: `L2_1_isolation`. -/
   transform : (n : ℕ) → Instance n → Draws → List ℕ × List ℕ
@@ -128,12 +176,30 @@ structure Routines where
   (`thmA_part1_fail_le`, `thmA_part2`). -/
   aliasA : (n : ℕ) → Instance n → Draws → Option (List ℚ)
   aliasCost : (n : ℕ) → Instance n → ℕ
+  /-- **§5.2 / Theorem A's alias-phase program** — a named obligation, stated not
+  proved.  `LeafAnone` consumes exactly this segment, and `LeafTest` consumes the
+  estimate list it leaves behind. -/
+  aliasProg : List Instr
+  /-- Theorem A's segment agreement: the segment halts, and its verdict is
+  «the phase succeeded» — `some Â` reads as `true`, the paper's `FAIL` as `false`.
+  This is the `Option`-free statement `LeafAnone`/`LeafTest` can consume. -/
+  alias_agrees : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    run aliasProg x ρ (aliasCost n x) = some (aliasA n x (fun r => (ρ r).toNat)).isSome
   /-- §7 step 6 / §6: Theorem B — the checksum with the 43-filter family.
   `some V̂` carries the estimates `V̂_ρ`.  Core: B4's region analysis
   (`Proofs/ThmB.lean`: `region_existence`, `lem_B2_domination`,
   `row_errors_le_six_eps`). -/
   checksumB : (n : ℕ) → Instance n → Draws → Option (List ℚ)
   checksumCost : (n : ℕ) → Instance n → ℕ
+  /-- **§6 / Theorem B's checksum-phase program** — a named obligation, stated not
+  proved.  `LeafBnone` consumes this segment; `LeafTest` consumes the `V̂` list it
+  leaves behind. -/
+  checksumProg : List Instr
+  /-- Theorem B's segment agreement: halt, with «the phase succeeded» as the
+  verdict — the same `Option`-free shape as `alias_agrees`. -/
+  checksum_agrees : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    run checksumProg x ρ (checksumCost n x)
+      = some (checksumB n x (fun r => (ρ r).toNat)).isSome
   /-- The paper's cutoff `n_*` (§7: «a fixed cutoff n_* gives success
   probability at least 5/6»). -/
   nStar : ℕ
@@ -181,8 +247,24 @@ def cost (R : Routines) (n : ℕ) (x : Instance n) : ℕ :=
 /-- §7's «Running time» paragraph as a proposition: on inputs with `b ≤ n^c`
 the total is at most `K₀ · 2^{(τ₀+20ε)n + 2n^{0.7}} · (n + b + 2)^K`.
 
-This is the *counter-level* envelope — no bit-cost→step translation appears in
-it.  The translation is `D7`, the named seam. -/
+**Which side of the accounting this speaks.**  `R.cost` counts the paper's own
+unit — **word operations** (§7's bullets are word-op charges, and the trusted
+statement's «a fresh independent uniform w-bit random word costs one operation»
+fixes the same unit).  `WithinEnvelope` is therefore a word-operation envelope,
+not a bit-cost envelope: there is no bit→step translation inside it.  That
+translation is `D7`, the named seam — `D7.program` is the instruction text, and
+`D7`'s agreement is what ties word-operation accounting to `Instr` steps.
+
+The distinction is load-bearing because the concrete program is a **multi-word**
+program: §6.2 carries the estimates at `n²` fractional bits while the statement's
+word is `w = 4(n+b) + ⌈log₂((n+2)⁴)⌉ = O(n+b)`, so at `b = 1` the curves cross at
+`n = 7` and `n²` stays ahead — an `n²`-fractional dyadic does not fit in one word.
+The statement contemplates exactly this («arithmetic exceeding these limits is
+implemented by multiple word operations and charged accordingly»), so every
+dyadic operation costs up to `wordOpFactor n = n² + 1` word operations.  That
+expansion does **not** move the row's exponent: `withinEnvelope_wordop_absorb`
+below shows it is absorbed by raising the envelope's existentially quantified
+polynomial exponent `K` by three, and `K` is §7's to choose. -/
 def WithinEnvelope (R : Routines) (c : ℕ) : Prop :=
   ∃ K₀ K : ℕ, ∀ (n : ℕ) (x : Instance n), 2 ≤ n → x.bits ≤ n ^ c →
     (R.cost n x : ℝ)
@@ -190,6 +272,62 @@ def WithinEnvelope (R : Routines) (c : ℕ) : Prop :=
         * ((n : ℝ) + (x.bits : ℝ) + 2) ^ K
 
 end Routines
+
+/-! ### The multi-word charge, and why it does not move the row's exponent
+
+§6.2's estimates live at `n²` fractional bits; the statement's word is
+`w = 4(n+b) + ⌈log₂((n+2)⁴)⌉`.  For `b ≤ n` and `n ≥ 10` this gives
+`w ≤ 8n + 4log₂(n+2) + 1 < n²` (and at `b = 1` the curves cross as early as
+`n = 7`), so there the dyadic is *wider than a word* and the concrete program
+spends several word operations per arithmetic step — the case the statement
+contemplates («multiple word operations and charged accordingly»).  The statement
+allows `b ≤ n^c`, so the routed class also contains regimes where the word is
+wider and the ratio is 1; the charge is therefore stated as the uniform bound
+`⌈n²/w⌉ + 1 ≤ wordOpFactor n = n² + 1`, which covers both.  The charge is real and
+polynomial: it is already inside §7's `(n + b + 2)^K` with `K` three larger. -/
+
+/-- The multi-word expansion factor: one dyadic operation on `n²`-bit operands in
+`w`-bit words costs at most `⌈n²/w⌉ + 1 ≤ n² + 1` word operations. -/
+def wordOpFactor (n : ℕ) : ℕ := n ^ 2 + 1
+
+/-- The expansion factor is inside the envelope's own polynomial factor. -/
+theorem wordOpFactor_le_cube (n b : ℕ) : wordOpFactor n ≤ (n + b + 2) ^ 3 := by
+  have h1 : wordOpFactor n ≤ (n + 2) ^ 3 := by
+    rw [wordOpFactor]
+    nlinarith [Nat.zero_le n]
+  exact le_trans h1 (Nat.pow_le_pow_left (by omega) 3)
+
+/-- **Multi-word charging is absorbed by the envelope's existential `K`.**  If
+`cost` obeys §7's word-operation envelope then so does `cost` *times* the
+multi-word expansion factor, with `K` raised by three — so the concrete
+multi-word program needs no re-derivation of the row's exponent, only a larger
+polynomial constant.  This is the statement that closes the accounting seam named
+in `Routines.WithinEnvelope`'s docstring. -/
+theorem withinEnvelope_wordop_absorb {R : Routines} {c : ℕ} (h : R.WithinEnvelope c) :
+    ∃ K₀ K : ℕ, ∀ (n : ℕ) (x : Instance n), 2 ≤ n → x.bits ≤ n ^ c →
+      ((R.cost n x * wordOpFactor n : ℕ) : ℝ)
+        ≤ (K₀ : ℝ) * (2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ))
+          * ((n : ℝ) + (x.bits : ℝ) + 2) ^ K := by
+  obtain ⟨K₀, K, hK⟩ := h
+  refine ⟨K₀, K + 3, fun n x hn hb => ?_⟩
+  set E : ℝ := (tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ) with hE
+  set P : ℝ := (n : ℝ) + (x.bits : ℝ) + 2 with hP
+  have h1 : (R.cost n x : ℝ) ≤ (K₀ : ℝ) * (2 : ℝ) ^ E * P ^ K := hK n x hn hb
+  have hf : (wordOpFactor n : ℝ) ≤ P ^ 3 := by
+    have hnat : (((n + x.bits + 2) ^ 3 : ℕ) : ℝ) = P ^ 3 := by
+      rw [hP]; push_cast; ring
+    have hc : (wordOpFactor n : ℝ) ≤ (((n + x.bits + 2) ^ 3 : ℕ) : ℝ) := by
+      exact_mod_cast wordOpFactor_le_cube n x.bits
+    rwa [hnat] at hc
+  have hcast : ((R.cost n x * wordOpFactor n : ℕ) : ℝ) = (R.cost n x : ℝ) * (wordOpFactor n : ℝ) := by
+    push_cast
+    ring
+  have hP0 : (0 : ℝ) ≤ P := by rw [hP]; positivity
+  calc ((R.cost n x * wordOpFactor n : ℕ) : ℝ)
+      = (R.cost n x : ℝ) * (wordOpFactor n : ℝ) := hcast
+    _ ≤ ((K₀ : ℝ) * (2 : ℝ) ^ E * P ^ K) * P ^ 3 :=
+        mul_le_mul h1 hf (by positivity) (by positivity)
+    _ = (K₀ : ℝ) * (2 : ℝ) ^ E * P ^ (K + 3) := by rw [pow_add]; ring
 
 /-! ### The routing, read from the `false` side
 

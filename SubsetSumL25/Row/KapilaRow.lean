@@ -135,7 +135,28 @@ random words.
 Note what is *not* here: no correctness claim, no probability, no cost
 arithmetic.  Correctness is `CorrectAt`; the cost accounting is
 `Routines.WithinEnvelope` + `runtime_absorb`.  The seam is only the program and
-the outcome agreement. -/
+the outcome agreement.
+
+**Which side of the accounting each half speaks.**  `Routines.cost` is a
+**word-operation** counter — §7's bullets charge word operations, and the
+statement's «a fresh independent uniform w-bit random word costs one operation»
+fixes the same unit — so `WithinEnvelope` is a word-operation envelope and
+`runtime_absorb` composes it in that unit.  This field, `D7`, is the *translation*
+into the statement's `Instr` steps at `w = wordLength n b`: it is what lets a
+word-operation budget become a `SolvedInTime` horizon.  The two units meet here
+and nowhere else.
+
+The translation must therefore absorb the **multi-word charge**: §6.2 carries the
+estimates at `n²` fractional bits while `w = 4(n+b) + ⌈log₂((n+2)⁴)⌉ = O(n+b)`,
+so at `b = 1` the curves cross at `n = 7` and `n²` stays ahead — a dyadic
+operation is `⌈n²/w⌉ + 1 ≤ n² + 1` word operations, exactly the case the
+statement contemplates («arithmetic exceeding these limits is implemented by
+multiple word operations and charged accordingly»).  This is a requirement on the
+`cost` field (it must bound the *word-operation* count of this program's
+multi-word arithmetic), not a consequence of `WithinEnvelope` alone; and it does
+not move the row's exponent, because
+`Routines.withinEnvelope_wordop_absorb` shows the expansion is absorbed by
+raising the envelope's existentially quantified polynomial exponent by three. -/
 structure D7 (R : Routines) where
   /-- One finite program for all `n` and `b` — the statement's `P : List Instr`.
   The verified `α = 1/2` package (`subsetsum-v2-snapshot`) is a worked instance
@@ -143,6 +164,12 @@ structure D7 (R : Routines) where
   program : List Instr
   /-- **The fallback branch's translation** — the branch the guard routes to,
   and the branch that already has a worked reference.
+
+  This field is **derivable** once `Routines` carries its first program:
+  `fallback_agrees_of_mitmProg` proves it from `Routines.mitm_agrees`, so
+  `D7.ofMitmProg` assembles the seam with only the main branch left.  It is kept
+  as an explicit field so a `D7` can still be built by hand when the program is
+  supplied independently of `Routines`.
 
   `R.fallback n x = true` means the input is below the cutoff or violates
   `10⁶⌈log₂(b+1)⌉ ≤ n`, so §7 step 1 runs §6.3's *exact* meet-in-the-middle:
@@ -232,6 +259,34 @@ theorem fallback_agrees_iff (R : Routines) (program : List Instr) :
   · intro H n x ρ hf
     rw [hcost n x hf, hrun n x (fun r => (ρ r).toNat) hf]
     exact H n x ρ hf
+
+/-- **The fallback branch is discharged, not assumed, once `Routines` carries its
+program.**  `Routines.mitm_agrees` has exactly the right-hand side of
+`fallback_agrees_iff`, so the seam's fallback field *follows* from it: a `D7` for
+the reified `Routines` carries **two** obligations, not three.  The reference
+package proves a statement of this shape outright — `prog2`'s
+`smalln2_run2`/`smalln3_run2`/`bign_run2` are `mitm_agrees` at `α = 1/2`, verdict
+`decide (isSum …)` on every tape — so this is a *port*, not a re-derivation. -/
+theorem fallback_agrees_of_mitmProg (R : Routines) :
+    ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+      R.fallback n x = true →
+        run R.mitmProg x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat)) :=
+  -- `mitm_agrees` holds *unconditionally* (the fallback is deterministic and is
+  -- run on every input), so it is strictly stronger than the branch's hypothesis
+  -- needs: the guard premise is discarded here and used only by the cost collapse.
+  (fallback_agrees_iff R R.mitmProg).mpr (fun n x ρ _ => R.mitm_agrees n x ρ)
+
+/-- **Assemble the seam for the reified `Routines`.**  The program is the
+meet-in-the-middle text this structure already supplies, the fallback field is
+proved, and the only remaining premise is the main branch — the same one
+`agrees_main_iff_leaves` cuts into four segment leaves, each of which now has a
+named program field of its own (`prelimProg`, `aliasProg`, `checksumProg`, and
+`Routines.run`'s step-7 scan). -/
+def D7.ofMitmProg {R : Routines}
+    (hm : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+      R.fallback n x = false →
+        run R.mitmProg x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat))) :
+    D7 R := ⟨R.mitmProg, fallback_agrees_of_mitmProg R, hm⟩
 
 /-- **The guard's coverage, correctness half.**  On an input the guard routes to
 the exact fallback, §7's `CorrectAt` needs no union bound at all.
@@ -366,6 +421,27 @@ theorem abs_ge_half_iff (d : ℚ) : (1 / 2 : ℚ) ≤ |d| ↔ (1 / 4 : ℚ) ≤ 
   · intro h
     have h2 : (1 / 2 : ℚ) ^ 2 ≤ |d| ^ 2 := by rw [hsq, hd]; linarith
     nlinarith [h0, h2]
+
+/-- **The three loop rules *characterise* the test.**  Any `f` obeying the
+nil/nil and cons/cons rules *is* `rowTest`, so an instruction-level proof of §7
+step 7's segment never has to reason about `rowTest` itself: it has to establish
+exactly three equations at the segment's exit.  That is all of `LeafTest` which
+is not control flow.  This is the precise sense in which «the loop rules are
+landed» — they are not merely true of `rowTest`, they determine it, so a segment
+proof cannot get the test wrong while obeying them. -/
+theorem rowTest_eq_of_rules (f : List ℚ → List ℚ → Bool)
+    (h0 : ∀ V, f [] V = false) (h1 : ∀ A, f A [] = false)
+    (h2 : ∀ (a : ℚ) (A : List ℚ) (v : ℚ) (V : List ℚ),
+      f (a :: A) (v :: V) = (decide ((1 / 2 : ℚ) ≤ |v - a|) || f A V)) :
+    ∀ A V, f A V = Routines.rowTest A V := by
+  intro A
+  induction A with
+  | nil => intro V; rw [h0, rowTest_nil_left]
+  | cons a A ih =>
+    intro V
+    cases V with
+    | nil => rw [h1, rowTest_nil_right]
+    | cons v V => rw [h2, rowTest_cons_cons, ih V]
 
 /-- Segment 2 (Proposition P): on the guard's complement, if the phase decides,
 the program's verdict at the abstract horizon is that decision. -/

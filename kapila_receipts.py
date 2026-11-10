@@ -151,6 +151,12 @@ def main():
         bad.append("sorryAx")
     if "native_decide" in banner or "Lean.ofReduceBool" in banner:
         bad.append("native_decide")
+    # An errored banner run is not a clean banner: a misspelled `#print axioms`
+    # name would otherwise leave `bad` empty while half the declarations were
+    # never checked (measured 2026-11-10, receipts/kapila-20261110T150102Z:
+    # axioms_exit=1 with STATUS "DONE").
+    if ax.returncode != 0:
+        bad.append(f"axiom banner exited {ax.returncode} (not a clean banner)")
     for line in banner.splitlines():
         if "depends on axioms:" in line:
             ax_set = {a.strip() for a in line.split("[", 1)[1].rstrip("]").split(",")}

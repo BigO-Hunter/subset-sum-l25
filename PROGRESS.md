@@ -880,3 +880,55 @@ Next (single lever): the `Routines` refinement — reify `mitm`/`prelim`/`aliasA
 `checksumB` as `List Instr` programs with per-field agreement hypotheses, then
 discharge the four leaves against them (`mitm` first: the snapshot's `prog2` is
 the worked reference; then `LeafTest`; then the three phases).
+
+## Row lane 2026-11-10 (3) — `Routines` reified: `mitmProg` landed and its seam field discharged; `LeafTest`'s loop rules now characterise the test; the multi-word charge proved absorbable (LANDED)
+
+The refinement the previous round named as the blocker is in the structure, and
+its first field is *discharged*, not merely named.
+
+* **Structure.** `Routines` (`SubsetSumL25/Row/KapilaAlgo.lean`) gained, per
+  decision field, its instruction text and its agreement hypothesis:
+  `mitmProg : List Instr` + `mitm_agrees`; `prelimProg` + `prelim_agrees`;
+  `aliasProg` + `alias_agrees`; `checksumProg` + `checksum_agrees`. The phase
+  agreements are stated through `failToNo` (§7's «If it fails, return NO»), so
+  each is a claim about *its phase's verdict only*. `failToNo` is deliberately
+  non-injective: `none` and `some false` agree, and which one happened is the
+  **control-flow** fact `LeafAnone`/`LeafBnone` carry, not something a segment's
+  accumulator can encode. That is why each leaf now has exactly one program
+  premise.
+* **The fallback branch is proved, not assumed.** `Routines.mitm_agrees` has
+  verbatim the right-hand side of `fallback_agrees_iff`, so
+  `fallback_agrees_of_mitmProg` derives `D7.agrees_fallback` from it and
+  `D7.ofMitmProg` assembles the seam from `R.mitmProg` + the main branch. The
+  seam is **two obligations, not three**. `mitm_agrees` holds unconditionally
+  (the fallback is deterministic and halts on every input), so the branch's
+  guard premise is discarded at that step and used only by the cost collapse.
+  Port, not re-derivation: `prog2`'s `smalln2_run2`/`smalln3_run2`/`bign_run2`
+  are `mitm_agrees` at `α = 1/2`.
+* **`LeafTest`, measured.** `rowTest_eq_of_rules`: any `f` obeying nil/nil and
+  cons/cons *is* `rowTest` — the loop rules do not merely hold of `rowTest`, they
+  determine it, so a segment proof establishes three equations at its exit and
+  cannot get the test wrong while obeying them. What remains of `LeafTest` is
+  (i) those three rules, (ii) control flow to the segment's entry with both
+  estimate lists laid out at `n²` bits, (iii) the multi-word charge. Not
+  discharged: no segment text exists.
+* **Which side of the accounting each half speaks — and the multi-word charge as
+  a theorem.** `WithinEnvelope` is a **word-operation** envelope (it counts
+  `Routines.cost`, §7's own unit; the statement's «a fresh independent uniform
+  w-bit random word costs one operation» fixes it). `D7` is the translation into
+  `Instr` steps at `w = wordLength n b`; the two units meet there and nowhere
+  else. `wordOpFactor n = n² + 1` bounds the per-operation expansion
+  `⌈n²/w⌉ + 1`, covering both regimes; `withinEnvelope_wordop_absorb` proves the
+  expansion is absorbed by raising the envelope's existential `K` by three, so
+  multi-word arithmetic does not move the row's `2^{(τ₀+20ε)n}` exponent.
+  **Correction to the previous round's note:** «`n²` stays ahead thereafter» is
+  true only at fixed `b`. With `b ≤ n^c` the word `w = 4(n+b)+O(log n)` can
+  *exceed* `n²` (for `b ≈ 2^{n/10⁶}`), making the ratio 1 — so the charge is
+  stated as the uniform bound `wordOpFactor`, not as an always-on factor. The
+  narrower-than-a-word claim holds for `b ≤ n`, `n ≥ 10`.
+
+Receipt: `receipts/kapila-20261110T150641Z`. `Statement.lean` still `3dc6567e…34aa`.
+
+Next (single lever): `prelimProg` — Proposition P's instruction text; `LeafP` is
+its consumer, and both its mathematical core (`prop_p_chebyshev`) and its program
+skeleton (`prog2`'s prologue/dispatch) are in-tree.
