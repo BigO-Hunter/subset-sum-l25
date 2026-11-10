@@ -1530,3 +1530,53 @@ successfully"; M6.olean fresh; `#print axioms` for all 13 =
 44c34961, PROOF_0.4877.tex §5.7, sha256 b397531c…); this package formalizes
 it. The envelope consumes our proved B5 `a7_envelope`; the clause slacks and
 the A3/(S5)/(C2)–(C7) discharges are the §2.2 + §5.7 arithmetic.**
+
+## DS-M7 — Theorem A assembly (§5.8): WIP drafted, FIRST BUILD PENDING (Proofs/M7.lean)
+
+Drafted + desk-checked + wip-committed this round; the build is pending —
+host swap-gated (`used > 12 GB` the entire window, trend rising to 13.7 GB;
+regime cap reached, build deferred).  Thirteen theorems consuming
+`a7_expected_work` (M6) and `o8_trials_le_cap`/`o8_draws_le`/`o8_time_bound`
+(O8) by name: `two_rpow_pos`/`two_rpow_mono` helpers, `thmA_markov_cap`
+(generic Markov tail on the fraction model — the `expect_tail_prob_le` shape
+with an abstract μ-bound; empty-space junk handled like M2's),
+`thmA_cap_fail_le` + `thmA_cap_fail_guard_le` (bullet 4: the Markov display,
+then the guard `b+2 ≤ 2^{n/10^6+1}` collapsing it to
+`2^{(ζ−ε₀)n+n/10^6+δ+4−n^{0.7}}`; the «So this is o(1)» is the asymptotic
+reading with `10^{-6}+ζ < ε₀`, named as in `continue_prob_le`),
+`thmA_union_range` + `thmA_sampler_fail_le` (bullet 5: draws
+`2+n²+3K ≤ (n²+5)·cap`; per-draw failure `q` = `2^{−n³}+e^{−c₀n²}` named),
+`thmA_union_five` + `thmA_part1_fail_le` (the five-event assembly; the three
+upstream o(1) events enter as named displays `p₁ p₂ p₃`), `thmA_err_triangle`
++ `thmA_err_le_16` + `thmA_total_err_le` (the 1/16 discharge, `n ≥ 5`
+explicit — the paper's «for large n», O(n) = 3n+1), `thmA_part2` (§5.8's
+«Part 2 holds by Section 5.2» = the `o8_time_bound` re-display).  Named
+seams per the ledger, respected not re-litigated: the per-trial expectation
+transfer (`hlin`), the exec counts (Φ_L/Φ_R terms, dictionary keys, moduli
+≤ 2^n), the §6.2 per-term precision display, and the outside-events
+correctness implication.
+
+### Pin facts verified this round (source-checked against the vendored Mathlib)
+* `Real.rpow_le_rpow_left` is NOT a lemma at this pin — same-base
+  monotonicity goes through `Real.rpow_le_rpow_left_iff (hx : 1 < x) :
+  x ^ y ≤ x ^ z ↔ y ≤ z` (@[simp], Pow/Real.lean:630); M7 pins it as
+  `two_rpow_mono`.
+* `Real.rpow_sub (hx : 0 < x) (y z : ℝ) : x ^ (y - z) = x ^ y / x ^ z` —
+  y z EXPLICIT (the rpow_add shape).
+* `Finset.card_union_le (s t : Finset α) : #(s ∪ t) ≤ #s + #t` — both args
+  EXPLICIT (Data/Finset/Card.lean:590).
+* `rw [h]` with `h : (2 : ℝ) = (2 : ℝ) ^ (1 : ℝ)` rewrites EVERY literal 2,
+  including rpow bases — apply `Real.rpow_one` in a calc equality step at
+  the `2 ^ (1 : ℝ)` site instead.
+* `ring` does not close `≤` goals — route through an equality step
+  (`congr 1; ring` on the rpow exponents, then the monotone helper); and
+  nlinarith only multiplies HYPOTHESIS PAIRS, so exponent inequalities that
+  need `n·(n−5) ≥ 0` require `hnn : 0 ≤ n` already in context.
+* `mul_le_mul'` unusable at this pin (M6 gotcha) — every multiplicative
+  monotonicity step goes through the banked `a7_right`/`a7_left` wrappers,
+  each bound with a concrete-typed `have` (the flattened-helper rule).
+
+**Status: NOT LANDED — no receipts, no axiom banner yet.**  Next:
+swap-gate → `flock -w 7200 /Volumes/Substrate-1/bigo/.build.lock
+lake build SubsetSumL25.Proofs.M7` → fix-forward if needed → receipts →
+amend this section to LANDED.

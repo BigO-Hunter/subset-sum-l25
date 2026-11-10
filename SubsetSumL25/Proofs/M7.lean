@@ -116,7 +116,7 @@ theorem thmA_markov_cap {α : Type*} (s : Finset α) (f : α → ℝ)
     have h0 : (0 : ℝ) ≤ μ := by simpa using hμ
     exact div_nonneg (by norm_num) (div_nonneg h0 hcap.le)
   · have hcard : (0 : ℝ) < s.card := by exact_mod_cast Nat.pos_of_ne_zero hs
-    set bad := s.filter (fun a => cap ≤ f a) with hbad
+    set bad := s.filter (fun a => cap ≤ f a)
     have hbadsub : bad ⊆ s := Finset.filter_subset _ s
     -- each bad outcome costs at least the cap
     have hlow : cap * bad.card ≤ ∑ a ∈ bad, f a := by
@@ -197,7 +197,11 @@ theorem thmA_cap_fail_guard_le {α : Type*} (s : Finset α) (Wt : α → ℝ)
   have hpC : 0 < (2 : ℝ) ^ (τ₀ * n + n ^ (0.7 : ℝ)) := two_rpow_pos _
   have hnum : (b + 2) * (2 : ℝ) ^ ((τ₀ - ε₀ + ζ) * n + (δ + 3))
       ≤ (2 : ℝ) ^ (n / (10 : ℝ) ^ 6 + 1) * (2 : ℝ) ^ ((τ₀ - ε₀ + ζ) * n + (δ + 3)) :=
-    mul_le_mul_right' hguard hpA
+    a7_right hguard hpA.le
+  have hnum2 : (b + 2) * (2 : ℝ) ^ ((τ₀ - ε₀ + ζ) * n + (δ + 3))
+        * (2 : ℝ) ^ (τ₀ * n + n ^ (0.7 : ℝ))
+      ≤ (2 : ℝ) ^ (n / (10 : ℝ) ^ 6 + 1) * (2 : ℝ) ^ ((τ₀ - ε₀ + ζ) * n + (δ + 3))
+          * (2 : ℝ) ^ (τ₀ * n + n ^ (0.7 : ℝ)) := a7_right hnum hpC.le
   have hexp : (n / (10 : ℝ) ^ 6 + 1 + ((τ₀ - ε₀ + ζ) * n + (δ + 3)))
         - (τ₀ * n + n ^ (0.7 : ℝ))
       = ((ζ - ε₀) * n + n / (10 : ℝ) ^ 6 + (δ + 4) - n ^ (0.7 : ℝ)) := by ring
@@ -207,7 +211,7 @@ theorem thmA_cap_fail_guard_le {α : Type*} (s : Finset α) (Wt : α → ℝ)
           / (2 : ℝ) ^ (τ₀ * n + n ^ (0.7 : ℝ)) := hcap
     _ ≤ (2 : ℝ) ^ (n / (10 : ℝ) ^ 6 + 1 + ((τ₀ - ε₀ + ζ) * n + (δ + 3)))
           / (2 : ℝ) ^ (τ₀ * n + n ^ (0.7 : ℝ)) :=
-          div_le_div_iff₀ hpC hpC |>.mpr (mul_le_mul_right' hnum hpC)
+          div_le_div_iff₀ hpC hpC |>.mpr hnum2
     _ = (2 : ℝ) ^ (n / (10 : ℝ) ^ 6 + 1 + ((τ₀ - ε₀ + ζ) * n + (δ + 3))
           - (τ₀ * n + n ^ (0.7 : ℝ))) :=
           (Real.rpow_sub (by norm_num : (0 : ℝ) < 2) _ _).symm
@@ -225,6 +229,10 @@ theorem thmA_union_range {α : Type*} (s : Finset α) (hs : 0 < s.card)
   have hcard : (0 : ℝ) < s.card := by exact_mod_cast hs
   have hbu : (Finset.biUnion (Finset.range K) F).card
       ≤ ∑ i ∈ Finset.range K, (F i).card := Finset.card_biUnion_le _
+  have hstep1 : ((Finset.biUnion (Finset.range K) F).card : ℝ)
+      ≤ ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ) := by exact_mod_cast hbu
+  have hstep2 : ((Finset.biUnion (Finset.range K) F).card : ℝ) * s.card
+      ≤ ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ) * s.card := a7_right hstep1 hs.le
   have hsum : (((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ)) ≤ K * (q * s.card) := by
     have h1 : ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ)
         = ∑ i ∈ Finset.range K, ((F i).card : ℝ) := by
@@ -236,11 +244,12 @@ theorem thmA_union_range {α : Type*} (s : Finset α) (hs : 0 < s.card)
       _ = K * (q * s.card) := by rw [Finset.sum_const, nsmul_eq_mul]
   calc ((Finset.biUnion (Finset.range K) F).card : ℝ) / s.card
       ≤ ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ) / s.card :=
-          div_le_div_iff₀ hcard hcard |>.mpr (by exact_mod_cast hbu)
+          div_le_div_iff₀ hcard hcard |>.mpr hstep2
     _ ≤ K * q := by
+        have hne0 : s.card ≠ 0 := hcard.ne
         have h : ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ) / s.card
             ≤ K * (q * s.card) / s.card := div_le_div_iff₀ hcard hcard |>.mpr hsum
-        field_simp [hcard.ne] at h ⊢
+        field_simp at h ⊢
         linarith
 
 /-- §5.8 bullet 5: «A capped execution makes at most 2^{O(n)} draws, so this
@@ -260,13 +269,12 @@ theorem thmA_sampler_fail_le {α : Type*} (s : Finset α) (hs : 0 < s.card)
       ≤ (↑(n ^ 2 + 5) * ↑cap) * q := by
   have hK : K ≤ cap := o8_trials_le_cap S h1 hcapN
   have hD : n ^ 2 + 2 + 3 * K ≤ (n ^ 2 + 5) * cap := o8_draws_le hcap1 hK
-  have hDc : (((n ^ 2 + 2 + 3 * K : ℕ) : ℝ)) ≤ (↑(n ^ 2 + 5) * ↑cap : ℝ) := by
-    rw [Nat.cast_mul]
-    exact_mod_cast hD
+  have hDc : (((n ^ 2 + 2 + 3 * K : ℕ) : ℝ)) ≤ (↑(n ^ 2 + 5) * ↑cap : ℝ) :=
+    by exact_mod_cast hD
   have hunion := thmA_union_range s hs F (n ^ 2 + 2 + 3 * K) hq
   calc ((Finset.biUnion (Finset.range (n ^ 2 + 2 + 3 * K)) F).card : ℝ) / s.card
       ≤ (((n ^ 2 + 2 + 3 * K : ℕ) : ℝ)) * q := hunion
-    _ ≤ (↑(n ^ 2 + 5) * ↑cap) * q := mul_le_mul_right' hDc hq0
+    _ ≤ (↑(n ^ 2 + 5) * ↑cap) * q := a7_right hDc hq0
 
 /-! ### The five-event union — §5.8 part 1 -/
 
@@ -392,17 +400,31 @@ once `5 ≤ n` («for large n» made explicit: the paper's
 `2^{−n²+O(n)} ≤ 1/16` with O(n) = 3n+1). -/
 theorem thmA_err_le_16 {n NL NK NM e : ℝ} (hn : (5 : ℝ) ≤ n)
     (hNL : NL ≤ (2 : ℝ) ^ n) (hNK : NK ≤ (2 : ℝ) ^ n) (hNM : NM ≤ (2 : ℝ) ^ n)
+    (hNK0 : 0 ≤ NK) (hNM0 : 0 ≤ NM) (he0 : 0 ≤ e)
     (he : e ≤ (2 : ℝ) ^ (-(2 * n * n)) + (2 : ℝ) ^ (-(n * n))) :
     NL * NK * NM * e ≤ 1 / 16 := by
   have h25 : (25 : ℝ) ≤ n * n := by nlinarith
-  have hAB : NL * NK ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n := mul_le_mul' hNL hNK
-  have hABC : NL * NK * NM
-      ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n := mul_le_mul' hAB hNM
-  have hAB3 : (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n ≤ (2 : ℝ) ^ (3 * n) := by
+  have hnn : (0 : ℝ) ≤ n := le_trans (by norm_num) hn
+  have hnn2 : (0 : ℝ) ≤ n * n := mul_nonneg hnn hnn
+  have hpow : (0 : ℝ) < (2 : ℝ) ^ n := two_rpow_pos n
+  have hpownn : (0 : ℝ) ≤ (2 : ℝ) ^ n := hpow.le
+  have hAB1 : NL * NK ≤ (2 : ℝ) ^ n * NK := a7_right hNL hNK0
+  have hAB2 : (2 : ℝ) ^ n * NK ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n := a7_left hNK hpownn
+  have hAB : NL * NK ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n := le_trans hAB1 hAB2
+  have hA2nn : (0 : ℝ) ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n := mul_nonneg hpownn hpownn
+  have hABC1 : NL * NK * NM ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * NM := a7_right hAB hNM0
+  have hABC2 : (2 : ℝ) ^ n * (2 : ℝ) ^ n * NM
+      ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n := a7_left hNM hA2nn
+  have hABC : NL * NK * NM ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n :=
+    le_trans hABC1 hABC2
+  have hA3nn : (0 : ℝ) ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n :=
+    mul_nonneg (mul_nonneg hpownn hpownn) hpownn
+  have hAB3 : (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n = (2 : ℝ) ^ (3 * n) := by
     rw [a7_two_pow_add, a7_two_pow_add]
-    exact two_rpow_mono (by ring)
+    congr 1
+    ring
   have h2le : (2 : ℝ) ^ (-(2 * n * n)) ≤ (2 : ℝ) ^ (-(n * n)) :=
-    two_rpow_mono (by nlinarith)
+    two_rpow_mono (by linarith)
   have hjoin : (((2 : ℝ) ^ (1 : ℝ)) * (2 : ℝ) ^ (-(n * n)))
       = (2 : ℝ) ^ (1 - n * n) := by
     rw [a7_two_pow_add]
@@ -417,11 +439,14 @@ theorem thmA_err_le_16 {n NL NK NM e : ℝ} (hn : (5 : ℝ) ≤ n)
         ≤ (2 : ℝ) ^ (-(n * n)) + (2 : ℝ) ^ (-(n * n)) := by
       refine add_le_add_right h2le _
     linarith [he, h1]
+  have hstep1 : NL * NK * NM * e
+      ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n * e := a7_right hABC he0
   calc NL * NK * NM * e
-      ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n * e := mul_le_mul' hABC (le_refl e)
+      ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n * e := hstep1
     _ ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n
-          * ((2 : ℝ) * (2 : ℝ) ^ (-(n * n))) := mul_le_mul' (le_refl _) he2
-    _ ≤ (2 : ℝ) ^ (3 * n) * (2 : ℝ) ^ (1 - n * n) := mul_le_mul' hAB3 hB
+          * ((2 : ℝ) * (2 : ℝ) ^ (-(n * n))) := a7_left he2 hA3nn
+    _ = (2 : ℝ) ^ (3 * n) * ((2 : ℝ) * (2 : ℝ) ^ (-(n * n))) := by rw [hAB3]
+    _ = (2 : ℝ) ^ (3 * n) * (2 : ℝ) ^ (1 - n * n) := by rw [hB]
     _ = (2 : ℝ) ^ (3 * n + (1 - n * n)) := a7_two_pow_add _ _
     _ ≤ (2 : ℝ) ^ ((-4 : ℝ)) := two_rpow_mono (by nlinarith)
     _ = 1 / 16 := by norm_num
@@ -434,19 +459,21 @@ theorem thmA_total_err_le {α : Type*} (t : Finset α) (err exact : α → ℝ)
     {n NL NK NM e : ℝ} (hn : (5 : ℝ) ≤ n)
     (hcard : ((t.card : ℝ)) ≤ NL * NK * NM)
     (hNL : NL ≤ (2 : ℝ) ^ n) (hNK : NK ≤ (2 : ℝ) ^ n) (hNM : NM ≤ (2 : ℝ) ^ n)
+    (hNK0 : 0 ≤ NK) (hNM0 : 0 ≤ NM)
     (he : ∀ i ∈ t, |err i - exact i| ≤ e)
     (heT : e ≤ (2 : ℝ) ^ (-(2 * n * n)) + (2 : ℝ) ^ (-(n * n))) :
     |(∑ i ∈ t, err i) - ∑ i ∈ t, exact i| ≤ 1 / 16 := by
   by_cases h0 : t = ∅
   · subst h0
-    simp
+    rw [Finset.sum_empty, Finset.sum_empty, sub_zero, abs_zero]
+    norm_num
   · have hne : t.Nonempty := Finset.nonempty_iff_ne_empty.mpr h0
     obtain ⟨i, hi⟩ := hne
     have he0 : 0 ≤ e := le_trans (abs_nonneg _) (he i hi)
     calc |(∑ j ∈ t, err j) - ∑ j ∈ t, exact j|
         ≤ (t.card : ℝ) * e := thmA_err_triangle t err exact he
-      _ ≤ (NL * NK * NM) * e := mul_le_mul_right' hcard he0
-      _ ≤ 1 / 16 := thmA_err_le_16 hn hNL hNK hNM heT
+      _ ≤ (NL * NK * NM) * e := a7_right hcard he0
+      _ ≤ 1 / 16 := thmA_err_le_16 hn hNL hNK hNM hNK0 hNM0 he0 heT
 
 /-! ### Part 2 — §5.8's opening line -/
 
