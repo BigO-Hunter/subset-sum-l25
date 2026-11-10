@@ -1,0 +1,19 @@
+⚠ [8927/8929] Replayed SubsetSumL25.Row.KapilaRow
+warning: SubsetSumL25/Row/KapilaRow.lean:611:60: exponent 10000 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+⚠ [8928/8929] Replayed SubsetSumL25.Row.KapilaGuard
+warning: SubsetSumL25/Row/KapilaGuard.lean:79:26: `if_pos` has been deprecated: Use `ite_eq_left` instead
+⚠ [8929/8929] Built SubsetSumL25.Row.KapilaPrelim (38s)
+warning: SubsetSumL25/Row/KapilaPrelim.lean:181:5: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:189:5: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:414:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:422:6: `dif_neg` has been deprecated: Use `dite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:428:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:463:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:466:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:475:10: `dif_neg` has been deprecated: Use `dite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:477:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:493:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:493:18: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:494:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:494:18: `if_neg` has been deprecated: Use `ite_eq_right` instead
+Build completed successfully (8929 jobs).

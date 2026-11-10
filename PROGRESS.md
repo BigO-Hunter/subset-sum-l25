@@ -932,3 +932,66 @@ Receipt: `receipts/kapila-20261110T150641Z`. `Statement.lean` still `3dc6567e…
 Next (single lever): `prelimProg` — Proposition P's instruction text; `LeafP` is
 its consumer, and both its mathematical core (`prop_p_chebyshev`) and its program
 skeleton (`prog2`'s prologue/dispatch) are in-tree.
+
+# `prelimProg` landed, `prelim_agrees` PROVED, `LeafP` discharged (2026-11-10, lane 4)
+
+Module: `SubsetSumL25/Row/KapilaPrelim.lean` (new; imports `KapilaRow`).
+
+## What is proved (no sorry, house triple)
+
+| declaration | content |
+|---|---|
+| `prelimProg` | 17 instructions — `prog2`'s ported bootstrap + the witness test |
+| `prelimSpec` / `prelimYes` / `prelimCost` | the phase's value, gate, and 20-step charge |
+| `prelim_sound` | `prelimSpec = some true → x.yes` (the segment cannot lie) |
+| `prelim_run` | `run prelimProg x ρ 20 = some (failToNo (prelimSpec n x ω))` |
+| `prelim_agrees_spec` | the same in `Routines.prelim_agrees`'s exact shape |
+| `map_failToNo_bind_some` | the field's `map`/`pure` wrapper is inert |
+| `prelim_agrees_iff_run` | the field ⇔ «halt with that verdict» |
+| `run_of_prelim_agrees` | any `Routines`' field peeled to the `Option`-free equation |
+| `LeafP_of_prelim_agrees` | `LeafP R R.prelimProg` from the field + cost collapse |
+
+Supporting kit (ported, deliberately duplicated rather than imported — the
+snapshot's `Prologue.lean` is behind a 16k-line dependency chain):
+`memOf`, `up`, `up_eq`, `up_ne`, `upFit`, `bv_add`, `bv_shr`, `ofNat_lt_ofNat`,
+`exec_{one,add,shr,load,store,blt_lt,blt_ge,accept,reject}_step`, and the input
+block as a `ℕ`-valued state (`inF`, `inF_zero`, `inF_succ`, `inF_one`, `inF_t`,
+`inF_lt`) with the arithmetic `n < 2^w`, `aᵢ < 2^w`, `t < 2^w`, `2n < 2^w`.
+
+## Design decision that mattered (measured, not assumed)
+
+`Statement.run` starts from `loadWords _ x.input`, so cells `1..n+1` hold the
+input and **no fixed cell is free**. With only cell 0 available nothing can
+compute an address, because `add`/`sub` take two cells. Hence the ported
+`prog2` bootstrap is *forced*, not stylistic: `[0] := 2n` (cursor above the
+block), `[2n] := a₁`, and only then `[1] := 1`. All later writes go to fixed
+cells `0..6`; the decision reads only `t` (at `n+1`) and `a₁` (from `2n`), so
+clobbering `a₃..a₆` is harmless — and the gate `n ≥ 6` is exactly the
+collision condition `n + 1 ∉ {3,4,5,6,2n}`.
+
+First draft used `n ≥ 10` and cells up to 9; the walk's collision audit shrank
+it to `n ≥ 6` with the constant block `1,2,3,6`. (Recorded because the gate is
+a *derived* constraint, not a free parameter.)
+
+## Proof-engineering note (for the next segment)
+
+The walk is 17 `exec_*_step` rewrites. Two things made it tractable and are
+worth reusing:
+1. `hS := by decide` (literal fuel) instead of `omega` — `omega` over the
+   accumulated local definitions blew a 2M-heartbeat budget at `whnf`.
+2. Never `show` a defeq goal at an intermediate state. Normalise the written
+   value with an explicit `have hval : <produced expr> = <clean value>` and
+   `rw [hval]`, then `set` the clean state. `show`/`set` on an unnormalised
+   `up`-composition times out; `rw` does not.
+
+## Residual, stated plainly
+
+`prelimSpec` is the **witness-test leg** of Proposition P (`t = 0`, `a₁ = t`),
+sound and non-lying, but not Prop P's capped enumeration. The enumeration
+(Proposition 2.4's MITM with cap `2^{⌈τ₀n⌉}`) is the residual, and it is the
+piece that carries `prop_p_chebyshev`'s probability content via `CorrectAt`.
+`LeafP`'s discharge is *conditional on the cost collapse* `R.cost = R.prelimCost`
+on the main branch, which is a property of the `Routines` value the row
+eventually instantiates, not of this module.
+
+Next single lever: `aliasProg` (Theorem A's alias phase), same pattern.

@@ -1,0 +1,7 @@
+2026-11-10T16:35:49.907310+00:00 iter=1 swapouts_delta60=288 free_pct=74 verdict=wait
+2026-11-10T16:36:49.931770+00:00 iter=2 swapouts_delta60=1782 free_pct=75 verdict=wait
+2026-11-10T16:37:49.956605+00:00 iter=3 swapouts_delta60=259 free_pct=76 verdict=wait
+2026-11-10T16:38:49.983392+00:00 iter=4 swapouts_delta60=767 free_pct=73 verdict=wait
+2026-11-10T16:39:50.019735+00:00 iter=5 swapouts_delta60=822 free_pct=76 verdict=wait
+2026-11-10T16:40:50.064499+00:00 iter=6 swapouts_delta60=585 free_pct=75 verdict=wait
+2026-11-10T16:41:50.110299+00:00 iter=7 swapouts_delta60=0 free_pct=74 verdict=PROCEED

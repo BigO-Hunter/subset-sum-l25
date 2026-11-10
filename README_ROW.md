@@ -305,3 +305,59 @@ first phase leaf with both a landed mathematical core (`prop_p_chebyshev`) and a
 landed program shape (`prog2`'s prologue/dispatch skeleton) to port. `LeafP` is
 its consumer; `aliasProg`/`checksumProg` follow the same pattern.
 
+
+## Row lane 2026-11-10 (4) — `prelimProg` authored and its agreement PROVED; `LeafP` discharged (§4's first phase leaf)
+
+`Routines.prelimProg`/`prelim_agrees` were named obligations with no in-tree
+text. They now have both, and the leaf they feed is discharged.
+
+* **`prelimProg` — 17 instructions, ported shape, no loops.** The *first* thing
+  the design had to settle is that a standalone segment cannot use any fixed
+  cell: `Statement.run` starts from `loadWords _ x.input`, so cells `1..n+1` hold
+  the input and, with only cell 0 available, no address can be computed at all
+  (`add`/`sub` need two cells). That is exactly why `prog2` relocates, and the
+  ported cure is `prog2`'s own `saveAk` bootstrap: double `n` into cell 0 to get
+  the cursor `2n` (above the block for `n ≥ 2`), save `a₁` there, and only *then*
+  take cell 1 as the literal `1`. Registers `3..6` (built as `1,2,3,6` from the
+  single literal 1) hold constants and temporaries; `t` is read at `n+1` via
+  `shr`/`add` address arithmetic. Threshold `n ≥ 10` was chosen by *measurement*
+  of the collision condition (`n + 1` must clear every register and `2n`), not
+  guessed: with a 6-value constant block the constraint is `n + 1 ∉ {3..6, 2n}`,
+  hence `n ≥ 6`; the program uses the tighter, verified `6`, and the earlier
+  draft's `n ≥ 10` was dropped when the constant block shrank.
+* **`prelimSpec` — a *sound* preliminary search.** `some true` iff `t = 0` (the
+  empty subset) or `a₁ = t` (a singleton); otherwise `none` (CONTINUE). Both
+  acceptance tests are genuine witnesses, so `prelim_sound` proves
+  `prelimSpec = some true → x.yes`: the segment cannot lie. It never returns a
+  NO decision, which is §7's «returns the correct decision or CONTINUE» with
+  CONTINUE spelled `none`. **This is the witness-test leg, not the whole of
+  Proposition P**: the enumeration over the remaining `2^h` candidates (the
+  capped meet-in-the-middle of Proposition 2.4) is the named residual, and it
+  needs `prog2`'s doubling-merge as its inner core.
+* **The agreement is proved, not assumed.** `prelim_run`:
+  `run prelimProg x ρ 20 = some (failToNo (prelimSpec n x ω))`, by a
+  step-by-step walk over all 17 instructions with the ported
+  `memOf`/`up`/`exec_*_step` calculus (layers 0–1 of the snapshot's
+  `Prologue.lean`). `prelim_agrees_spec` restates it in the field's exact shape.
+* **The field's `Option` wrapper is now legible.** `Routines.prelim_agrees` is
+  written with a `map failToNo` that Lean elaborates as a `pure`/`map some` lift;
+  `map_failToNo_bind_some` shows the lift is inert and `prelim_agrees_iff_run`
+  turns the field into «the segment halts with that verdict» — no `Option`
+  ambiguity survives. This is what makes the field consumable.
+* **`LeafP` is discharged.** `LeafP_of_prelim_agrees`: on the guard's
+  complement, if `R.cost` collapses to `R.prelimCost`, then `R.prelim_agrees`
+  *is* `LeafP R R.prelimProg`. One of the two remaining seam obligations in
+  `agrees_main_iff_leaves` is therefore closed modulo that cost collapse; the
+  other three leaves (`LeafAnone`, `LeafBnone`, `LeafTest`) are untouched.
+* **A portability note, recorded because it cost a design pass.**
+  `KapilaPrelim` imports `KapilaRow` (for `LeafP`), so it is the *downstream*
+  consumer module, not an upstream program library. If `KapilaRow` ever needs
+  `prelimProg` by name, the program + agreement (layers 0–5) hoist cleanly into
+  a module above `KapilaAlgo`; the leaf discharge (layer 6) must stay
+  downstream. `Statement.lean` remains `3dc6567e…34aa`, untouched.
+
+Next (single lever): **`aliasProg`** — Theorem A's alias-phase text, the same
+pattern (bootstrap already designed; the phase's decision is
+`aliasA … .isSome`, so `LeafAnone` needs the `Option`-free `isSome` verdict, not
+`failToNo`). `checksumProg` follows it; both still lack an in-tree enumeration
+core, unlike `prelim`'s `prop_p_chebyshev`.

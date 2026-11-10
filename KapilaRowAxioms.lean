@@ -1,5 +1,6 @@
 import SubsetSumL25.Row.KapilaRow
 import SubsetSumL25.Row.KapilaGuard
+import SubsetSumL25.Row.KapilaPrelim
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -48,3 +49,13 @@ open SubsetSumL25.Row
 #print axioms rowTest_eq_of_rules
 #print axioms wordOpFactor_le_cube
 #print axioms withinEnvelope_wordop_absorb
+
+-- Proposition P's instruction text: the program, its agreement, and the leaf
+-- it discharges
+#print axioms prelim_run
+#print axioms prelim_sound
+#print axioms prelim_agrees_iff_run
+#print axioms prelim_agrees_spec
+#print axioms run_of_prelim_agrees
+#print axioms LeafP_of_prelim_agrees
+#print axioms LeafP_of_prelim_run

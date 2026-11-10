@@ -41,6 +41,7 @@ NAMED_OLEANS = [
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaAbsorb.olean",
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaRow.olean",
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaGuard.olean",
+    ".lake/build/lib/lean/SubsetSumL25/Row/KapilaPrelim.olean",
 ]
 
 HOUSE = {"propext", "Classical.choice", "Quot.sound"}
@@ -112,7 +113,8 @@ def main():
         env["PATH"] = "/opt/homebrew/bin:" + env.get("PATH", "")
         t0 = time.time()
         build = subprocess.run(["lake", "build", "SubsetSumL25.Row.KapilaRow",
-                                "SubsetSumL25.Row.KapilaGuard"], cwd=str(LANE), capture_output=True,
+                                "SubsetSumL25.Row.KapilaGuard",
+                                "SubsetSumL25.Row.KapilaPrelim"], cwd=str(LANE), capture_output=True,
                                text=True, env=env, start_new_session=True)
         (RECEIPT / "build.log").write_text(build.stdout + build.stderr)
         (RECEIPT / "build.exit").write_text(str(build.returncode))
