@@ -1173,3 +1173,101 @@ not covered by that receipt, so it was verified separately:
 module (`Statements.DS`, `M6`, `O8`) and was never in this lane's targets. That
 build also ran with the lock expired (181 s bounded wait, deviation recorded
 here); no sources were touched by it.
+
+## Row lane 2026-11-10 (8) — the payload convention landed: `LeafTest`'s first obligation is statement-complete (LANDED)
+
+New module `SubsetSumL25/Row/KapilaTest.lean` (a leaf of the import DAG, so no
+built module's hash moved; `Statement.lean` still `3dc6567e…34aa`).
+Statement-and-definition work only: **no walk, no loop, no cross-estimate
+relation** — exactly the boundary the round was scoped to.
+
+The obligation it closes is the one `isSome_forgets_payload` named. The three
+landed legs agree with their `Routines` fields through `Option.isSome`, which
+records *that* a phase succeeded and discards *what it left behind*; `LeafTest`
+consumes the lists themselves. `KapilaTest` supplies them from the one place
+they can honestly come from — the segment's exit memory.
+
+## What is landed (no sorry, house triple)
+
+| Declaration | Note |
+|---|---|
+| `payloadBlock` | `len` words from `base` read as fixed point at `2^-fracBits` — the layout §6.2's `n²` fractional bits live in |
+| `PayloadConvention` | the exit contract: `fracBits`, `blockLen`, `baseA`, `baseV`, the exit `mem`, the verdict function, and the three `rowTest` rules |
+| `.Ahat` / `.Vhat` | **defs**, not fields: the two payload lists as the exit memory holds them |
+| `.aAt` / `.vAt` / `.dAt` | per-word reads and the estimate `d = V̂_i − Â_i` §7 step 7 actually compares |
+| `.Ahat_eq_map`, `.Vhat_eq_map`, `.Ahat_length`, `.Vhat_length`, `payloadBlock_getElem?` | well-formedness (the accumulator obligation's per-word shape) |
+| `.dAt_eq` | **the payload survives**: `d` is two words and a scale, nothing else |
+| `.verdict_eq_rowTest`, `.verdict_Ahat_Vhat` | the three exit equations *determine* the verdict (`rowTest_eq_of_rules`) |
+| `payload_rules_iff` | and the rule set is *exactly* `rowTest` — neither too weak nor stronger |
+| `rowTest_separates_payloads`, `isSome_not_enough` | the test consumes the payload; equal `isSome`s are still separable, so no `isSome` field can supply `LeafTest`'s input |
+| `LeafTest_of_payload_exit` | sufficiency, statement only: reach such an exit *carrying the field payloads* ⇒ `LeafTest`, verbatim |
+
+## The design change that mattered (forced, not stylistic)
+
+**The payloads are `def`s and the structure has no equation asserting them.**
+The tempting shape is a pair of fields `Ahat Vhat : List ℚ` plus
+`hA : Ahat = payloadBlock …`. That shape lets the convention *lie*: `hA` is an
+obligation that can be false, and a `Routines` builder could satisfy it with a
+list threaded beside the state rather than in it — the `isSome` gap one level
+down. As defs, `Ahat`/`Vhat`/`dAt` are definitionally the memory read, so the
+`ℚ` accumulator layout obligation has exactly one shape to prove (the exit
+memory holds these words at this scale) and nothing else to be talked out of.
+
+**Three rules, not four.** `rowTest_eq_of_rules` takes three hypotheses, because
+`rule_nil_left : ∀ V, verdict [] V = false` subsumes both empty cases; the
+"nil/nil and cons/cons" phrasing in the paper's reading is the segment-level
+view of the same three. `payload_rules_iff` pins that this is not a loss.
+
+## What this does not touch (the seam, still bounded)
+
+`LeafTest`'s remaining three items are unchanged and now each has a named place:
+the loop + its word-op cost (item 2 — `payload_rules_iff` says exactly which
+three equations an instruction-level proof must establish, and
+`payloadBlock` is deliberately *static*, so the loop is what fills an arbitrary
+number of blocks), the cross-estimate relation `d_i = bin sum` (item 3 — `dAt`
+is now the object such a statement is about), and the multi-word accumulator's
+word arithmetic (item 4 — `fracBits`/`blockLen` are §6.2's `n²` and
+`⌈n²/w⌉ + 1`, and `dAt_eq` is the two-word form).
+
+## Lane rule: every waiter carries a hard expiry (measured this round)
+
+Two builds this round, both behind `/Volumes/Substrate-1/bigo/.build.lock`, both
+deviating: the receipt build proceeded **UNLOCKED after 301 s**, the barrel build
+**after 241 s**. Measured contention at the time: **2 foreign lock-fd holders**
+(zeta's `locked_run.py`, weil's `closure_supervisor.py`) plus **4 foreign lean
+processes** (a Stacks build). The barrel build then died at `[8971/8976]` with
+**exit -9, zero error lines** — the documented class: a runner that
+`SIG_IGN`s TERM by design gets SIGKILLed when something wants the host back.
+
+The precedent is the 2 h 19 m stale waiter: an *unbounded* `flock` parked a lane
+for two hours and nineteen minutes, and the stale waiter had to be SIGKILLed
+because these runners ignore SIGTERM. So the rule, now lane discipline:
+
+> **Every waiter carries a hard expiry.** A TERM-ignoring runner cannot be
+> asked to leave, so its *owner* timeout is the only thing that bounds it. The
+> wait bound is what guarantees both that the lane makes progress and that no
+> waiter outlives its purpose; the deviation is recorded in `lock.acquired`
+> rather than silently absorbed.
+
+## Receipts
+
+`receipts/kapila-20261110T182651Z`: gate `swapouts_delta60=0 free_pct=69`;
+build exit 0 in 55.1 s (`✔ Built SubsetSumL25.Row.KapilaTest` at
+`[8932/8932]`, 8932 jobs); `KapilaTest.olean` 250600 bytes, sha256
+`afb4844d…24b1ad`, mtime this run; axiom banner exit 0 with
+`axiom_banner_house_triple_only: true` (every new declaration in
+`[propext, Classical.choice, Quot.sound]`, no `sorryAx`, no `native_decide`);
+no `declaration uses 'sorry'` in the build log.
+
+**Barrel edit, verified separately** (the receipt's targets are the row closure,
+so the `SubsetSumL25.lean` import is not covered by it — the same lane rule as
+the previous round). The check is `lake build SubsetSumL25`, and this round it
+was **killed**: reach `[8971/8976]`, exit -9, zero `error:` lines. What it
+established before dying is the thing the check asks: **the barrel module
+compiled** — `.lake/build/lib/lean/SubsetSumL25.olean`, written 10:40:25 during
+that run (the source is 10:26:36). *Which* jobs it never reached is
+**unmeasured** — the
+log stops at the replay line for `Row.KapilaChecksum` and the buffered tail was
+lost with the process — and it is not re-run here: a whole-`SubsetSumL25` build
+drags in glob-matched modules outside this lane's targets, and the barrel's own
+compilation is the question this check exists to answer.

@@ -3,6 +3,7 @@ import SubsetSumL25.Row.KapilaGuard
 import SubsetSumL25.Row.KapilaPrelim
 import SubsetSumL25.Row.KapilaAlias
 import SubsetSumL25.Row.KapilaChecksum
+import SubsetSumL25.Row.KapilaTest
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -87,3 +88,16 @@ open SubsetSumL25.Row
 #print axioms checksum_run_of_field
 #print axioms LeafBnone_of_checksum_agrees
 #print axioms LeafBnone_of_checksum_run
+
+-- LeafTest's first obligation: the payload convention (two list-valued exits
+-- defined from the exit memory, the estimate `d`, and the three rules that
+-- determine `rowTest`)
+#print axioms payloadBlock
+#print axioms PayloadConvention.Ahat_length
+#print axioms PayloadConvention.dAt_eq
+#print axioms PayloadConvention.verdict_eq_rowTest
+#print axioms PayloadConvention.verdict_Ahat_Vhat
+#print axioms payload_rules_iff
+#print axioms rowTest_separates_payloads
+#print axioms isSome_not_enough
+#print axioms LeafTest_of_payload_exit
