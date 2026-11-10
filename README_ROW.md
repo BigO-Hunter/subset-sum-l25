@@ -171,11 +171,32 @@ unconditional is the one failure this lane must not commit.
 
 ## What is next (single lever)
 
-Write `D7.program` for the *fallback branch first*, not the whole algorithm:
-`Routines.run` with `needsFallback = true` is §6.3's exact MITM, whose
-`List Instr` twin already exists (`subsetsum-v2-snapshot`'s `prog2`, 17k lines
-of glue, axiom-clean at `α = 1/2`). Pinning `D7.agrees` on the fallback branch
-first converts the seam from "everything, at once" into a sequence of
-per-branch obligations, each with a worked reference implementation — and it
-immediately buys the guard's coverage, which is where `b ≤ n^c` and the
-`10⁶⌈log₂(b+1)⌉ ≤ n` boundary live.
+**Landed 2026-11-10** — `SubsetSumL25.Row.KapilaRow` (the seam) and the new
+`SubsetSumL25.Row.KapilaGuard` (the arithmetic):
+
+* **`D7` is cut per branch.** `program` plus two fields —
+  `agrees_fallback` (the guard routes to §6.3's exact MITM, so the obligation
+  *is* «`program` computes the MITM verdict at the MITM cost», which
+  `fallback_agrees_iff` records mechanically) and `agrees_main` (the inputs the
+  guard admits). `D7.agrees` reassembles the single equation every consumer
+  already used, so `kapila_row`'s statement and proof are untouched;
+  `D7.ofBranches` is the constructor.
+* **The fallback branch's correctness is free.** `correctAt_of_fallback_det`:
+  exactness there collapses `CorrectAt`'s two-thirds majority to «every tape
+  agrees» (`count_const`), so §7's five failure events, the `2/3`, and the
+  sample-space identification all live strictly on the main branch.
+* **The guard's coverage is done.** `guardOk_eventually`:
+  `∀ c, ∃ N, ∀ n ≥ N, ∀ b, b ≤ n^c → guardOk n b` — the statement's
+  polynomial-bit class eventually satisfies §7's bit-guard, so the uncovered set
+  is finite in `n` per `c` and is absorbed exactly like the small-`n` branch
+  `kapila_row` already absorbs. Its one analysis input is
+  `log2_mul_le_self : (Nat.log2 n) * k ≤ n` past `2k²`, from
+  `two_mul_sq_lt_two_pow`.
+
+Next (single lever): **`agrees_main`** — the branch no in-tree program
+implements. It is now an isolated obligation, so it can be attacked without
+disturbing the fallback half: write §7's main-branch `List Instr` (or show the
+row's `Routines.mitm` is unreachable above the guard's threshold) and let
+`D7.agrees` + `kapila_row` carry it. Nothing else in the row is open:
+`CorrectAt` remains the documented correctness assumption, and it is now
+provably *vacuous* on the branch the guard isolates.

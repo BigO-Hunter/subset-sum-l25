@@ -56,6 +56,14 @@ theorem count_congr {p q : ℕ → Prop} [DecidablePred p] [DecidablePred q]
     · have hq : ¬ q N := fun hq => hp ((h N).2 hq)
       simp only [hp, hq, ite_false]
 
+/-- `count` of a predicate that holds everywhere is the whole count. -/
+theorem count_const {p : ℕ → Prop} [DecidablePred p] (h : ∀ s, p s) :
+    ∀ N : ℕ, count p N = N
+  | 0 => rfl
+  | N + 1 => by
+    rw [count, count_const h N]
+    simp [h N]
+
 /-! ### What the row is allowed to assume
 
 Two hypotheses, both at the same documented boundary, both stated in the
@@ -103,15 +111,120 @@ structure D7 (R : Routines) where
   The verified `α = 1/2` package (`subsetsum-v2-snapshot`) is a worked instance
   of this field's shape: one `List Instr`, no advice, no dependence on `c`. -/
   program : List Instr
-  /-- **The translation, outcome for outcome.**  At the abstract cost horizon
-  `R.cost n x`, the program's run on the random tape `ρ : ℕ → BitVec w` returns
-  exactly §7's decision read on the same words (`(ρ r).toNat` is the unsigned
-  word).  This single equation is the whole seam: it carries the instruction
-  selection, the cell allocation, indirect addressing, balanced trees,
-  finite-precision dyadic arithmetic and the `cap`'s fail-fast, because all of
-  those are *what the program does* between step `0` and step `R.cost n x`. -/
-  agrees : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
-    run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat))
+  /-- **The fallback branch's translation** — the branch the guard routes to,
+  and the branch that already has a worked reference.
+
+  `R.fallback n x = true` means the input is below the cutoff or violates
+  `10⁶⌈log₂(b+1)⌉ ≤ n`, so §7 step 1 runs §6.3's *exact* meet-in-the-middle:
+  `Routines.run` collapses to `Routines.mitm` and `Routines.cost` to
+  `Routines.mitmCost`, and this field becomes, verbatim, «`program` computes the
+  meet-in-the-middle decision» — which is `subsetsum-v2-snapshot`'s `prog2`
+  (`Race.bound : SolvedInTime (1/2)`, verdict `decide (isSum …)` on every tape).
+  `fallback_agrees_iff` below records that identification mechanically, and
+  `correctAt_of_fallback_det` records that this branch's *correctness* needs no
+  union bound. -/
+  agrees_fallback : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    R.fallback n x = true →
+      run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat))
+  /-- **The main branch's translation.**  The same equation, taken on the inputs
+  the guard *admits*.  This is the half no in-tree program implements yet; it is
+  a separate field — not a conjunct of the old `agrees` — precisely so the two
+  halves can be discharged independently, in either order, each against its own
+  reference. -/
+  agrees_main : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    R.fallback n x = false →
+      run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat))
+
+/-- **The seam, reassembled from its two branches.**  The guard is a `Bool`
+decided by `n` and `x` alone, so `cases` on it is exhaustive and the two fields
+above *are* the whole obligation.  Consumers (and `kapila_row`) keep seeing the
+single equation they always saw. -/
+theorem D7.agrees {R : Routines} (D : D7 R) :
+    ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+      run D.program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat)) := by
+  intro n x ρ
+  cases h : R.fallback n x
+  · exact D.agrees_main n x ρ h
+  · exact D.agrees_fallback n x ρ h
+
+/-- Assemble the seam from a program and its two branch obligations. -/
+def D7.ofBranches {R : Routines} (program : List Instr)
+    (hfb : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+      R.fallback n x = true →
+        run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat)))
+    (hm : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+      R.fallback n x = false →
+        run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat))) :
+    D7 R := ⟨program, hfb, hm⟩
+
+/-- **The fallback branch, unfolded: it is §6.3's exact MITM and nothing else.**
+
+On that branch the procedure's own definitions collapse (`Routines.run` to
+`Routines.mitm`, `Routines.cost` to `Routines.mitmCost`), so the branch's
+translation obligation is *the same proposition* as «`program` computes the
+meet-in-the-middle decision at the meet-in-the-middle cost».  Stating it this way
+is what makes the branch portable: the worked reference (`subsetsum-v2-snapshot`)
+proves a statement of exactly this shape, over exactly this `Instr` set, and
+needs no §7 arithmetic at all. -/
+theorem fallback_agrees_iff (R : Routines) (program : List Instr) :
+    (∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+        R.fallback n x = true →
+          run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat)))
+      ↔ (∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+        R.fallback n x = true →
+          run program x ρ (R.mitmCost n x) = some (R.mitm n x)) := by
+  have hrun : ∀ (n : ℕ) (x : Instance n) (ω : Draws), R.fallback n x = true →
+      R.run n x ω = R.mitm n x := by
+    intro n x ω hf
+    simp [Routines.run, hf]
+  have hcost : ∀ (n : ℕ) (x : Instance n), R.fallback n x = true →
+      R.cost n x = R.mitmCost n x := by
+    intro n x hf
+    simp [Routines.cost, hf]
+  constructor
+  · intro H n x ρ hf
+    rw [← hcost n x hf, ← hrun n x (fun r => (ρ r).toNat) hf]
+    exact H n x ρ hf
+  · intro H n x ρ hf
+    rw [hcost n x hf, hrun n x (fun r => (ρ r).toNat) hf]
+    exact H n x ρ hf
+
+/-- **The guard's coverage, correctness half.**  On an input the guard routes to
+the exact fallback, §7's `CorrectAt` needs no union bound at all.
+
+The fallback is §6.3's exact meet-in-the-middle — deterministic — so if it
+decides `x.yes` correctly then *every* tape agrees, `count` is the whole tape
+space, and the two-thirds majority is vacuous.  The five failure events of §7's
+union bound, the `2/3`, and the abstract-draw / sample-space identification
+therefore all live strictly on the main branch.  (The snapshot's lane reaches the
+same collapse through `correct_of_det`, its verdict being `decide (isSum …)` on
+every tape.) -/
+theorem correctAt_of_fallback_det (R : Routines) (n : ℕ) (x : Instance n)
+    (hfb : R.fallback n x = true)
+    (hdet : (x.yes ∧ R.mitm n x = true) ∨ (¬ x.yes ∧ R.mitm n x = false)) :
+    CorrectAt R n x := by
+  have hrun : ∀ ω : Draws, R.run n x ω = R.mitm n x := by
+    intro ω
+    simp [Routines.run, hfb]
+  unfold CorrectAt
+  dsimp only
+  rcases hdet with ⟨hy, hm⟩ | ⟨hny, hm⟩
+  · refine Or.inl ⟨hy, ?_⟩
+    have hall : ∀ s : ℕ,
+        R.run n x (fun r => ((tape (wordLength n x.bits) s) r).toNat) = true := by
+      intro s
+      rw [hrun]
+      exact hm
+    rw [count_const hall]
+    exact Nat.mul_le_mul_right _ (by norm_num)
+  · refine Or.inr ⟨hny, ?_⟩
+    have hall : ∀ s : ℕ,
+        R.run n x (fun r => ((tape (wordLength n x.bits) s) r).toNat) = false := by
+      intro s
+      rw [hrun]
+      exact hm
+    rw [count_const hall]
+    exact Nat.mul_le_mul_right _ (by norm_num)
 
 /-! ### The runtime envelope in reals, its monotonicity, and its absorption -/
 

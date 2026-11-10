@@ -2,11 +2,12 @@
 """Receipt runner for the ss/kapila 0.4877 row assembly (wip-kapila-row).
 
 The build target is the ROW'S OWN MODULE CLOSURE
-(`lake build SubsetSumL25.Row.KapilaRow`: Statement -> KapilaAlgo ->
-KapilaAbsorb -> KapilaRow), not the whole library.  The row closure is what
-"the row assembles" means; a whole-`SubsetSumL25` build additionally drags in
-M5/M5CorA6/M6 and competes with the other lanes for the host, which the shared
-build lock serialises (and which killed two attempts here at exit -15 / -9).
+(`lake build SubsetSumL25.Row.KapilaRow SubsetSumL25.Row.KapilaGuard`:
+Statement -> KapilaAlgo -> KapilaAbsorb -> KapilaRow, plus the guard-coverage
+module), not the whole library.  The row closure is what "the row assembles"
+means; a whole-`SubsetSumL25` build additionally drags in M5/M5CorA6/M6 and
+competes with the other lanes for the host, which the shared build lock
+serialises (and which killed two attempts here at exit -15 / -9).
 
 Three receipts per landing, per the campaign's rule:
   1. full `lake build`, exit 0, log kept;
@@ -39,6 +40,7 @@ NAMED_OLEANS = [
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaAlgo.olean",
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaAbsorb.olean",
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaRow.olean",
+    ".lake/build/lib/lean/SubsetSumL25/Row/KapilaGuard.olean",
 ]
 
 HOUSE = {"propext", "Classical.choice", "Quot.sound"}
@@ -109,7 +111,8 @@ def main():
         env = dict(os.environ)
         env["PATH"] = "/opt/homebrew/bin:" + env.get("PATH", "")
         t0 = time.time()
-        build = subprocess.run(["lake", "build", "SubsetSumL25.Row.KapilaRow"], cwd=str(LANE), capture_output=True,
+        build = subprocess.run(["lake", "build", "SubsetSumL25.Row.KapilaRow",
+                                "SubsetSumL25.Row.KapilaGuard"], cwd=str(LANE), capture_output=True,
                                text=True, env=env, start_new_session=True)
         (RECEIPT / "build.log").write_text(build.stdout + build.stderr)
         (RECEIPT / "build.exit").write_text(str(build.returncode))

@@ -799,3 +799,22 @@ metavariable propagation; multiline show..from inside rw fails to parse).
 
 Next: DS-M7 per the ladder — the Theorem A assembly (§5.8: five failure
 events, Markov on the cap, the 1/16 finite-precision bound).
+
+
+## Row lane 2026-11-10 — D7 cut per branch + guard coverage (LANDED)
+
+* `D7` (`SubsetSumL25/Row/KapilaRow.lean`) is now `program` +
+  `agrees_fallback` + `agrees_main`; `D7.agrees` reassembles the old single
+  equation (so `kapila_row` is unchanged), `D7.ofBranches` reconstructs the
+  seam, and `fallback_agrees_iff` proves the fallback half is *exactly*
+  «`program` computes §6.3's MITM verdict at `mitmCost`» — the shape
+  `subsetsum-v2-snapshot`'s `prog2` already proves at `α = 1/2`.
+* `correctAt_of_fallback_det` (+ `count_const`): on guard-routed inputs the
+  two-thirds majority is vacuous — exactness ⇒ every tape agrees ⇒ count = N.
+  §7's union bound lives strictly on the main branch.
+* `SubsetSumL25/Row/KapilaGuard.lean`: `guardOk_eventually`
+  (`∀ c ∃ N, ∀ n ≥ N, ∀ b, b ≤ n^c → guardOk n b`), on top of
+  `log2_mul_le_self` (threshold `2k²`) and `two_mul_sq_lt_two_pow`.
+  This is where `b ≤ n^c` meets `10⁶⌈log₂(b+1)⌉ ≤ n`.
+* Open: `agrees_main` (no in-tree program yet) and `CorrectAt` (documented,
+  now provably vacuous on the fallback branch).
