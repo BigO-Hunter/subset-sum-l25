@@ -1,0 +1,5 @@
+⚠ [8927/8928] Replayed SubsetSumL25.Row.KapilaGuard
+warning: SubsetSumL25/Row/KapilaGuard.lean:79:26: `if_pos` has been deprecated: Use `ite_eq_left` instead
+⚠ [8928/8928] Replayed SubsetSumL25.Row.KapilaRow
+warning: SubsetSumL25/Row/KapilaRow.lean:535:60: exponent 10000 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+Build completed successfully (8928 jobs).

@@ -25,3 +25,18 @@ open SubsetSumL25.Row
 #print axioms two_mul_sq_lt_two_pow
 #print axioms log2_mul_le_self
 #print axioms guardOk_eventually
+
+-- agrees_main, measured: the routing on its false side, the fuel transport,
+-- the main branch's four segment leaves
+#print axioms exec_mono_halted
+#print axioms fallback_eq_false_iff
+#print axioms fallback_false_of_guard
+#print axioms fallback_false_eventually
+#print axioms run_eq_of_prelim_some
+#print axioms run_eq_false_of_alias_none
+#print axioms run_eq_false_of_checksum_none
+#print axioms run_eq_rowTest
+#print axioms rowTest_cons_cons
+#print axioms abs_ge_half_iff
+#print axioms agrees_main_iff_leaves
+#print axioms agrees_main_of_leaves

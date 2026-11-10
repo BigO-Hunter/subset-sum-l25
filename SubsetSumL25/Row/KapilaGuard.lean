@@ -154,3 +154,24 @@ theorem guardOk_eventually (c : ℕ) :
       omega
     have hlogb : Nat.log2 b ≤ c * (A + 1) := le_trans hmono hpow
     nlinarith
+
+/-! ### The fallback shadow on the routed class -/
+
+/-- **The fallback shadow is eventually absent on the statement's routed
+class.**  For every fixed `c` there is `N` such that every input the statement
+allows (`b ≤ n^c`) with `n ≥ N` takes §7's *main* branch.
+
+This is the lemma that joins guard coverage to the D7 seam: above the threshold,
+`D7.agrees_main` is the branch obligation in force and `Routines.WithinEnvelope`
+is the charge that applies, while the exact fallback — whose correctness is free
+(`correctAt_of_fallback_det`) — is confined to the finitely many `n < N`.  Note
+what it does *not* say: `agrees_main`'s own premise is already «`n ≥ n_*` and
+inside the guard» (`fallback_eq_false_iff`, `SubsetSumL25.Row.KapilaRow`), so
+this lemma locates the branch, it does not discharge the translation. -/
+theorem fallback_false_eventually (R : Routines) (c : ℕ) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+      ∀ (x : BigOSpeedrun.SubsetSum.Instance n), x.bits ≤ n ^ c → R.fallback n x = false := by
+  obtain ⟨N, hN⟩ := guardOk_eventually c
+  refine ⟨max N R.nStar, fun n hn x hb => ?_⟩
+  exact fallback_false_of_guard (le_trans (le_max_right _ _) hn)
+    (hN n x.bits (le_trans (le_max_left _ _) hn) hb)

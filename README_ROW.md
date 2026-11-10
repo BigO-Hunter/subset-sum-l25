@@ -48,19 +48,27 @@ proposition: on inputs with `b ≤ n^c`,
 ```lean
 structure D7 (R : Routines) where
   program : List Instr
-  agrees : ∀ n x ρ,
+  agrees_fallback : ∀ n x ρ, R.fallback n x = true  →
+    run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat))
+  agrees_main : ∀ n x ρ, R.fallback n x = false →
     run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat))
 ```
 
-Two fields, no correctness, no probability, no cost arithmetic. `agrees` is
-the translation, outcome for outcome, at the abstract cost horizon: it carries
-the instruction selection, the cell allocation, indirect addressing, balanced
-trees, finite-precision dyadic arithmetic and the `cap`'s fail-fast, because
-those are *what a program does* between step 0 and step `cost`.
+Three fields, no correctness, no probability, no cost arithmetic. The guard is a
+`Bool` decided by `n` and `x` alone, so `D7.agrees` reassembles the single
+equation from the two branch fields (`cases` on the guard is exhaustive) and
+every consumer sees what it always saw. The translation, outcome for outcome, at
+the abstract cost horizon, carries the instruction selection, the cell
+allocation, indirect addressing, balanced trees, finite-precision dyadic
+arithmetic and the `cap`'s fail-fast, because those are *what a program does*
+between step 0 and step `cost`.
 
 The seam's shape is not speculative: the verified `α = 1/2` package
-(`subsetsum-v2-snapshot`, `Race.bound : SolvedInTime (1/2)`) is a worked
-instance of it — one `List Instr`, no advice, no dependence on `c`.
+(`subsetsum-v2-snapshot`, `Race.bound : SolvedInTime (1/2)`, ~17k lines across
+24 modules) is a worked instance of the *fallback* half — one `List Instr`, no
+advice, no dependence on `c`, proved segment by segment (`pro_segA23`, the
+prologue walk, Phase A's sorted half-sums, Phase B's candidate × binary-search
+cascade, then the budget composition).
 
 ### (c) The bound
 
@@ -193,10 +201,55 @@ unconditional is the one failure this lane must not commit.
   `log2_mul_le_self : (Nat.log2 n) * k ≤ n` past `2k²`, from
   `two_mul_sq_lt_two_pow`.
 
-Next (single lever): **`agrees_main`** — the branch no in-tree program
-implements. It is now an isolated obligation, so it can be attacked without
-disturbing the fallback half: write §7's main-branch `List Instr` (or show the
-row's `Routines.mitm` is unreachable above the guard's threshold) and let
-`D7.agrees` + `kapila_row` carry it. Nothing else in the row is open:
-`CorrectAt` remains the documented correctness assumption, and it is now
-provably *vacuous* on the branch the guard isolates.
+**`agrees_main` — measured, both routes, and the cheaper one landed
+(2026-11-10).** The two named routes were measured before any program was
+written, and the measurement changed the shape of the obligation rather than
+discharging it. Result: **route 2 is vacuous; route 1 is not yet well-posed; the
+obligation is now four instruction-segment leaves, each with its worked
+reference where one exists.**
+
+* **Route 2 (prove the fallback shadow unreachable above the guard threshold) is
+  vacuous.** `fallback_eq_false_iff` (`KapilaAlgo`) unfolds `agrees_main`'s own
+  hypothesis: `R.fallback n x = false ↔ n_* ≤ n ∧ guardOk n x.bits`. The shadow's
+  absence above the threshold *is the premise*, so proving it adds nothing to
+  the main obligation. What coverage does buy is the location of the branch:
+  `fallback_false_eventually` (`KapilaGuard`) turns `guardOk_eventually` into
+  «on the routed class, every `n ≥ max N n_*` takes the main branch», so the
+  exact fallback is confined to finitely many `n` per `c`.
+* **Route 1 (write §7's main-branch program) is not yet well-posed.** Three of
+  the main branch's four segments — `prelim` (§4 Prop P), `aliasA` (Thm A),
+  `checksumB` (Thm B) — are *opaque fields of an arbitrary `Routines`*. No fixed
+  `List Instr` computes an arbitrary total function `Instance n → Draws →
+  Option Bool`, so no program can be written against the statement as it stands:
+  `Routines` must first gain those three programs (and `mitm`'s) with their own
+  agreement hypotheses. The missing lever is that refinement — not a longer
+  proof of the same equation. (The `α = 1/2` reference is 17k lines for the
+  *deterministic* MITM alone, so the program text was never the cheap half.)
+* **Landed instead — the cut per instruction-segment.**
+  `agrees_main_iff_leaves`: the single equation is *equivalent* to four leaves
+  (`LeafP`, `LeafAnone`, `LeafBnone`, `LeafTest`) with **concrete verdicts** and
+  no `Option` plumbing, one per §7 phase of the dispatch; `agrees_main_of_leaves`
+  is the consumer form. `D7.agrees` + `kapila_row` carry it with no other
+  change — `kapila_row`'s statement and proof are byte-untouched.
+* **The test segment's worked reference** (the one segment §7 fully specifies):
+  `rowTest_cons_cons` / `rowTest_nil_left` / `rowTest_nil_right` are the loop
+  rules a scan over the stored estimate list needs, and `abs_ge_half_iff`
+  (`|B̂_s| ≥ 1/2 ↔ |B̂_s|² ≥ 1/4` on `ℚ`) puts the in-tree test in the **paper's
+  own squared vocabulary** — «the sum of the squares … exceeds 1/4».
+* **Two requirements on `Routines` that the statement of `D7` hid**, now
+  recorded in the module docstring: (i) the per-field programs above; (ii) the
+  concrete program is a **multi-word** program — §6.2's estimates carry `n²`
+  fractional bits while the statement's word is `w = 4(n+b)+⌈log₂((n+2)⁴)⌉ =
+  O(n+b)` (at `b = 1` the two cross at `n = 7`), and the statement itself
+  contemplates this («arithmetic exceeding these limits is implemented by
+  multiple word operations and charged accordingly») — so `Routines.cost` must
+  bound the **word-operation** count, which `WithinEnvelope` alone does not say.
+* **Also landed:** `exec_mono_halted` (halting at `t` transports to `t + k`) —
+  the direction a segment proof needs, so no segment has to count the whole run.
+
+Next (single lever): **the `Routines` refinement** — reify `mitm`, `prelim`,
+`aliasA`, `checksumB` as `List Instr` programs with per-field agreement
+hypotheses, then discharge the four leaves against them (textbook-first:
+`mitm` is the snapshot's `prog2`, then `LeafTest`, then the three phases).
+Nothing else in the row is open: `CorrectAt` remains the documented correctness
+assumption, and it is now provably *vacuous* on the branch the guard isolates.

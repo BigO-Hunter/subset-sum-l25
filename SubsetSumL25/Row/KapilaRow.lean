@@ -44,6 +44,20 @@ theorem exec_eq_of_halted {w : ℕ} (P : List Instr) (ρ : ℕ → BitVec w) :
     generalize hS : P[pc]?.getD Instr.reject = S at h ⊢
     cases S <;> (first | rfl | (exact ih _ _ _ h k))
 
+/-- **Fuel transport, the direction a refinement proof needs.**  A segment
+argument exhibits halting at some explicit step count `t`; the row's obligation
+is at the abstract horizon `R.cost n x`.  This carries the first to the second,
+so one segment's proof never has to count the whole run at once. -/
+theorem exec_mono_halted {w : ℕ} (P : List Instr) (ρ : ℕ → BitVec w)
+    (t pc r : ℕ) (m : ℕ → BitVec w) (v : Bool)
+    (h : exec P ρ t pc r m = some v) (k : ℕ) :
+    exec P ρ (t + k) pc r m = some v := by
+  have hne : exec P ρ t pc r m ≠ none := by
+    intro hc
+    rw [h] at hc
+    exact Option.some_ne_none v hc
+  rw [exec_eq_of_halted P ρ t pc r m hne k, h]
+
 /-- `count` only sees its predicate pointwise. -/
 theorem count_congr {p q : ℕ → Prop} [DecidablePred p] [DecidablePred q]
     (h : ∀ s, p s ↔ q s) : ∀ N : ℕ, count p N = count q N
@@ -63,6 +77,22 @@ theorem count_const {p : ℕ → Prop} [DecidablePred p] (h : ∀ s, p s) :
   | N + 1 => by
     rw [count, count_const h N]
     simp [h N]
+
+/-! ### What the guard has already decided
+
+`D7.agrees_main`'s hypothesis is `R.fallback n x = false`.  Unfolding §7's
+routing (`fallback_eq_false_iff`, proved where the routing is defined, in
+`SubsetSumL25.Row.KapilaAlgo`) shows this is *exactly* «`n ≥ n_*` and the
+bit-guard holds» — so the main obligation's premise **is** the statement that
+the fallback shadow is absent.  It cannot be discharged, or weakened, by
+proving that absence afresh: that reading of the seam is vacuous, and the
+unfolding lemma is the measurement of it.
+
+What guard coverage does buy is the other direction.  `KapilaGuard`'s
+`guardOk_eventually` + `fallback_false_eventually` say the shadow is *eventually
+absent on the statement's routed class*, so the main branch is the one that runs
+there and the exact fallback (with its free correctness,
+`correctAt_of_fallback_det`) is confined to `n < N`. -/
 
 /-! ### What the row is allowed to assume
 
@@ -130,7 +160,21 @@ structure D7 (R : Routines) where
   the guard *admits*.  This is the half no in-tree program implements yet; it is
   a separate field — not a conjunct of the old `agrees` — precisely so the two
   halves can be discharged independently, in either order, each against its own
-  reference. -/
+  reference.
+
+  Two things are now *measured* about this half rather than assumed:
+
+  * its hypothesis (`R.fallback n x = false`) unfolds to «`n ≥ n_*` **and** the
+    bit-guard holds» (`fallback_eq_false_iff`) — so it is already the statement
+    that the fallback shadow is absent, and proving that absence does not
+    reduce it;
+  * it is *equivalent* to four per-segment leaves with concrete verdicts
+    (`agrees_main_iff_leaves`), and those leaves are about a program whose
+    segments — `prelim`, `aliasA`, `checksumB` — are still opaque fields of an
+    arbitrary `Routines`.  Discharging it therefore begins with giving
+    `Routines` those three programs and their agreement hypotheses; see the
+    section «The main branch, cut into instruction-segments» in
+    `SubsetSumL25.Row.KapilaRow`. -/
   agrees_main : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
     R.fallback n x = false →
       run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat))
@@ -225,6 +269,185 @@ theorem correctAt_of_fallback_det (R : Routines) (n : ℕ) (x : Instance n)
       exact hm
     rw [count_const hall]
     exact Nat.mul_le_mul_right _ (by norm_num)
+
+/-! ### The main branch, cut into instruction-segments
+
+`agrees_main` is one equation, but it is not one obligation.  On the main branch
+`Routines.run` is a three-deep dispatch over `prelim`, `aliasA`, `checksumB`, and
+the four reachable leaves have *concrete* verdicts.  `agrees_main_iff_leaves`
+records that split: proving the four leaves proves the equation, and — the
+leaves carrying no `Option` plumbing — each leaf is exactly what an
+instruction-level proof of that segment has to establish (reach the segment's
+exit with that word in the accumulator, at fuel `R.cost n x`).
+
+Two measurements are recorded here, because they decide how this half can be
+worked, and neither is visible from the statement of `agrees_main`:
+
+1. **The main obligation is not yet well-posed at the level stated.**  Three of
+   the four segments are opaque fields of an *arbitrary* `Routines`.  No fixed
+   `List Instr` computes an arbitrary total function `Instance n → Draws →
+   Option Bool`, so `agrees_main` cannot be discharged for arbitrary `R` by
+   writing a program: `Routines` must first gain *the programs* for `prelim`,
+   `aliasA`, `checksumB` (and `mitm`) together with their own agreement
+   hypotheses, and only then does `agrees_main` become a proposition about
+   specific instruction text.  The missing lever is that refinement, not a
+   longer proof of the same statement.
+
+2. **The concrete program is a multi-word program, so `cost` must count word
+   operations.**  §6.2 carries the estimates at `n²` fractional bits, while the
+   statement's word is `w = 4(n+b) + ⌈log₂((n+2)⁴)⌉ = O(n+b)`; at `b = 1` the
+   two cross at `n = 7` and `n²` stays ahead thereafter, so an `n²`-fractional
+   dyadic does not fit in one word.  The trusted statement anticipates exactly
+   this («arithmetic exceeding these limits is implemented by multiple word
+   operations and charged accordingly»), hence `Routines.cost` must bound the
+   *word-operation* count of the concrete program — a requirement on the `cost`
+   field that `WithinEnvelope` alone does not state, and part of the D7
+   boundary.
+
+The test segment is the one segment §7 fully specifies (`rowTest`), so it is the
+one with a worked reference here — including the paper's own squared form of the
+comparison (`|B̂_s| ≥ 1/2 ⟺ |B̂_s|² ≥ 1/4`, `abs_ge_half_iff`) and the cons/nil
+rules a loop proof consumes (`rowTest_cons_cons`, `rowTest_nil_left`,
+`rowTest_nil_right`). -/
+
+/-- The main branch's value, case 1: Proposition P (§4) decides, and its verdict
+is the row's verdict.  Core: `prop_p_chebyshev` (B5). -/
+theorem run_eq_of_prelim_some (R : Routines) (n : ℕ) (x : Instance n) (ω : Draws)
+    (hf : R.fallback n x = false) {b : Bool} (hp : R.prelim n x ω = some b) :
+    R.run n x ω = b := by
+  simp [Routines.run, hf, hp]
+
+/-- Case 2: Theorem A's `FAIL` — «If it fails, return NO», verbatim. -/
+theorem run_eq_false_of_alias_none (R : Routines) (n : ℕ) (x : Instance n) (ω : Draws)
+    (hf : R.fallback n x = false) (hp : R.prelim n x ω = none)
+    (ha : R.aliasA n x ω = none) : R.run n x ω = false := by
+  simp [Routines.run, hf, hp, ha]
+
+/-- Case 3: Theorem B's `FAIL` — the same NO. -/
+theorem run_eq_false_of_checksum_none (R : Routines) (n : ℕ) (x : Instance n) (ω : Draws)
+    (hf : R.fallback n x = false) (hp : R.prelim n x ω = none)
+    {Ahat : List ℚ} (ha : R.aliasA n x ω = some Ahat)
+    (hb : R.checksumB n x ω = none) : R.run n x ω = false := by
+  simp [Routines.run, hf, hp, ha, hb]
+
+/-- Case 4: both phases produce estimates, and §7 step 7's test decides. -/
+theorem run_eq_rowTest (R : Routines) (n : ℕ) (x : Instance n) (ω : Draws)
+    (hf : R.fallback n x = false) (hp : R.prelim n x ω = none)
+    {Ahat : List ℚ} (ha : R.aliasA n x ω = some Ahat)
+    {Vhat : List ℚ} (hb : R.checksumB n x ω = some Vhat) :
+    R.run n x ω = Routines.rowTest Ahat Vhat := by
+  simp [Routines.run, hf, hp, ha, hb]
+
+/-- The test on an empty left list never fires (`zipWith` truncates). -/
+theorem rowTest_nil_left (V : List ℚ) : Routines.rowTest [] V = false := by
+  simp [Routines.rowTest]
+
+/-- Nor on an empty right list. -/
+theorem rowTest_nil_right (A : List ℚ) : Routines.rowTest A [] = false := by
+  simp [Routines.rowTest]
+
+/-- **The test's loop rule** — its cons/cons step, in the `Bool`-or shape a
+scan over the stored estimate list needs. -/
+theorem rowTest_cons_cons (a : ℚ) (A : List ℚ) (v : ℚ) (V : List ℚ) :
+    Routines.rowTest (a :: A) (v :: V)
+      = (decide ((1 / 2 : ℚ) ≤ |v - a|) || Routines.rowTest A V) := by
+  simp [Routines.rowTest]
+
+/-- **§7 step 7 in the paper's own squared vocabulary.**  The paper states the
+test as «the sum of the squares of the dyadic real and imaginary parts exceeds
+1/4»; the estimate list carries the magnitude `|B̂_s| = |V̂_s − Â_s|`, and on
+`ℚ` the two forms agree — so the in-tree test is the paper's test. -/
+theorem abs_ge_half_iff (d : ℚ) : (1 / 2 : ℚ) ≤ |d| ↔ (1 / 4 : ℚ) ≤ d * d := by
+  have h0 : (0 : ℚ) ≤ |d| := abs_nonneg d
+  have hsq : |d| ^ 2 = d ^ 2 := sq_abs d
+  have hd : d ^ 2 = d * d := by ring
+  constructor
+  · intro h; nlinarith [h0, h]
+  · intro h
+    have h2 : (1 / 2 : ℚ) ^ 2 ≤ |d| ^ 2 := by rw [hsq, hd]; linarith
+    nlinarith [h0, h2]
+
+/-- Segment 2 (Proposition P): on the guard's complement, if the phase decides,
+the program's verdict at the abstract horizon is that decision. -/
+def LeafP (R : Routines) (program : List Instr) : Prop :=
+  ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    R.fallback n x = false → ∀ b : Bool, R.prelim n x (fun r => (ρ r).toNat) = some b →
+      run program x ρ (R.cost n x) = some b
+
+/-- Segment 5 (Theorem A's `FAIL`): the program reaches NO. -/
+def LeafAnone (R : Routines) (program : List Instr) : Prop :=
+  ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    R.fallback n x = false → R.prelim n x (fun r => (ρ r).toNat) = none →
+      R.aliasA n x (fun r => (ρ r).toNat) = none →
+      run program x ρ (R.cost n x) = some false
+
+/-- Segment 6 (Theorem B's `FAIL`): the program reaches NO. -/
+def LeafBnone (R : Routines) (program : List Instr) : Prop :=
+  ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    R.fallback n x = false → R.prelim n x (fun r => (ρ r).toNat) = none →
+      ∀ Ahat : List ℚ, R.aliasA n x (fun r => (ρ r).toNat) = some Ahat →
+        R.checksumB n x (fun r => (ρ r).toNat) = none →
+        run program x ρ (R.cost n x) = some false
+
+/-- Segment 7 (§7 step 7's test): the program's verdict is the test of the two
+stored estimate lists. -/
+def LeafTest (R : Routines) (program : List Instr) : Prop :=
+  ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    R.fallback n x = false → R.prelim n x (fun r => (ρ r).toNat) = none →
+      ∀ Ahat : List ℚ, R.aliasA n x (fun r => (ρ r).toNat) = some Ahat →
+        ∀ Vhat : List ℚ, R.checksumB n x (fun r => (ρ r).toNat) = some Vhat →
+        run program x ρ (R.cost n x) = some (Routines.rowTest Ahat Vhat)
+
+/-- The four segment obligations, no `Option` plumbing left. -/
+def MainLeaves (R : Routines) (program : List Instr) : Prop :=
+  LeafP R program ∧ LeafAnone R program ∧ LeafBnone R program ∧ LeafTest R program
+
+/-- **`agrees_main`, cut per instruction-segment.**  The main branch's dispatch
+is exhaustive over the three phases' outcomes, so the single equation is
+*equivalent* to the four leaves above — no obligation is added, none is dropped,
+and each leaf states a concrete verdict for one segment. -/
+theorem agrees_main_iff_leaves (R : Routines) (program : List Instr) :
+    (∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+        R.fallback n x = false →
+          run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat)))
+      ↔ MainLeaves R program := by
+  constructor
+  · intro H
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · intro n x ρ hf b hp
+      rw [H n x ρ hf, run_eq_of_prelim_some R n x _ hf hp]
+    · intro n x ρ hf hp ha
+      rw [H n x ρ hf, run_eq_false_of_alias_none R n x _ hf hp ha]
+    · intro n x ρ hf hp Ahat ha hb
+      rw [H n x ρ hf, run_eq_false_of_checksum_none R n x _ hf hp ha hb]
+    · intro n x ρ hf hp Ahat ha Vhat hb
+      rw [H n x ρ hf, run_eq_rowTest R n x _ hf hp ha hb]
+  · rintro ⟨hP, hA, hB, hT⟩ n x ρ hf
+    cases hp : R.prelim n x (fun r => (ρ r).toNat) with
+    | some b =>
+      rw [run_eq_of_prelim_some R n x _ hf hp]
+      exact hP n x ρ hf b hp
+    | none =>
+      cases ha : R.aliasA n x (fun r => (ρ r).toNat) with
+      | none =>
+        rw [run_eq_false_of_alias_none R n x _ hf hp ha]
+        exact hA n x ρ hf hp ha
+      | some Ahat =>
+        cases hb : R.checksumB n x (fun r => (ρ r).toNat) with
+        | none =>
+          rw [run_eq_false_of_checksum_none R n x _ hf hp ha hb]
+          exact hB n x ρ hf hp Ahat ha hb
+        | some Vhat =>
+          rw [run_eq_rowTest R n x _ hf hp ha hb]
+          exact hT n x ρ hf hp Ahat ha Vhat hb
+
+/-- The consumer form: four segment proofs are `agrees_main`. -/
+theorem agrees_main_of_leaves {R : Routines} {program : List Instr}
+    (h : MainLeaves R program) :
+    ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+      R.fallback n x = false →
+        run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat)) :=
+  (agrees_main_iff_leaves R program).mpr h
 
 /-! ### The runtime envelope in reals, its monotonicity, and its absorption -/
 

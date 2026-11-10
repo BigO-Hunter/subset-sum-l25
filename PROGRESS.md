@@ -818,3 +818,65 @@ events, Markov on the cap, the 1/16 finite-precision bound).
   This is where `b ≤ n^c` meets `10⁶⌈log₂(b+1)⌉ ≤ n`.
 * Open: `agrees_main` (no in-tree program yet) and `CorrectAt` (documented,
   now provably vacuous on the fallback branch).
+
+## Row lane 2026-11-10 (2) — `agrees_main` measured: route 2 vacuous, route 1 not yet well-posed, the obligation cut into four segment leaves (LANDED)
+
+Both routes named at the D7 cut were measured *before* any program text was
+written; the measurement changed the shape of the obligation rather than
+discharging it.
+
+* **Route 2 is vacuous, and now provably so.** `fallback_eq_false_iff`
+  (`KapilaAlgo`, next to the routing definition) unfolds `agrees_main`'s own
+  hypothesis: `R.fallback n x = false ↔ n_* ≤ n ∧ guardOk n x.bits`. «The
+  fallback shadow is absent above the guard threshold» *is the premise*, so
+  proving it cannot reduce the main obligation. Coverage still earns its place
+  by locating the branch: `fallback_false_eventually` (`KapilaGuard`) composes
+  `guardOk_eventually` with `fallback_false_of_guard` into «for each `c`, every
+  routed input with `n ≥ max N n_*` takes the main branch» — so the exact
+  fallback (`correctAt_of_fallback_det`, free correctness) is confined to
+  finitely many `n` per `c`.
+* **Route 1 is not yet well-posed.** Three of the main branch's four segments
+  (`prelim`, `aliasA`, `checksumB`) are opaque fields of an *arbitrary*
+  `Routines`; no fixed `List Instr` computes an arbitrary total function
+  `Instance n → Draws → Option Bool`. `agrees_main` therefore cannot be
+  discharged for arbitrary `R` by writing a program: `Routines` must gain those
+  programs (and `mitm`'s) with per-field agreement hypotheses first. The
+  missing lever is that refinement. (Scale check: the `α = 1/2` reference —
+  `subsetsum-v2-snapshot` — is ~17k lines across 24 modules for the
+  *deterministic* MITM alone, proved segment by segment.)
+* **Landed — the cut per instruction-segment.** `agrees_main_iff_leaves`
+  (`KapilaRow`): the single equation is *equivalent* to four leaves with
+  concrete verdicts and no `Option` plumbing — `LeafP` (Prop P decides → that
+  verdict), `LeafAnone` (Thm A `FAIL` → NO), `LeafBnone` (Thm B `FAIL` → NO),
+  `LeafTest` (both phases estimate → `rowTest`). `agrees_main_of_leaves` is the
+  consumer form; `D7.agrees` + `kapila_row` carry it with no other change —
+  `kapila_row`'s statement and proof are byte-untouched (the only deleted line
+  in the diff is the old `agrees_main` docstring's terminator). The four
+  value lemmas (`run_eq_of_prelim_some`, `run_eq_false_of_alias_none`,
+  `run_eq_false_of_checksum_none`, `run_eq_rowTest`) name the main branch's
+  value case by case.
+* **The test segment's worked reference** (the one segment §7 fully specifies):
+  `rowTest_cons_cons` + `rowTest_nil_left`/`rowTest_nil_right` are the loop rules
+  a scan over the stored estimate list consumes; `abs_ge_half_iff`
+  (`(1/2:ℚ) ≤ |d| ↔ (1/4:ℚ) ≤ d*d`) puts the in-tree test in the **paper's own
+  squared vocabulary**.
+* **Two requirements on `Routines` the statement of `D7` hid** (recorded in the
+  module docstring, «The main branch, cut into instruction-segments»):
+  (i) per-field programs; (ii) the concrete program is a **multi-word** program
+  — §6.2's `n²` fractional bits against a word `w = 4(n+b)+⌈log₂((n+2)⁴)⌉`
+  (at `b = 1` the curves cross at `n = 7`) — and the trusted statement
+  contemplates exactly this («multiple word operations and charged
+  accordingly»), so `Routines.cost` must bound the **word-operation** count.
+  `WithinEnvelope` alone does not say so.
+* **Also landed:** `exec_mono_halted` — halting at `t` transports to `t + k`,
+  so a segment proof never has to count the whole run at once.
+
+Receipt: `receipts/kapila-20261110T<stamp>Z` (build exit 0, both named oleans,
+axiom banner: every new declaration `⊆ [propext, Classical.choice,
+Quot.sound]`; several report only `[propext, Quot.sound]`). `Statement.lean`
+still `3dc6567e…34aa`.
+
+Next (single lever): the `Routines` refinement — reify `mitm`/`prelim`/`aliasA`/
+`checksumB` as `List Instr` programs with per-field agreement hypotheses, then
+discharge the four leaves against them (`mitm` first: the snapshot's `prog2` is
+the worked reference; then `LeafTest`; then the three phases).

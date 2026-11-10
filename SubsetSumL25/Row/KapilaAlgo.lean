@@ -191,4 +191,28 @@ def WithinEnvelope (R : Routines) (c : ℕ) : Prop :=
 
 end Routines
 
+/-! ### The routing, read from the `false` side
+
+`Routines.fallback` is a `decide`d `Bool`, so its `false` side unfolds to a
+conjunction and nothing more.  Both branches of the D7 seam read this lemma: it
+is what makes `agrees_main`'s hypothesis («the guard admits this input»)
+identical to «`n ≥ n_*` and `10⁶⌈log₂(b+1)⌉ ≤ n`», and it is what lets guard
+coverage (`KapilaGuard.fallback_false_eventually`) pin down *where* the main
+branch runs. -/
+theorem fallback_eq_false_iff (R : Routines) (n : ℕ) (x : Instance n) :
+    R.fallback n x = false ↔ R.nStar ≤ n ∧ guardOk n x.bits := by
+  by_cases h2 : guardOk n x.bits
+  · by_cases h1 : R.nStar ≤ n
+    · have hlt : ¬ (n < R.nStar) := by omega
+      simp [Routines.fallback, hlt, h2, h1]
+    · have hlt : n < R.nStar := by omega
+      simp [Routines.fallback, hlt, h2, h1]
+  · simp [Routines.fallback, h2]
+
+/-- The near side of the routing: above `n_*`, the bit-guard alone decides the
+branch. -/
+theorem fallback_false_of_guard {R : Routines} {n : ℕ} {x : Instance n}
+    (hn : R.nStar ≤ n) (hg : guardOk n x.bits) : R.fallback n x = false :=
+  (fallback_eq_false_iff R n x).mpr ⟨hn, hg⟩
+
 end SubsetSumL25.Row
