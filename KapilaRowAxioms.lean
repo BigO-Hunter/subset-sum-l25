@@ -6,7 +6,6 @@ import SubsetSumL25.Row.KapilaChecksum
 import SubsetSumL25.Row.KapilaTest
 import SubsetSumL25.Row.KapilaLoop
 import SubsetSumL25.Row.KapilaEstimate
-import SubsetSumL25.Row.KapilaEstimate
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -160,3 +159,28 @@ open SubsetSumL25.Row
 #print axioms payloadStride
 #print axioms placeValue
 #print axioms placeValue_one
+
+-- §L11: the multi-word layout — the scale identity, the carry chain, the block
+-- sizing, exactness, and item 3's bin-sum contract restated about `placeValue`
+-- (item 4's layout written; the read loop's stride arithmetic named as residual)
+#print axioms placeValue_nonneg
+#print axioms placeValue_scale
+#print axioms placeValueAt
+#print axioms placeValue_eq_placeValueAt
+#print axioms placeValueAt_zero
+#print axioms mod_mul_split
+#print axioms sum_base_digits
+#print axioms placeValueAt_succ
+#print axioms payloadStride_mul_spec
+#print axioms placeValueAt_digits
+#print axioms placeValueAt_payloadStride
+#print axioms placeValue_payloadStride
+#print axioms getElem?_map_range
+#print axioms dAt_eq_of_map
+#print axioms rowTest_eq_map
+#print axioms WideLayout
+#print axioms WideBinSumAgrees
+#print axioms dAt_eq_widePlaceValue
+#print axioms rowTest_eq_wideBinSum
+#print axioms dAt_eq_placeValue_one
+#print axioms wideBinSumAgrees_one_iff

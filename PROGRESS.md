@@ -1675,3 +1675,111 @@ comparable at all, since `placeValue_one` only settles the degenerate stride-1
 case.  Then the carry chain over `payloadStride w fracBits` words.  Item 3's
 bin-sum identity lands on top of that by restating `BinSumAgrees` about
 `placeValue` and reusing `rowTest_eq_binSum`.
+
+## Row lane 2026-11-10 (11) — item 4's layout written: the one-denominator identity, the carry chain, and the bin-sum contract restated about `placeValue` (LANDED)
+
+Same module (`SubsetSumL25/Row/KapilaEstimate.lean`, §8.5–8.7 appended), still a
+leaf of the import DAG, so no built module's hash moves and `Statement.lean`
+stays `3dc6567e…34aa`.  Statement **and proof**: no sorry, house triple.  This
+closes the item 3 + item 4 seam on the arithmetic side; what is left of it is a
+fact about the *program*, enumerated at the end of this section and at the foot
+of the module.
+
+### 1. `placeValue_scale` — the one shared denominator (the requested identity)
+
+| Declaration | Content |
+|---|---|
+| `placeValue_scale` | `placeValue m base stride fracBits s * 2^fracBits = Σ_{j<stride} (m (base+s*stride+j)).toNat * 2^(w*j)` in `ℚ` — multiplying a place value by the single scale clears the denominator exactly |
+| `placeValue_nonneg` | the sum's terms are nonnegative over a positive denominator |
+| `placeValueAt` + `placeValue_eq_placeValueAt` | the same reading at an **explicit address** (`placeValue` addresses estimate `s` at `base + s*stride`; the chain appends at a fixed address, so it needs the address as a parameter) |
+| `placeValueAt_zero` | the empty block is `0` |
+
+Contrast with the previous round's limit, now in one line: `abs_dAt_mul_lt` bounds
+`|dAt i| · 2^fracBits` by one word (`< 2^w`) whatever `fracBits` is; here the
+numerator is the *whole* stride-`k` sum.
+
+### 2. The carry chain over `payloadStride w fracBits` words
+
+| Declaration | Content |
+|---|---|
+| `mod_mul_split` | `N % (a·b) = N % a + (N / a % b)·a` — the base decomposition, the only arithmetic the chain needs |
+| `sum_base_digits` | `Σ_{j<stride} (N / 2^{w·j} % 2^w)·2^{w·j} = N % 2^{w·stride}` — reading a numerator's base-`2^w` digits recovers it **exactly** |
+| `placeValueAt_succ` | appending one word at `addr + stride` adds exactly its place value `word · 2^{w·stride}` to the numerator over the one denominator — the chain step |
+| `payloadStride_mul_spec` | `fracBits ≤ w·payloadStride` **and** `fracBits + w ≤ w·payloadStride`: the `⌈·⌉ + 1` stride holds `fracBits + w` bits, so the extra word is a full word of carry headroom, not padding |
+| `placeValueAt_digits` | a block whose words are `N`'s digits reads back as `N % 2^{w·stride}` over the shared scale |
+| `placeValueAt_payloadStride` | **a `fracBits`-bit numerator is carried exactly** by a `payloadStride` block — the theorem the truncation denied the one-word read |
+| `placeValue_payloadStride` | the `s = 0` `placeValue` form of the same, so the vocabulary the contract below uses is known to carry a full numerator |
+
+Note on what "carry" means here: no carry is propagated explicitly, because in
+base `2^w` the carries *are* the digits' meaning.  `sum_base_digits` is the whole
+content of the chain, and it is exactness — the exact opposite of
+`abs_dAt_lt_half`.
+
+### 3. `BinSumAgrees`, restated about `placeValue`
+
+| Declaration | Content |
+|---|---|
+| `getElem?_map_range` | the `i`-th entry of a `range`-indexed map |
+| `dAt_eq_of_map` / `rowTest_eq_map` | `dAt` and the verdict are read off **any** per-index presentation of the two blocks (the landed `F = aAt`, `G = vAt` is the special case) |
+| `WideLayout` | the wide (stride-`k`) layout: `Â`/`V̂` are the place-value readings of a multi-word accumulator memory at `baseA`/`baseV` |
+| `WideBinSumAgrees` | item 3's contract with the left side being the **difference of two place values**, one equation per index |
+| `dAt_eq_widePlaceValue` | `dAt i` *is* that difference — the estimate the test compares is the multi-word reading, not a proxy |
+| `rowTest_eq_wideBinSum` | supply the pointwise identity and §7 step 7's verdict on the payloads **is** the test on the bin sums; nothing else about `dAt`, the payloads, or the memory is consumed |
+| `dAt_eq_placeValue_one` + `wideBinSumAgrees_one_iff` | the landed `BinSumAgrees` is the wide contract's `stride = 1` instance — **both directions**, on the module's own memory.  So the restatement generalizes, it does not displace |
+
+### What remains, enumerated (item 3 + item 4's residual after this round)
+
+* **(i) The read loop's stride arithmetic — the application seam.**  `aAt` reads
+  `C.mem (C.baseA + i)`: one word per index.  A stride-`k` payload needs the
+  program to sum `k` words per estimate and to address estimate `s` at
+  `base + s·stride` before `aAt` *is* a wide reading.  That is `KapilaLoop`'s
+  instruction sequence — the arithmetic is now proved, the program is not.
+* **(ii) The bin sums themselves.**  `BinSumAgrees`/`WideBinSumAgrees` are
+  contracts, not constructions: no bin object exists in the tree and neither
+  landed leg pins one (alias certifies `Â`'s support, checksum `V̂`'s magnitude).
+* **(iii) The program-entry reach premise** — §7 step 7's loop is actually
+  entered.  Named in `KapilaLoop`/`KapilaTest`'s residual; untouched here.
+* **(iv) `KapilaAlgo.cost` and `D7.agrees`'s step horizon — untouched by
+  instruction.**  Recorded so the wide layout is not read as cost-neutral: a
+  stride-`k` read costs `k` words per estimate instead of one (plus the
+  accumulation), so if (i) ever lands the charge must be **re-measured**, not
+  inherited.
+
+### Receipts
+
+**Final: `receipts/kapila-20261110T225928Z`** — gate `swapouts_delta60=0
+free_pct=73` (iter 3; iters 1–2 correctly waited on `18700` then `1160` — the
+load-bearing half of the gate, working), lock **acquired after 40.1 s**
+(bounded 240 s; it now succeeds, the Weil holder releases per-unit), build exit
+0 in 35.0 s, 8934 jobs — **compile, not replay**: `KapilaEstimate.olean`
+rebuilt this run (634688 bytes, sha256 `afb96536…7cfc0`).  Axiom banner exit 0,
+**129 banners**, `axiom_banner_house_triple_only: true` — the twenty-one new
+declarations report `[propext, Classical.choice, Quot.sound]` (with
+`getElem?_map_range`, a list lemma, on `[propext]` alone);
+`payloadStride_mul_spec` on `[propext, Quot.sound]`; no `sorryAx`, no
+`native_decide`.  `Statement.lean` still hashes `3dc6567e…34aa`.
+
+**Aborted, kept: `receipts/kapila-20261110T225247Z`** — gate never opened
+(killed at iter 5, `swapouts_delta60` climbing 12101 → 80864 under fleet load)
+so nothing was built and *no tree was ever receipted*: I stopped it to replace a
+one-directional bridge (`BinSumAgrees ⇒` wide-at-stride-1) with the exact
+**iff** before paying for a build.  The STATUS line records that, so the receipt
+is not mistakable for a failed proof.
+
+**Runner defect fixed (the third of its kind, and mechanical):** the
+**bounded** runner's `NAMED_OLEANS`/`TARGETS` did not name `KapilaTest`,
+`KapilaLoop` or `KapilaEstimate`, while the unbounded `kapila_receipts.py` did —
+so a bounded receipt would have silently *not built* the module it was
+receipting, and its omission from `oleans.txt` would have been invisible.  Both
+lists now mirror the unbounded runner.  This is the same failure mode as
+`20261110T221500Z` (missing target ⇒ every new `#print axioms` an unknown
+identifier), one file over; the durable fix is that the two runners must share
+one list, which is now true.
+
+Next single action: **(i) — the read loop's stride arithmetic.**  The arithmetic
+side of items 3 and 4 is closed; the next lever is the instruction sequence:
+a stride-`k` read that sums `k` words per estimate into the `ℕ`-valued state
+`KapilaLoop` already proves things about (`wordList`/`memOf` are stride-1 shapes,
+so the loop needs a `stride`-general block reader and its own induction), after
+which `aAt` becomes the wide reading and (ii) — the bin sums — is the only
+mathematical object still missing.

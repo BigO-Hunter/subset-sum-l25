@@ -1,0 +1,5 @@
+2026-11-10T22:53:47.868930+00:00 iter=1 swapouts_delta60=1636 free_pct=74 verdict=wait
+2026-11-10T22:54:47.896454+00:00 iter=2 swapouts_delta60=20 free_pct=70 verdict=wait
+2026-11-10T22:55:47.925748+00:00 iter=3 swapouts_delta60=48 free_pct=73 verdict=wait
+2026-11-10T22:56:48.068571+00:00 iter=4 swapouts_delta60=12101 free_pct=73 verdict=wait
+2026-11-10T22:57:48.175573+00:00 iter=5 swapouts_delta60=80864 free_pct=73 verdict=wait
