@@ -114,7 +114,7 @@ theorem thmA_markov_cap {α : Type*} (s : Finset α) (f : α → ℝ)
     subst hse
     simp only [Finset.filter_empty, Finset.card_empty, Nat.cast_zero, zero_div]
     have h0 : (0 : ℝ) ≤ μ := by simpa using hμ
-    exact div_nonneg (by norm_num) (div_nonneg h0 hcap.le)
+    exact div_nonneg h0 hcap.le
   · have hcard : (0 : ℝ) < s.card := by exact_mod_cast Nat.pos_of_ne_zero hs
     set bad := s.filter (fun a => cap ≤ f a)
     have hbadsub : bad ⊆ s := Finset.filter_subset _ s
@@ -122,6 +122,7 @@ theorem thmA_markov_cap {α : Type*} (s : Finset α) (f : α → ℝ)
     have hlow : cap * bad.card ≤ ∑ a ∈ bad, f a := by
       have h1 : (∑ a ∈ bad, (cap : ℝ)) = cap * bad.card := by
         rw [Finset.sum_const, nsmul_eq_mul]
+        ring
       calc cap * bad.card = ∑ a ∈ bad, (cap : ℝ) := h1.symm
         _ ≤ ∑ a ∈ bad, f a := Finset.sum_le_sum fun a ha => (Finset.mem_filter.mp ha).2
     -- bad is a sub-measure (f ≥ 0 off bad): the M2 hbig if-decomposition
@@ -150,7 +151,7 @@ theorem thmA_markov_cap {α : Type*} (s : Finset α) (f : α → ℝ)
       rwa [mul_comm] at he2
     have hkey : cap * bad.card ≤ s.card * μ := le_trans (le_trans hlow hbig) hexp
     refine div_le_div_iff₀ hcard hcap |>.mpr ?_
-    rwa [mul_comm cap bad.card, mul_comm s.card μ] at hkey
+    linarith [hkey]
 
 /-- §5.8 bullet 4's Markov display: the capped execution's work `Wt` has mean
 at most Lemma A7's ledger bound (consumed by name via `a7_expected_work`, with
@@ -172,8 +173,8 @@ theorem thmA_cap_fail_le {α : Type*} (s : Finset α) (Wt : α → ℝ)
           / (2 : ℝ) ^ (τ₀ * n + n ^ (0.7 : ℝ)) := by
   have hμ : s.expect Wt
       ≤ (b + 2) * (2 : ℝ) ^ ((τ₀ - ε₀ + ζ) * n + (δ + 3)) :=
-    a7_expected_work hb hK S hitem
-  exact thmA_markov_cap s Wt hw (le_trans hlin hμ) (two_rpow_pos _)
+    le_trans hlin (a7_expected_work hb hK S hitem)
+  exact thmA_markov_cap s Wt hw hμ (two_rpow_pos _)
 
 /-- §5.8 bullet 4's guard collapse: «The guard gives b + 2 ≤ 2^{n/10^6 + 1}»
 substituted into the Markov display gives the explicit exponent
@@ -210,8 +211,9 @@ theorem thmA_cap_fail_guard_le {α : Type*} (s : Finset α) (Wt : α → ℝ)
       ≤ (b + 2) * (2 : ℝ) ^ ((τ₀ - ε₀ + ζ) * n + (δ + 3))
           / (2 : ℝ) ^ (τ₀ * n + n ^ (0.7 : ℝ)) := hcap
     _ ≤ (2 : ℝ) ^ (n / (10 : ℝ) ^ 6 + 1 + ((τ₀ - ε₀ + ζ) * n + (δ + 3)))
-          / (2 : ℝ) ^ (τ₀ * n + n ^ (0.7 : ℝ)) :=
-          div_le_div_iff₀ hpC hpC |>.mpr hnum2
+          / (2 : ℝ) ^ (τ₀ * n + n ^ (0.7 : ℝ)) := by
+          rw [div_le_div_iff_of_pos_right hpC]
+          exact le_trans hnum (le_of_eq a7_two_pow_add)
     _ = (2 : ℝ) ^ (n / (10 : ℝ) ^ 6 + 1 + ((τ₀ - ε₀ + ζ) * n + (δ + 3))
           - (τ₀ * n + n ^ (0.7 : ℝ))) :=
           (Real.rpow_sub (by norm_num : (0 : ℝ) < 2) _ _).symm
@@ -222,17 +224,17 @@ theorem thmA_cap_fail_guard_le {α : Type*} (s : Finset α) (Wt : α → ℝ)
 
 /-- The union bound over a family of `K` draw-events on the fraction model:
 `K` events each of fraction ≤ q cover at most a `K·q` fraction. -/
-theorem thmA_union_range {α : Type*} (s : Finset α) (hs : 0 < s.card)
+theorem thmA_union_range {α : Type*} [DecidableEq α] (s : Finset α) (hs : 0 < s.card)
     (F : ℕ → Finset α) (K : ℕ) {q : ℝ}
     (hq : ∀ i ∈ Finset.range K, ((F i).card : ℝ) ≤ q * s.card) :
     ((Finset.biUnion (Finset.range K) F).card : ℝ) / s.card ≤ K * q := by
   have hcard : (0 : ℝ) < s.card := by exact_mod_cast hs
   have hbu : (Finset.biUnion (Finset.range K) F).card
-      ≤ ∑ i ∈ Finset.range K, (F i).card := Finset.card_biUnion_le _
+      ≤ ∑ i ∈ Finset.range K, (F i).card := Finset.card_biUnion_le
   have hstep1 : ((Finset.biUnion (Finset.range K) F).card : ℝ)
       ≤ ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ) := by exact_mod_cast hbu
   have hstep2 : ((Finset.biUnion (Finset.range K) F).card : ℝ) * s.card
-      ≤ ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ) * s.card := a7_right hstep1 hs.le
+      ≤ ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ) * s.card := a7_right hstep1 hcard.le
   have hsum : (((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ)) ≤ K * (q * s.card) := by
     have h1 : ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ)
         = ∑ i ∈ Finset.range K, ((F i).card : ℝ) := by
@@ -241,14 +243,14 @@ theorem thmA_union_range {α : Type*} (s : Finset α) (hs : 0 < s.card)
     rw [h1]
     calc ∑ i ∈ Finset.range K, ((F i).card : ℝ)
         ≤ (∑ _i ∈ Finset.range K, q * s.card : ℝ) := Finset.sum_le_sum hq
-      _ = K * (q * s.card) := by rw [Finset.sum_const, nsmul_eq_mul]
+      _ = K * (q * s.card) := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
   calc ((Finset.biUnion (Finset.range K) F).card : ℝ) / s.card
       ≤ ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ) / s.card :=
           div_le_div_iff₀ hcard hcard |>.mpr hstep2
     _ ≤ K * q := by
-        have hne0 : s.card ≠ 0 := hcard.ne
+        have hne0 : s.card ≠ 0 := by omega
         have h : ((∑ i ∈ Finset.range K, (F i).card : ℕ) : ℝ) / s.card
-            ≤ K * (q * s.card) / s.card := div_le_div_iff₀ hcard hcard |>.mpr hsum
+            ≤ K * (q * s.card) / s.card := div_le_div_iff_of_pos_right hcard |>.mpr hsum
         field_simp at h ⊢
         linarith
 
@@ -259,28 +261,28 @@ consumes ≥ 1 counted step, named data `S`) and draws `2 + n² + 3K ≤ (n²+5)
 via `o8_draws_le`.  The per-draw failure bound `q` — §5.8's
 `2^{−n³} + e^{−c₀n²}` — is named data (the sampler's distribution is the
 algorithm boundary). -/
-theorem thmA_sampler_fail_le {α : Type*} (s : Finset α) (hs : 0 < s.card)
+theorem thmA_sampler_fail_le {α : Type*} [DecidableEq α] (s : Finset α) (hs : 0 < s.card)
     (F : ℕ → Finset α)
     {cap K : ℕ} (S : ℕ → ℕ) (h1 : ∀ i, 1 ≤ S i)
     (hcapN : ∑ i ∈ Finset.range K, S i ≤ cap) (hcap1 : 1 ≤ cap)
     {n : ℕ} {q : ℝ} (hq0 : 0 ≤ q)
     (hq : ∀ i ∈ Finset.range (n ^ 2 + 2 + 3 * K), ((F i).card : ℝ) ≤ q * s.card) :
     ((Finset.biUnion (Finset.range (n ^ 2 + 2 + 3 * K)) F).card : ℝ) / s.card
-      ≤ (↑(n ^ 2 + 5) * ↑cap) * q := by
+      ≤ (((n ^ 2 + 5 : ℕ) : ℝ) * (cap : ℝ)) * q := by
   have hK : K ≤ cap := o8_trials_le_cap S h1 hcapN
   have hD : n ^ 2 + 2 + 3 * K ≤ (n ^ 2 + 5) * cap := o8_draws_le hcap1 hK
-  have hDc : (((n ^ 2 + 2 + 3 * K : ℕ) : ℝ)) ≤ (↑(n ^ 2 + 5) * ↑cap : ℝ) :=
+  have hDc : (((n ^ 2 + 2 + 3 * K : ℕ) : ℝ)) ≤ (((n ^ 2 + 5 : ℕ) : ℝ) * (cap : ℝ) : ℝ) :=
     by exact_mod_cast hD
   have hunion := thmA_union_range s hs F (n ^ 2 + 2 + 3 * K) hq
   calc ((Finset.biUnion (Finset.range (n ^ 2 + 2 + 3 * K)) F).card : ℝ) / s.card
       ≤ (((n ^ 2 + 2 + 3 * K : ℕ) : ℝ)) * q := hunion
-    _ ≤ (↑(n ^ 2 + 5) * ↑cap) * q := a7_right hDc hq0
+    _ ≤ (((n ^ 2 + 5 : ℕ) : ℝ) * (cap : ℝ)) * q := a7_right hDc hq0
 
 /-! ### The five-event union — §5.8 part 1 -/
 
 /-- The union bound over five events: the events cover at most the sum of
 their probabilities. -/
-theorem thmA_union_five {α : Type*} (s : Finset α) (hs : 0 < s.card)
+theorem thmA_union_five {α : Type*} [DecidableEq α] (s : Finset α) (hs : 0 < s.card)
     (E₁ E₂ E₃ E₄ E₅ : Finset α) {p₁ p₂ p₃ p₄ p₅ : ℝ}
     (h₁ : ((E₁.card : ℝ)) ≤ p₁ * s.card) (h₂ : ((E₂.card : ℝ)) ≤ p₂ * s.card)
     (h₃ : ((E₃.card : ℝ)) ≤ p₃ * s.card) (h₄ : ((E₄.card : ℝ)) ≤ p₄ * s.card)
@@ -328,7 +330,7 @@ events the output is the exact sum within the §6.2 precision — the correctnes
 implication is the named algorithm content per the DS.lean ledger.  Note the
 cap leg's `n` is the ℝ input size and the sampler leg's `nS` its ℕ
 counterpart; the identification is the exec boundary. -/
-theorem thmA_part1_fail_le {α : Type*} (s : Finset α) (hs : 0 < s.card)
+theorem thmA_part1_fail_le {α : Type*} [DecidableEq α] (s : Finset α) (hs : 0 < s.card)
     (E₁ E₂ E₃ : Finset α) {p₁ p₂ p₃ : ℝ}
     (h₁ : ((E₁.card : ℝ)) ≤ p₁ * s.card) (h₂ : ((E₂.card : ℝ)) ≤ p₂ * s.card)
     (h₃ : ((E₃.card : ℝ)) ≤ p₃ * s.card)
@@ -350,7 +352,7 @@ theorem thmA_part1_fail_le {α : Type*} (s : Finset α) (hs : 0 < s.card)
         / s.card
       ≤ p₁ + p₂ + p₃
         + (2 : ℝ) ^ ((ζ - ε₀) * n + n / (10 : ℝ) ^ 6 + (δ + 4) - n ^ (0.7 : ℝ))
-        + (↑(nS ^ 2 + 5) * ↑cap) * q := by
+        + (((nS ^ 2 + 5 : ℕ) : ℝ) * (cap : ℝ)) * q := by
   have hcard : (0 : ℝ) < s.card := by exact_mod_cast hs
   have hqc : ∀ i ∈ Finset.range (nS ^ 2 + 2 + 3 * K),
       ((F i).card : ℝ) ≤ q * s.card := fun i hi =>
@@ -361,8 +363,9 @@ theorem thmA_part1_fail_le {α : Type*} (s : Finset α) (hs : 0 < s.card)
   · exact h₁
   · exact h₂
   · exact h₃
-  · exact thmA_cap_fail_guard_le s Wt hw hb hK S hitem hlin hguard
-  · exact div_le_iff₀ hcard |>.mpr
+  · exact div_le_iff₀ hcard |>.mp
+      (thmA_cap_fail_guard_le s Wt hw hb hK S hitem hlin hguard)
+  · exact div_le_iff₀ hcard |>.mp
       (thmA_sampler_fail_le s hs F St h1 hcapN hcap1 hq0 hqc)
 
 /-! ### The 1/16 finite-precision bound — §5.8's closing -/
@@ -377,17 +380,8 @@ theorem thmA_err_triangle {α : Type*} (t : Finset α) (err exact : α → ℝ)
       = ∑ i ∈ t, (err i - exact i) := by
     rw [← Finset.sum_sub_distrib]
   rw [hsplit]
-  have htri : |∑ i ∈ t, (err i - exact i)| ≤ ∑ i ∈ t, |err i - exact i| := by
-    classical
-    induction t using Finset.induction_on with
-    | empty => simp
-    | @insert a t ha ih =>
-        rw [Finset.sum_insert ha, Finset.sum_insert ha]
-        calc |(∑ i ∈ t, (err i - exact i)) + (err a - exact a)|
-            ≤ |∑ i ∈ t, (err i - exact i)| + |err a - exact a| := abs_add _ _
-          _ ≤ (∑ i ∈ t, |err i - exact i|) + |err a - exact a| :=
-              add_le_add ih (le_refl _)
-          _ = ∑ i ∈ insert a t, |err i - exact i| := by rw [Finset.sum_insert ha]
+  have htri : |∑ i ∈ t, (err i - exact i)| ≤ ∑ i ∈ t, |err i - exact i| :=
+    Finset.abs_sum_le_sum_abs (fun i => err i - exact i) t
   calc |∑ i ∈ t, (err i - exact i)| ≤ ∑ i ∈ t, |err i - exact i| := htri
     _ ≤ (∑ _i ∈ t, e : ℝ) := Finset.sum_le_sum fun i hi => he i hi
     _ = (t.card : ℝ) * e := by rw [Finset.sum_const, nsmul_eq_mul]
@@ -429,7 +423,6 @@ theorem thmA_err_le_16 {n NL NK NM e : ℝ} (hn : (5 : ℝ) ≤ n)
       = (2 : ℝ) ^ (1 - n * n) := by
     rw [a7_two_pow_add]
     congr 1
-    ring
   have hB : (2 : ℝ) * (2 : ℝ) ^ (-(n * n)) = (2 : ℝ) ^ (1 - n * n) := by
     calc (2 : ℝ) * (2 : ℝ) ^ (-(n * n))
         = (2 : ℝ) ^ ((1 : ℝ)) * (2 : ℝ) ^ (-(n * n)) := by rw [Real.rpow_one]
@@ -437,7 +430,7 @@ theorem thmA_err_le_16 {n NL NK NM e : ℝ} (hn : (5 : ℝ) ≤ n)
   have he2 : e ≤ (2 : ℝ) * (2 : ℝ) ^ (-(n * n)) := by
     have h1 : (2 : ℝ) ^ (-(2 * n * n)) + (2 : ℝ) ^ (-(n * n))
         ≤ (2 : ℝ) ^ (-(n * n)) + (2 : ℝ) ^ (-(n * n)) := by
-      refine add_le_add_right h2le _
+      linarith [h2le]
     linarith [he, h1]
   have hstep1 : NL * NK * NM * e
       ≤ (2 : ℝ) ^ n * (2 : ℝ) ^ n * (2 : ℝ) ^ n * e := a7_right hABC he0
@@ -447,7 +440,7 @@ theorem thmA_err_le_16 {n NL NK NM e : ℝ} (hn : (5 : ℝ) ≤ n)
           * ((2 : ℝ) * (2 : ℝ) ^ (-(n * n))) := a7_left he2 hA3nn
     _ = (2 : ℝ) ^ (3 * n) * ((2 : ℝ) * (2 : ℝ) ^ (-(n * n))) := by rw [hAB3]
     _ = (2 : ℝ) ^ (3 * n) * (2 : ℝ) ^ (1 - n * n) := by rw [hB]
-    _ = (2 : ℝ) ^ (3 * n + (1 - n * n)) := a7_two_pow_add _ _
+    _ = (2 : ℝ) ^ (3 * n + (1 - n * n)) := a7_two_pow_add
     _ ≤ (2 : ℝ) ^ ((-4 : ℝ)) := two_rpow_mono (by nlinarith)
     _ = 1 / 16 := by norm_num
 

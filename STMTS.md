@@ -1531,11 +1531,10 @@ successfully"; M6.olean fresh; `#print axioms` for all 13 =
 it. The envelope consumes our proved B5 `a7_envelope`; the clause slacks and
 the A3/(S5)/(C2)–(C7) discharges are the §2.2 + §5.7 arithmetic.**
 
-## DS-M7 — Theorem A assembly (§5.8): WIP drafted, FIRST BUILD PENDING (Proofs/M7.lean)
+## DS-M7 — Theorem A assembly (§5.8) LANDED (Proofs/M7.lean)
 
-Drafted + desk-checked + wip-committed this round; the build is pending —
-host swap-gated (`used > 12 GB` the entire window, trend rising to 13.7 GB;
-regime cap reached, build deferred).  Thirteen theorems consuming
+Landed this round — drafted, desk-checked, compiled and receipted.  Thirteen
+theorems consuming
 `a7_expected_work` (M6) and `o8_trials_le_cap`/`o8_draws_le`/`o8_time_bound`
 (O8) by name: `two_rpow_pos`/`two_rpow_mono` helpers, `thmA_markov_cap`
 (generic Markov tail on the fraction model — the `expect_tail_prob_le` shape
@@ -1576,7 +1575,63 @@ correctness implication.
   monotonicity step goes through the banked `a7_right`/`a7_left` wrappers,
   each bound with a concrete-typed `have` (the flattened-helper rule).
 
-**Status: NOT LANDED — no receipts, no axiom banner yet.**  Next:
-swap-gate → `flock -w 7200 /Volumes/Substrate-1/bigo/.build.lock
-lake build SubsetSumL25.Proofs.M7` → fix-forward if needed → receipts →
-amend this section to LANDED.
+### Receipts (DS-M7 LANDED)
+
+* **Full `lake build` green — exit 0, 8967 jobs, "Build completed
+  successfully".**  This is the receipt of record: M7 is WIRED into the ladder
+  target (`SubsetSumL25.lean` now imports `SubsetSumL25.Proofs.M7` after M6),
+  so the default target elaborates it.
+* **`M7.olean` fresh**: 607,672 bytes, mtime 2026-11-09 22:04:33, written by
+  the successful `lake build SubsetSumL25.Proofs.M7` (8930 jobs, 33 s).
+* **`#print axioms` on all thirteen theorems =
+  `[propext, Classical.choice, Quot.sound]`** — every one; no `sorryAx`, no
+  `native_decide`.  (The ladder note said "fourteen": the file has THIRTEEN
+  declarations.  The fourteenth `^theorem` grep hit is the docstring line
+  «theorem; the assembly consumes …», not a declaration.)
+* Zero sorries in the source.
+
+Compile run: 79 errors on the first build → 11 → 0, all shape fixes.  No
+statement was weakened and no named seam was re-litigated.
+
+### Gotchas banked (DS-M7 round)
+
+* **`Finset.biUnion` and `Finset.union` need `[DecidableEq α]` at this pin —
+  and the requirement lands in the THEOREM STATEMENT.**  A `classical` in the
+  proof body cannot help; the statement itself must carry `[DecidableEq α]`.
+  The bulk of the first build's 79 errors were this one omission.  By contrast
+  `Finset.card_biUnion_le` takes NO explicit arguments (both `s`, `t` implicit).
+* `Finset.abs_sum_le_sum_abs (f) (s)` — the FUNCTION comes before the Finset.
+  `abs_add` is not a name at this pin (`abs_add_le`); prefer the Finset-level
+  triangle inequality over re-proving it by induction.
+* `induction t using Finset.induction_on` inside a `have` whose siblings mention
+  `t` REVERTS those siblings, so `ih` arrives with extra hypotheses
+  (`ih : (∀ i ∈ t, …) → … → …`) and `add_le_add ih` fails.  Hoist the lemma out.
+* `add_le_add_right h c` produced `c + a ≤ c + b` on a goal needing
+  `a + c ≤ b + c` — do not guess the side; `linarith [h]` is side-agnostic.
+* `↑(n ^ 2 + 5)` is ambiguous: the coercion DOMAIN resolves to ℝ and you get
+  `HAdd ℕ ℕ ℝ`.  Pin the source type: `((n ^ 2 + 5 : ℕ) : ℝ)`.  Likewise
+  `mul_comm s.card μ` fails because `s.card` coerces — use `linarith [hkey]`.
+* `a7_expected_work` concludes the SUM bound, not the `s.expect` bound: the mean
+  display is `le_trans hlin (a7_expected_work …)`.
+* `nsmul_eq_mul` yields `↑s.card * c`, not `c * ↑s.card` — a trailing `ring`
+  (or `mul_comm`) closes the commutativity.
+* `congr 1` can already close `1 + -(x) = 1 - x` (it is `rfl` via
+  `sub_eq_add_neg`); a following `ring` then errors "No goals to be solved".
+* `div_le_iff₀` for a different-denominator step,
+  `div_le_div_iff_of_pos_right` for a same-denominator one;
+  `div_le_div_iff₀` needs the CROSS-multiplied form and will not accept one
+  side in joined form (`2^a * 2^b` vs `2^(a+b)`) — join with `a7_two_pow_add`.
+
+### Host-operations note (why the first build died)
+
+The first build was not a compile failure: `scripts/memory_admission_watchdog.py`
+(R2125608674) SIGKILLed it (`action: killed-kill`) because its gate is
+`free < 3 GB OR swap > 75%`, and swap on this host is a NON-CLEARING
+high-water mark (wound R2125609494: pinned ~13.7 GB while `memory_pressure`
+reports 65–73 % free and the `vm_stat` Swapouts counter is frozen).  Builds
+here must gate on LIVE pressure — `memory_pressure` free% > 15 AND Swapouts
+delta over 60 s == 0 — and lock with `fcntl.flock` (`flock(1)` does not exist
+on this host: R2125609507).  The watchdog's victim pattern `/(lean|lake)\b`
+also matches a command line that merely MENTIONS a `.lake/` path, so a shell
+that only `ls`es a build artifact can be killed — run such probes from a
+script file whose wrapper cmdline stays clean.
