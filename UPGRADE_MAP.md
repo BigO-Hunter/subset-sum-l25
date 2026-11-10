@@ -38,8 +38,10 @@ map the rows.
 1. **Full build, exit 0** — `build.log` ends `Build completed successfully
    (8966 jobs)`, `build.exit` = `0`. Run with `FORCE_O1=1`, which deletes the
    O1 cone's olean/ilean/trace/hash first so lake **elaborates O1 from source
-   in this run** instead of replaying a cached artifact (the first green run
-   replayed everything — a consistency receipt, not a compile receipt). Proof
+   in this run** instead of replaying a cached artifact (the first green run's
+   log contains only `Replayed …` entries from job 8941 on, i.e. it certified
+   that the tree was consistent without elaborating O1 — a consistency
+   receipt, not a compile receipt). Proof
    of real elaboration: the log carries the linter warning
    `SubsetSumL25/Proofs/Isolation.lean:118:26: Variable name 'I' is not
    explicitly referenced`.
