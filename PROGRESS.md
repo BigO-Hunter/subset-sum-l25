@@ -1783,3 +1783,112 @@ a stride-`k` read that sums `k` words per estimate into the `ℕ`-valued state
 so the loop needs a `stride`-general block reader and its own induction), after
 which `aAt` becomes the wide reading and (ii) — the bin sums — is the only
 mathematical object still missing.
+
+## Row lane 2026-11-10 (12) — residual (i): the stride-`k` block reader, and the obstruction that re-specifies the read (LANDED)
+
+New leaf module `SubsetSumL25/Row/KapilaWide.lean` (§W1–§W5), importing
+`KapilaLoop` + `KapilaEstimate`; no built module's hash moves and `Statement.lean`
+stays `3dc6567e…34aa`.  Statement **and proof**: no sorry, house triple on all
+twenty-nine new declarations.
+
+### 1. The stride-general reader (§W1), with its own induction
+
+| Declaration | Content |
+|---|---|
+| `numAt` | the `stride` words at `addr` as a base-`2^w` integer, `Σ_{j<stride} f (addr+j)·2^{w·j}` — `placeValueAt`'s numerator in `ℕ` form |
+| `numAt_succ` | the carry step: one more word at `addr + stride` adds its place value |
+| `numAt_one` / `numAt_one_lt` | the stride-1 read is the landed one-word read, **and it always fits a word** |
+| `numBlock` / `numBlock_succ` | the block: estimate `s` at `base + s·stride`; the cons rule advances by a **stride**, not a word |
+| `numBlock_one_eq_wordList` | the landed `wordList` reader **is** the `stride = 1` instance — the generalization displaces nothing |
+
+### 2. `aAt` becomes the wide reading (§W2) — mechanically, not by assertion
+
+| Declaration | Content |
+|---|---|
+| `numAt_cast` | the reader cast to `ℚ` is the sum of the casts |
+| `numAt_eq_placeValueAt_scale` | **the reader *is* `placeValueAt`**, multiplied out over the one shared `2^fracBits` |
+| `placeValue_eq_scale_numAt` | the consuming direction: place value = scaled reader |
+| `numBlock_map_toQ_eq_placeValue` | a block of readers is the block of place values, scaled |
+| `wideLayout_of_numBlock` | a convention whose payloads are the **scaled reader constructs a `WideLayout`** — so the whole wide apparatus lands on the reader with no new contract |
+| `dAt_eq_reader` | `dAt_eq_widePlaceValue` instantiated at that layout: the estimate the test compares *is* the difference of the two multi-word readings |
+
+### 3. The wiring at the loop's own granularity (§W4)
+
+| Declaration | Content |
+|---|---|
+| `hitCount_numBlock_step` | **one iteration at stride `k`**: head pair at `base + j·stride`, tail re-based at `base + (j+1)·stride` — `stride` where `scan_loop` writes `1` |
+| `sum_range_map_succ` / `hitCount_map_range` | the list algebra (own inductions) that turns `hitCount` into a `range` sum |
+| `hitCount_numBlock_eq_sum` | the exit fold over the wide block |
+| `wideExit_eq_rowTest` | `scan_run`'s exit shape at stride `k`: the accumulator's `decide (0 < ·)` **is** `rowTest` on the two payload blocks |
+| `wideExit_eq_binSum` / `wideExit_eq_binSum'` | composed with `rowTest_eq_wideBinSum`: the stride-`k` verdict **is** the test on the bin sums, with `hb` discharged by `hitWord_eq_ratTest` in the primed form |
+
+### 4. The obstruction (§W3) — the result that changes (i)
+
+| Declaration | Content |
+|---|---|
+| `numAt_ge_top` | the last word read dominates the sum from below |
+| `numAt_not_word` | **at `stride ≥ 1`, a nonzero top digit forces `numAt ≥ 2^w`** |
+| `numAt_not_word_one` | one unit of top digit suffices — not a large-digit artefact |
+
+**So the loop's per-iteration read cannot be the k-word sum.**  The digits fit the
+word (`hfit`); their base-`2^w` sum does not.  `numAt` is not in the state's type,
+so `memOf` cannot hold it and `load` cannot produce it — residual (i) as worded is
+**not implementable in the `BitVec w` state**.  The contrast is `numAt_one_lt`:
+the stride-1 read always fits, which is exactly why `wordList`/`memOf` were
+stride-1 shapes and why the single-cell `hitWord` worked there.  The consequence
+is a design fact, not a missing lemma: a stride-`k` payload needs either a
+**top-down digitwise comparison** (`stride` word compares, no cell ever holding
+the numerator) or a multi-word output block with its own carry chain — and
+`hitWord`'s single-cell form cannot host the wide test.  (i) is therefore a
+*comparison* to re-shape, not a read to widen.
+
+### 5. The cost shape (§W5), stated not re-proved
+
+`scanWordOpsWide blockLen stride = blockLen·(2·stride + 3)`;
+`scanWordOpsWide_eq_scanWordOps` shows the landed `scanWordOps` **is** that shape
+at `stride = wordOpFactor n`, and `scanWordOpsWide_le` that the wide charge never
+exceeds it within §6.2's bound; `scanWordOpsWide_one` is the `5·blockLen`
+instance.  **Not inherited:** the envelope absorption (`K + 4`) and — the
+load-bearing one — `D7.agrees`'s step horizon.  A stride-`k` pass executes
+`stride` reads (and `stride` digit compares) per estimate, so the `Instr`-step
+count leaves `12·N + 6` for a count **linear in `stride`**; since `D7` is where
+word operations are translated into steps, quoting `K + 4` here would be the
+`K + 3`-versus-`K + 7` mistake wearing a stride.  Residual (iv) re-measures.
+
+### Residual after this round
+
+* **(i) RE-SPECIFIED.**  Not «a k-word summing read» — that is impossible
+  (`numAt_not_word`).  It is the digitwise comparison, plus the program segment
+  that walks the digits.  The reader (§W1–§W2) is done; the read is proved
+  unable to be a sum.
+* **(ii) The bin sums themselves** — unchanged, and now the *only* mathematical
+  input `wideExit_eq_binSum'` consumes.
+* **(iii) The program-entry reach premise** — untouched.
+* **(iv) `KapilaAlgo.cost` + `D7.agrees`'s horizon** — untouched by instruction;
+  the shape to re-measure is now named (`scanWordOpsWide`, and a step count linear
+  in `stride`).
+
+### Receipts
+
+**Final: `receipts/kapila-20261110T231919Z`** — gate `swapouts_delta60=0
+free_pct=68` (iter 2; iter 1 correctly waited on `47354`).  **Lock not acquired:
+bounded 240 s expired** (`acquired=False waited_s=240.3`), and the build proceeded
+with the deviation written into `lock.note`/`summary.json` — the bounded-wait
+policy doing exactly what it exists for under fleet load.  Build exit 0 in 37.3 s,
+8935 jobs — **compile, not replay**: `KapilaWide.olean` rebuilt this run (357344
+bytes, sha256 `762337ae…6c920`).  Axiom banner exit 0, **159 banners**, 29 new,
+`axiom_banner_house_triple_only: true`; `numAt`/`numAt_ge_top` on `[propext]`
+alone, `numBlock_succ`/`hitCount_map_range` on `[propext, Quot.sound]`,
+`scanWordOpsWide` on no axioms; no `sorryAx`, no `native_decide`.
+`Statement.lean` still `3dc6567e…34aa`.
+
+**Runner lists:** both runners now build and receipt `KapilaWide`
+(`NAMED_OLEANS` + `TARGETS`, and the unbounded runner's inline `lake build`
+argument), so neither can silently omit the module it receipts.
+
+Next single action: **re-specify (i) as the digitwise comparison and prove its
+decision lemma** — that a top-down walk over the two stride-`k` digit blocks
+decides `(1/2 : ℚ) ≤ |placeV − placeA|` **without** materialising either
+numerator (little-endian `numAt` needs the blocks addressed from `base + (stride−1−j)·stride`; `sum_base_digits` is the exactness input).  That is the arithmetic the
+program segment will then be proved against, and it is the only part of (i) that
+can be finished before the segment exists.
