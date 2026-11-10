@@ -1,0 +1,9 @@
+✔ [8924/8927] Built SubsetSumL25.Row.Statement (530ms)
+✔ [8925/8927] Built SubsetSumL25.Row.KapilaAlgo (35s)
+✔ [8926/8927] Built SubsetSumL25.Row.KapilaAbsorb (6.8s)
+✖ [8927/8927] Building SubsetSumL25.Row.KapilaRow (6.4s)
+trace: .> LEAN_PATH=/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/packages/Cli/.lake/build/lib/lean:/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/packages/batteries/.lake/build/lib/lean:/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/packages/Qq/.lake/build/lib/lean:/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/packages/aesop/.lake/build/lib/lean:/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/packages/proofwidgets/.lake/build/lib/lean:/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/packages/importGraph/.lake/build/lib/lean:/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/packages/plausible/.lake/build/lib/lean:/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/packages/mathlib/.lake/build/lib/lean:/Volumes/Substrate-1/bigo/kapila-row-lane/.lake/build/lib/lean /Users/dmitri.arkhipov/.elan/toolchains/leanprover--lean4---v4.34.1/bin/lean /Volumes/Substrate-1/bigo/kapila-row-lane/SubsetSumL25/Row/KapilaRow.lean -o /Volumes/Substrate-1/bigo/kapila-row-lane/.lake/build/lib/lean/SubsetSumL25/Row/KapilaRow.olean -i /Volumes/Substrate-1/bigo/kapila-row-lane/.lake/build/lib/lean/SubsetSumL25/Row/KapilaRow.ilean -c /Volumes/Substrate-1/bigo/kapila-row-lane/.lake/build/ir/SubsetSumL25/Row/KapilaRow.c --setup /Volumes/Substrate-1/bigo/kapila-row-lane/.lake/build/ir/SubsetSumL25/Row/KapilaRow.setup.json --json
+error: SubsetSumL25/Row/KapilaRow.lean:169:35: unexpected token 'set_option'; expected 'lemma'
+Some required targets logged failures:
+- SubsetSumL25.Row.KapilaRow
+error: build failed

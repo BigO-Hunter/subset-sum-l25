@@ -1,0 +1,2 @@
+⚠ [8936/8971] Replayed SubsetSumL25.Statements.PrimeCount
+warning: SubsetSumL25/Statements/PrimeCount.lean:108:8: `if_pos` has been deprecated: Use `ite_eq_left` instead

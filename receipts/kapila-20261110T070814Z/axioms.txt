@@ -1,0 +1,7 @@
+'SubsetSumL25.Row.kapila_row' depends on axioms: [propext, Classical.choice, Quot.sound]
+'SubsetSumL25.Row.rowHorizon_bigO' depends on axioms: [propext, Classical.choice, Quot.sound]
+'SubsetSumL25.Row.runtime_absorb' depends on axioms: [propext, Classical.choice, Quot.sound]
+'SubsetSumL25.Row.envE_absorb' depends on axioms: [propext, Classical.choice, Quot.sound]
+'SubsetSumL25.Row.exec_eq_of_halted' depends on axioms: [propext, Quot.sound]
+'SubsetSumL25.Row.count_congr' depends on axioms: [propext]
+'SubsetSumL25.Row.const_le_two_pow' depends on axioms: [propext, Classical.choice, Quot.sound]

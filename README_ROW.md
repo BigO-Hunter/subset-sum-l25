@@ -112,17 +112,50 @@ in a proof term.
 
 ## Receipts
 
-`receipts/kapila-<stamp>/`: `build.log` + `build.exit` (full `lake build`),
-`oleans.txt` (named oleans, size/mtime/sha256), `axioms.txt` +
-`axioms.exit` (`#print axioms` banner, hard gate on `sorryAx` /
-`native_decide` / non-house-triple), `gate.log` (live-pressure gate:
-`swapouts_delta60` and `memory_pressure` free %), `summary.json`,
-`sources.sha256`, `head.sha`. Runner: `kapila_receipts.py`.
+`receipts/kapila-<stamp>/`: `build.log` + `build.exit` (the row's module
+closure: `lake build SubsetSumL25.Row.KapilaRow`), `oleans.txt` (named oleans,
+size/mtime/sha256), `axioms.txt` + `axioms.exit` (`#print axioms` banner, hard
+gate on `sorryAx` / `native_decide` / non-house-triple), `gate.log`
+(live-pressure gate: `swapouts_delta60` and `memory_pressure` free %),
+`summary.json`, `sources.sha256`, `head.sha`. Runner: `kapila_receipts.py`.
 
-Host gate is the corrected one (R2125609494): `vm.swapusage` used is a
-high-water mark that never clears (pinned ~13 GB while RAM is free), so the
-gate is **live** pressure — `memory_pressure` free% > 15 and `vm_stat`
-Swapouts delta over 60 s == 0.
+First landing: **`kapila-20261110T070814Z`** — `Build completed successfully
+(8927 jobs)`, `build.exit = 0`, and
+
+```
+'SubsetSumL25.Row.kapila_row'      depends on axioms: [propext, Classical.choice, Quot.sound]
+'SubsetSumL25.Row.rowHorizon_bigO' depends on axioms: [propext, Classical.choice, Quot.sound]
+'SubsetSumL25.Row.runtime_absorb'  depends on axioms: [propext, Classical.choice, Quot.sound]
+'SubsetSumL25.Row.envE_absorb'     depends on axioms: [propext, Classical.choice, Quot.sound]
+'SubsetSumL25.Row.exec_eq_of_halted' depends on axioms: [propext, Quot.sound]
+'SubsetSumL25.Row.count_congr'     depends on axioms: [propext]
+'SubsetSumL25.Row.const_le_two_pow' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+
+No `sorryAx`, no `native_decide`, every banner a subset of the house triple.
+
+### Host observations (for the campaign, not for this lane's fix)
+
+* Live-pressure gate opened first poll on every attempt
+  (`swapouts_delta60 = 0`, free 57–66 %) while `vm.swapusage` sat at ~13 GB
+  used — confirming R2125609494: the high-water number is not a gate.
+* Two receipt attempts died on **unattributable kills** — `build_exit = -15`
+  (SIGTERM, receipt `-070128Z`) and `build_exit = -9` (SIGKILL, receipt
+  `-070449Z`) — while the build was making progress (first log line: 8932/8971
+  replayed). This is the R2125609493 class, now observed with SIGKILL as well,
+  which `trap "" TERM` cannot absorb. Host load average was 140–160 throughout
+  (other lanes compiling); the surviving runs are the ones that started when a
+  slot was free.
+* Consequence for anyone reading receipts: `build_exit ∈ {-9, -15}` with a
+  non-empty, progressing log is a kill, not a compile failure. Retry; do not
+  "fix" the sources.
+
+### Statement hash trap (measured)
+
+The trusted statement has two byte-forms that hash differently and are both
+correct: CRLF on disk `3dc6567e…34aa` (the verifier's checkout, and this lane's
+copy) and LF git blob `80bc6d28…7517` (`text=auto`, and `subsetsum-v2-snapshot`'s
+vendored copy). Compare content, not one literal.
 
 ## Filing
 

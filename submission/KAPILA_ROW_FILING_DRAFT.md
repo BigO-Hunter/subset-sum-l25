@@ -53,9 +53,7 @@ Notes on the literal (measured, not guessed):
                                            (4877 / 10000 : Rat)
   Submission/Statement.lean           -- the trusted statement, COPIED UNCHANGED
                                          (verifier challenges/subset-sum/
-                                          Statement.lean, sha256
-                                          3dc6567e9ee2232f90aae5e3ac4f5a8a3b7e5e34b242861edfe0e9d5189934aa,
-                                          verifier commit 4cfb6db)
+                                          Statement.lean, verifier commit 4cfb6db)
   Submission/...                      -- the SubsetSumL25 tree the assembly imports
   manifest.json                       -- {"problem": "subset-sum", "bound": "4877/10000"}
 ```
@@ -63,6 +61,18 @@ Notes on the literal (measured, not guessed):
 Profile facts already verified for this pin: toolchain `leanprover/lean4:v4.34.1`,
 Mathlib `d13f23b723b8a846827a245b89c10fc7d3f11612` (the DFT pin the subset-sum
 README names), ≤ 20 MB per file, three permitted file kinds.
+
+**Statement hash trap (measured, so nobody mis-files a "mismatch" report).**
+The trusted statement exists in two byte-forms that are the same file modulo
+line endings, and they hash differently:
+
+| form | sha256 | where |
+|---|---|---|
+| CRLF on disk | `3dc6567e9ee2232f90aae5e3ac4f5a8a3b7e5e34b242861edfe0e9d5189934aa` | `verifier/challenges/subset-sum/Statement.lean` as checked out on this host, and `SubsetSumL25/Row/Statement.lean` in this lane |
+| LF (git blob) | `80bc6d282676fc056a220968a727ab983b8c5a280cb0d9f24561bb3c90867517` | the blob git stores (`text=auto` normalisation), and `subsetsum-v2-snapshot`'s vendored copy |
+
+Both are byte-exact copies of the challenge. A hash comparison against only one
+of them will read the other as corruption; compare content, not one literal.
 
 ## What must become unconditional before posting
 
