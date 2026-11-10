@@ -1151,16 +1151,20 @@ The two lemmas this section will state, in the shape the absorption needs:
     scan_cost_absorbed  : (R.cost + scanWordOps : ℕ) ≤ K₀ · 2^E · P^(K + 7)
 
 **The call site is `KapilaAlgo.withinEnvelope_wordop_absorb`, and the exponent it
-raises is `K + 3` — the scan needs `K + 7`.**  That `+3` is exactly
+raises is `K + 3` — the residual asks for `K + 7`.**  That `+3` is exactly
 `wordOpFactor n ≤ (n + b + 2) ^ 3` (`wordOpFactor_le_cube`), a *linear* charge.  The
-scan's charge carries `wordOpFactor` **squared** (the nested comparison loops *inside*
-an outer loop of `blockLen` iterations), so the same argument consumes
-`(n + b + 2) ^ 6` for the nested factor and one more unit for the constant `5` and the
-`blockLen ≤ n ≤ P` slack that the linear case folded into `R.cost`'s own polynomial:
-seven, not three.  So `withinEnvelope_wordop_absorb` cannot be *applied* here — it is
-the same argument at a larger exponent, and the lemma to write abstracts
+scan's charge carries `wordOpFactor` **squared** (a comparison loop nested inside an
+outer loop of `blockLen` iterations), so the same argument runs at a larger
+exponent: round (9) accounted the `+7` as *one* unit from the nested `wordOpFactor²`
+and *five* from `wordOpFactor ≤ (n+b+2)^3` squared times the constant `5`.  **That
+split is that residual's sketch, not a checked derivation** — no arithmetic lemma in
+this module backs it, `scanWordOps_le` has not been written, and the `^7` in the
+statement above is the residual's target, not a proved bound.  What *is* checked is
+only the reason `withinEnvelope_wordop_absorb` cannot be *applied*: it proves the
+absorption for `R.cost · wordOpFactor` with `K + 3`, and the scan's charge is a
+different function of `wordOpFactor`, so the lemma to write must abstract
 `wordOpFactor`'s exponent instead of quoting the `+3`.  That is why this stays a
-stated residual rather than a one-line citation, and why it does not weaken the row's
-`2^{(τ₀+20ε)n}` exponent: `K` is §7's to choose. -/
+stated residual rather than a one-line citation — and why, once it is written, it
+will not weaken the row's `2^{(τ₀+20ε)n}` exponent: `K` is §7's to choose. -/
 
 end SubsetSumL25.Row

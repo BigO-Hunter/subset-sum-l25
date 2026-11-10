@@ -1430,9 +1430,11 @@ would have been wrong here.
 1. **The word-op cost model** — stated in the module's closing comment with its call
    site: `KapilaAlgo.withinEnvelope_wordop_absorb` raises `K` by **three**, which is
    exactly `wordOpFactor n ≤ (n+b+2)^3` (`wordOpFactor_le_cube`), the *linear* charge.
-   The scan's charge carries `wordOpFactor` **squared** (a nested comparison loop
-   inside an outer `blockLen` loop), so the same argument gives `K + 7`, and the
-   `+3` lemma cannot be cited directly. Two lemmas named, neither proved:
+   The scan's charge is a *different function* of `wordOpFactor` (squared, since a
+   comparison loop nests inside an outer `blockLen` loop), so that lemma cannot be
+   cited directly; round (9) sketched the replacement's exponent as `K + 7`. Two
+   lemmas named, neither proved, and **the `^7`/`K+7` are the residual's target, not
+   a checked bound**:
    `scanWordOps_le : blockLen·(2·wordOpFactor n + 3) ≤ (n+b+2)^7` and
    `scan_cost_absorbed : (R.cost + scanWordOps : ℕ) ≤ K₀·2^E·P^(K+7)`.
 2. **`LeafTest`'s items 3 and 4** — the estimates' arithmetic relation and the
@@ -1440,19 +1442,50 @@ would have been wrong here.
 
 ## Receipts
 
-`receipts/kapila-20261110T210808Z`: gate `swapouts_delta60=0 free_pct=72` (iter 2;
-iter 1 was `delta60=435` — the host was swapping, so the gate waited rather than
-building). Build exit 0 in 43.6 s (8933 jobs), with
-`⚠ [8933/8933] Built SubsetSumL25.Row.KapilaLoop (34s)` — the changed module
-**rebuilt**, not replayed (its olean mtime is this run: 2250072 bytes, sha256
-`e9e6deef…0bb7`; the other nine oleans are replays, as in every previous round).
-Axiom banner exit 0, `axiom_banner_house_triple_only: true` (81 banners; the five new
-declarations report `[propext, Classical.choice, Quot.sound]`, and
+**Final: `receipts/kapila-20261110T212539Z`** — gate `swapouts_delta60=0 free_pct=74`
+(iter 1). Build exit 0 in 45.5 s, `⚠ [8933/8933] Built SubsetSumL25.Row.KapilaLoop`:
+the changed module **rebuilt**, not replayed (olean mtime = that run, 2250424 bytes,
+sha256 `b4daaaff…46efe`; the other nine oleans are replays, as in every previous
+round). Axiom banner exit 0, `axiom_banner_house_triple_only: true` (81 banners; the
+five new declarations report `[propext, Classical.choice, Quot.sound]`, and
 `wordLength_ge_one` only `[propext, Quot.sound]`); no `declaration uses 'sorry'`.
 Lock: **DEVIATION, proceeded UNLOCKED after 241 s** (recorded in `lock.acquired` and
 `summary.json`) per the lane's hard-expiry rule — the fleet build lock was held
-throughout the bounded wait, and the two sibling lanes' lake jobs were live.
+throughout the bounded wait.
 
-Next single action: the cost pair — `scanWordOps_le` first (pure `ℕ` arithmetic:
-`blockLen ≤ n`, `2·(n²+1) + 3 ≤ (n+b+2)^4`), then `scan_cost_absorbed` by the same
-argument `withinEnvelope_wordop_absorb` runs, with the factor's exponent abstracted.
+That receipt supersedes `receipts/kapila-20261110T210808Z` (the same tree **before** a
+doc-only pass to the module's closing comment: the cost residual's `^7`/`K+7` split is
+now labelled as round (9)'s sketch rather than as a derivation, because no arithmetic
+lemma in the module backs any particular split of the seven). Both receipts are kept;
+the second is the one that covers the landed bytes.
+
+**One failed attempt, and why it is kept:
+`receipts/kapila-20261110T211651Z` — `STATUS: FAIL build_exit=-9`.** The gate opened
+(`delta60=0 free_pct=73`) but the build was SIGKILLed at job `[8931/8933]`, i.e. the
+instant it started compiling `KapilaLoop`. Cause is host pressure, not the proof: the
+*first* gate iteration of that run measured `swapouts_delta60=22372` (the host was
+swapping hard), and two sibling lanes' lake jobs — `Widgets` and a 27-module
+`StacksFrontier` list — were live throughout. Exit `-9` is SIGKILL, which the runner's
+own SIGTERM/SIGHUP shielding does not cover (it shields itself, not an OOM kill of a
+child). Recorded rather than deleted because a `-9` that looks like a gate failure is
+exactly the shape that gets misread as a proof failure next time.
+
+## Two facts the next mind should not have to re-derive
+
+* **The fleet build lock is effectively permanently held** by
+  `weil-verify-lane/closure_supervisor.py` (measured: 5 h 53 m at 21:02 UTC, still the
+  holder at 21:30). Every receipt in this round therefore landed on the 241 s
+  hard-expiry, UNLOCKED. That is the lane rule working as designed, not a defect — but
+  it means "acquired the lock" is not the signal to wait for; the gate is.
+* **The build gate's `swapouts_delta60` is the load-bearing half**, not `free_pct`
+  (72–74 % throughout). `22372 → 0` between two gate iterations is the fleet settling;
+  a build launched inside that `22372` window is what got SIGKILLed.
+
+Next single action: `scanWordOps_le` — and the first job inside it is to find the
+*true* exponent rather than inherit the residual's `^7`. `scanWordOps` is
+`blockLen·(2·wordOpFactor n + 3)` with `wordOpFactor n = n² + 1`, so it is a cubic in
+`n` (`≈ 2n³`) and `blockLen ≤ n` is the only block fact needed: the `^7` target is
+almost certainly loose, and a loose exponent is a weaker absorption than the row can
+have. Establish the tight bound first, then `scan_cost_absorbed` follows by the same
+argument `withinEnvelope_wordop_absorb` runs with the factor's exponent abstracted
+(and the `K + 7` re-derived, not assumed).
