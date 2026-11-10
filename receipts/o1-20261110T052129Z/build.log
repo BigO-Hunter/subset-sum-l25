@@ -1,0 +1,298 @@
+⚠ [8940/8966] Replayed SubsetSumL25.Proofs.Presearch
+warning: SubsetSumL25/Proofs/Presearch.lean:109:44: Variable name `hK` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hK
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+⚠ [8941/8966] Replayed SubsetSumL25.Proofs.ThmB
+warning: SubsetSumL25/Proofs/ThmB.lean:44:26: Variable name `hΓ` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hΓ
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/ThmB.lean:149:55: Variable name `hε` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hε
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/ThmB.lean:229:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+warning: SubsetSumL25/Proofs/ThmB.lean:244:59: Variable name `G₀` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _G₀
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/ThmB.lean:245:5: Variable name `Gbar` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _Gbar
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+⚠ [8943/8966] Replayed SubsetSumL25.Statements.PrimeCount
+warning: SubsetSumL25/Statements/PrimeCount.lean:108:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+⚠ [8944/8966] Replayed SubsetSumL25.Proofs.PrimeCount
+warning: SubsetSumL25/Proofs/PrimeCount.lean:52:6: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/PrimeCount.lean:77:36: Variable name `p` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _p
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:126:33: Variable name `hn` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hn
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:230:35: Variable name `hn` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hn
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:252:45: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:252:45: Unused tactic linter: `decide` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:265:45: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:265:45: Unused tactic linter: `decide` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:297:45: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:297:45: Unused tactic linter: `decide` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:329:29: Variable name `hn` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hn
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:432:4: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+warning: SubsetSumL25/Proofs/PrimeCount.lean:507:8: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:609:6: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:507:8: Unused tactic linter: `(rw [← hn_def]; exact hnlt.le)` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Proofs/PrimeCount.lean:609:6: Unused tactic linter: `skip` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+⚠ [8945/8966] Replayed SubsetSumL25.Proofs.Deficiency
+warning: SubsetSumL25/Proofs/Deficiency.lean:51:69: Variable name `hy` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hy
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/Deficiency.lean:233:31: Variable name `hij` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hij
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+⚠ [8946/8966] Replayed SubsetSumL25.Proofs.RandomRestrictions
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:107:37: Variable name `i` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _i
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:262:15: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:267:17: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:454:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:459:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:470:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:470:23: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:473:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:473:23: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:475:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:475:23: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:489:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:497:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:504:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:509:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/RandomRestrictions.lean:640:5: Variable name `hEL` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hEL
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+⚠ [8948/8966] Replayed SubsetSumL25.Proofs.Layers
+warning: SubsetSumL25/Proofs/Layers.lean:55:8: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Proofs/Layers.lean:61:8: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Proofs/Layers.lean:39:19: Variable name `ht` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _ht
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/Layers.lean:210:8: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Proofs/Layers.lean:216:8: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+⚠ [8949/8966] Replayed SubsetSumL25.Proofs.CorD
+warning: SubsetSumL25/Proofs/CorD.lean:129:44: Variable name `h` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _h
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+⚠ [8950/8966] Replayed SubsetSumL25.Proofs.A5
+warning: SubsetSumL25/Proofs/A5.lean:150:47: Variable name `hG` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hG
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/A5.lean:171:42: Variable name `hp0` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hp0
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/A5.lean:284:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Proofs/A5.lean:284:21: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Proofs/A5.lean:285:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/A5.lean:285:21: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/A5.lean:225:5: Variable name `hBle` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hBle
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/A5.lean:348:50: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Proofs/A5.lean:427:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+⚠ [8952/8966] Replayed SubsetSumL25.Proofs.O4
+warning: SubsetSumL25/Proofs/O4.lean:40:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+warning: SubsetSumL25/Proofs/O4.lean:74:56: Unused tactic linter: `push_cast` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Proofs/O4.lean:219:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+⚠ [8954/8966] Replayed SubsetSumL25.Proofs.DS
+warning: SubsetSumL25/Proofs/DS.lean:50:16: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Proofs/DS.lean:54:18: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Proofs/DS.lean:225:49: Variable name `hlz` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hlz
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+⚠ [8955/8966] Replayed SubsetSumL25.Proofs.O57
+warning: SubsetSumL25/Proofs/O57.lean:65:46: Variable name `hΩ` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hΩ
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+⚠ [8956/8966] Replayed SubsetSumL25.Proofs.M2
+warning: SubsetSumL25/Proofs/M2.lean:98:6: Unused tactic linter: `push_cast` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Proofs/M2.lean:127:6: Unused tactic linter: `push_cast` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+⚠ [8957/8966] Replayed SubsetSumL25.Proofs.M3
+warning: SubsetSumL25/Proofs/M3.lean:42:10: This simp argument is unused:
+  hZ
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [hF]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: SubsetSumL25/Proofs/M3.lean:296:20: This simp argument is unused:
+  h2
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [h1]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+⚠ [8959/8966] Replayed SubsetSumL25.Proofs.M5
+warning: SubsetSumL25/Proofs/M5.lean:94:50: Variable name `hp` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hp
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/M5.lean:96:5: Variable name `hsq` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hsq
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/M5.lean:97:5: Variable name `hc2` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hc2
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/M5.lean:398:44: Variable name `hp0` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hp0
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+⚠ [8961/8966] Replayed SubsetSumL25.Proofs.M6
+warning: SubsetSumL25/Proofs/M6.lean:260:5: Variable name `hζ` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hζ
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Proofs/M6.lean:343:5: Variable name `hζ` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hζ
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+✔ [8962/8966] Built SubsetSumL25.Statements.Isolation (33s)
+⚠ [8964/8966] Built SubsetSumL25.Proofs.Isolation (8.5s)
+warning: SubsetSumL25/Proofs/Isolation.lean:185:4: Try this: 
+  haveI̵
+
+The goal is a proposition, so `have` is preferred over `haveI`.
+The difference between `have` and `haveI` is that `haveI` inlines the value.
+But this is not relevant for proofs because of proof irrelevance.
+
+Note: This linter can be disabled with `set_option linter.style.haveILetI false`
+warning: SubsetSumL25/Proofs/Isolation.lean:118:26: Variable name `I` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _I
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+Build completed successfully (8966 jobs).

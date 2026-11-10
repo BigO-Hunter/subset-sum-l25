@@ -1,0 +1,11 @@
+FORCE_O1=1 — removed build artifacts:
+.lake/build/lib/lean/SubsetSumL25/Statements/Isolation.olean
+.lake/build/lib/lean/SubsetSumL25/Statements/Isolation.ilean
+.lake/build/lib/lean/SubsetSumL25/Statements/Isolation.trace
+.lake/build/lib/lean/SubsetSumL25/Statements/Isolation.olean.hash
+.lake/build/lib/lean/SubsetSumL25/Statements/Isolation.ilean.hash
+.lake/build/lib/lean/SubsetSumL25/Proofs/Isolation.olean
+.lake/build/lib/lean/SubsetSumL25/Proofs/Isolation.ilean
+.lake/build/lib/lean/SubsetSumL25/Proofs/Isolation.trace
+.lake/build/lib/lean/SubsetSumL25/Proofs/Isolation.olean.hash
+.lake/build/lib/lean/SubsetSumL25/Proofs/Isolation.ilean.hash

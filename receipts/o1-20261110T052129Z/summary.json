@@ -1,0 +1,18 @@
+{
+  "receipt": "o1-20261110T052129Z",
+  "lane": "o1-isolation",
+  "branch": "wip-o1-isolation",
+  "commit": "f0c7b59777a9f69f77e9f5d28203571b32d1c845",
+  "commit_subject": "O1 lane: swap gate now precedes the build lock \u2014 never hold .build.lock while waiting",
+  "worktree_dirty": true,
+  "toolchain": "leanprover/lean4:v4.34.1",
+  "mathlib_rev": "d13f23b723b8a846827a245b89c10fc7d3f11612",
+  "gate_decision": "override: swap_used>12GB but swapouts_delta=0 and free%>=30",
+  "forced_o1_rebuild": true,
+  "o1_oleans_built_this_run": true,
+  "build_exit": 0,
+  "axioms_exit": 0,
+  "axiom_banner_house_triple_only": true,
+  "sha_Proofs_Isolation": "69316a6823428f931660be4f0cb2521c4eaebe222faa9d7c65e4a028f1a0db8c",
+  "sha_Statements_Isolation": "0a708ed7f1de755cae06998fd9436409ecd21f1093602dd380159eb2e5610e5d"
+}

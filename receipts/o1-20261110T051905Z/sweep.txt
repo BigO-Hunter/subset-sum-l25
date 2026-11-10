@@ -1,0 +1,17 @@
+=== authoritative: build-log 'sorry' warnings:
+NONE
+
+=== authoritative: build-log native_decide mentions:
+NONE
+
+=== raw grep over SubsetSumL25/ (7 hits; ALL prose in docstrings — no code-level sorry; the build-log section above is authoritative):
+SubsetSumL25/Proofs/M2.lean:3:alias-class dictionary's counting core, proven without `sorry`.
+SubsetSumL25/Statements/CorD.lean:54:* M1 carried `sorry` placeholders; M2/M3 replaced them, so Corollary D and all
+SubsetSumL25/Statements/SparseDistinctions.lean:44:(M5b); it lived here with a `sorry` placeholder at M1 and moved to Proofs/ at
+SubsetSumL25/Statements/Layers.lean:34:* M1 carried `sorry` placeholders; M2/M3 replaced them, so every lemma below is
+SubsetSumL25/Statements/Presearch.lean:58:`sorry`: M1 placeholders — proof targets `Proofs/Presearch.lean` (M2).
+SubsetSumL25/Statements/PrimeCollision.lean:22:`sorry`: M1 placeholder — proof target Proofs/PrimeCollision.lean (M2).
+SubsetSumL25/Statements/PrimeCollision.lean:36:they lived here with `sorry` placeholders at M1 and moved to Proofs/ at M2.
+
+=== sorryAx occurrences in axiom banner:
+NONE

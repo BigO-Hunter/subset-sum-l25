@@ -1,0 +1,2 @@
+'SubsetSumL25.L2_1_isolation' depends on axioms: [propext, Classical.choice, Quot.sound]
+'SubsetSumL25.L2_1_isolation_prob' depends on axioms: [propext, Classical.choice, Quot.sound]

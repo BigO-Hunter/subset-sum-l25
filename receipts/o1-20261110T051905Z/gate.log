@@ -1,0 +1,2 @@
+stamp                iter swap_used_MB swapouts_delta60 free_pct verdict
+2026-11-10T05:20:05Z    1       13604               0       88 PROCEED (no live swap; ample free memory) [swap-used>12GB is stale high-water; override logged]
