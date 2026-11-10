@@ -1,0 +1,3 @@
+⚠ [8927/8927] Built SubsetSumL25.Row.KapilaRow (34s)
+warning: SubsetSumL25/Row/KapilaRow.lean:199:60: exponent 10000 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+Build completed successfully (8927 jobs).

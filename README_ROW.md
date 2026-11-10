@@ -120,7 +120,12 @@ gate on `sorryAx` / `native_decide` / non-house-triple), `gate.log`
 `summary.json`, `sources.sha256`, `head.sha`. Runner: `kapila_receipts.py`.
 
 First landing: **`kapila-20261110T070814Z`** — `Build completed successfully
-(8927 jobs)`, `build.exit = 0`, and
+(8927 jobs)`, `build.exit = 0`; the axiom banner below. Forced rebuild (all four
+row oleans deleted first, then rebuilt from the committed sources):
+**`kapila-20261110T073335Z`** — `build.exit = 0`, 41.5 s, and every olean's
+sha256 is **byte-identical** to the first receipt's (`Statement 81720a73…`,
+`KapilaAlgo f99f3876…`, `KapilaAbsorb 2dc0d994…`, `KapilaRow 6e3d3295…`), i.e.
+the assembly builds reproducibly from these sources.
 
 ```
 'SubsetSumL25.Row.kapila_row'      depends on axioms: [propext, Classical.choice, Quot.sound]
