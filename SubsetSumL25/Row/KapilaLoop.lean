@@ -38,48 +38,39 @@ This file lands the loop:
    three equations into `rowTest`; and `scan_run_eq_rowTest` puts the program's
    run on the left of that equation.  Together: the loop's exit is a
    `PayloadConvention` whose payloads are the memory's blocks.
-5. **The word-operation cost model** (§L7), in §6.2's `n²`-fractional-bits
-   vocabulary: the single-word regime's exact `Instr`-step count
-   (`12·blockLen + 6`), the multi-word charge (`wordOpFactor` per iteration, since
-   a comparison of two `n²`-bit dyadics is itself a loop of `⌈n²/w⌉ + 1 ≤
+   The run is assembled in §L8 — `scan_prologue` (the four `pc 0 → pc 4`
+   instructions) + `scan_loop` at `m = N` + `scan_epilogue`, one statement at
+   fuel `12·N + 6` — so `scan_run_eq_rowTest` is a statement about the *whole*
+   program on `memOf w f0`, not about a suffix of it.
+5. **The word-operation cost model** (§L8, closing comment), in §6.2's
+   `n²`-fractional-bits vocabulary: the single-word regime's exact `Instr`-step
+   count (`12·blockLen + 6`), the multi-word charge (`wordOpFactor` per iteration,
+   since a comparison of two `n²`-bit dyadics is itself a loop of `⌈n²/w⌉ + 1 ≤
    wordOpFactor n` word-visits), and the absorption — `scan_cost_absorbed` shows
    the whole charge lands inside §7's envelope with the existential `K` raised by
    seven, so the loop does not move the row's `2^{(τ₀+20ε)n}` exponent.  This is
-   the `wordOpFactor`/`withinEnvelope_wordop_absorb` machinery of `KapilaAlgo`
-   applied to a segment that actually exists.
+   the same argument as the `wordOpFactor`/`withinEnvelope_wordop_absorb`
+   machinery of `KapilaAlgo`, at a larger exponent (the scan's charge carries
+   `wordOpFactor` squared), applied to a segment that actually exists.  **Stated,
+   not proved** — see §L8's closing comment for the exact call site and why the
+   `+3` lemma cannot be cited directly.
 
-What is *not* here, stated so the residual is bounded and exact — the module
-landed **without** these three, and each is a specific piece of work, not a hope:
+What is *not* here, stated so the residual is bounded and exact:
 
-1. **The prologue and the run assembly.**  `scan_loop` starts at the loop head
-   (`pc 4`) with the invariant; the four prologue instructions (`pc 0 → pc 4`:
-   `[1] := 1`, `[12] := 0`, `acc := 0`, `k := 0`) and the composition into one
-   `scan_run` statement at fuel `12·N + 6` were written and **removed for want of a
-   `1 ≤ w` hypothesis** (the literal `1 < 2^w` needs the word to have at least one
-   bit; the lane's other modules carry `wordLength_ge_five` for exactly this).  The
-   exit half *is* landed (`scan_epilogue`: `pc 18` tests `0 < acc` and accepts or
-   rejects).  So the missing statement is exactly
-   `exec scanProg ρ (12*N+6) 0 0 (memOf w f0) = some (decide (0 < hitCount …))`,
-   and its proof is `scan_epilogue` composed with `scan_loop` at `m = N` over the
-   prologue's state.
-2. **The `rowTest` verdict at the exit** — the composition of (1) with
-   `hitCount_pos_iff` + `anyHit_eq_rowTest` + `payloadBlock_memOf`, giving
-   `exec … = some (Routines.rowTest (payloadBlock … baseA N mem) (payloadBlock …
-   baseV N mem))`.  Every ingredient is proved here; the missing line is the
-   rewriting of (1)'s `decide (0 < hitCount …)` into `rowTest`.
-3. **The word-operation cost model.**  The exact `Instr`-step count is the fuel
-   `12·N + 6` that (1) would state; the multi-word charge is the observation that
-   §6.2's `n²`-bit dyadic comparison is itself a loop of
-   `⌈n²/w⌉ + 1 ≤ wordOpFactor n` word-visits, so the per-pair word-op charge is
-   `2·wordOpFactor n + 3` and the total is `blockLen·(2·wordOpFactor n + 3)`.  The
-   absorption is then `KapilaAlgo.withinEnvelope_wordop_absorb`'s argument with the
-   polynomial exponent raised by seven (one `wordOpFactor²` from the nested loop,
-   five from `wordOpFactor ≤ (n+b+2)^3` squared times the constant `5`), i.e.
-   `K + 7` rather than `K + 3`.  **Not landed**: the two lemmas
+1. **The word-operation cost model** (piece 3 of the original trio; pieces 1 and 2
+   landed in §L8).  The exact `Instr`-step count *is* landed — it is `scan_run`'s
+   fuel `12·N + 6`.  What remains is the multi-word charge: §6.2's `n²`-bit dyadic
+   comparison is itself a loop of `⌈n²/w⌉ + 1 ≤ wordOpFactor n` word-visits, so the
+   per-pair word-op charge is `2·wordOpFactor n + 3` and the total is
+   `blockLen·(2·wordOpFactor n + 3)`.  The absorption is then
+   `KapilaAlgo.withinEnvelope_wordop_absorb`'s argument with the polynomial
+   exponent raised by seven (one `wordOpFactor²` from the nested loop, five from
+   `wordOpFactor ≤ (n+b+2)^3` squared times the constant `5`), i.e. `K + 7` rather
+   than `K + 3`.  **Not landed**: the two lemmas
    (`scanWordOps_le : blockLen·(2·wordOpFactor n + 3) ≤ (n+b+2)^7` and
    `scan_cost_absorbed : (R.cost + scanWordOps ≤ K₀·2^E·P^(K+7))`) — stated
    precisely, proved not yet.
-4. **The multi-word accumulator layout** (`LeafTest`'s item 4) and **the
+2. **The multi-word accumulator layout** (`LeafTest`'s item 4) and **the
    estimates' arithmetic relation** (item 3) are untouched, as before.
 
 Statement.lean's hashes are untouched (`3dc6567e…34aa`): this module adds names
@@ -972,5 +963,204 @@ theorem scan_epilogue {f : Nat → Nat} (hfit : ∀ z, f z < 2 ^ w) (h12 : f 12 
     have d19 : scanProg.getD 19 Instr.reject = Instr.reject := rfl
     rw [exec_reject_step (S := S + 1) (hS := by omega) d19]
     rw [decide_eq_false (by rw [h12] at hlt; omega)]
+
+/-! ### §L8 — the prologue, the run assembly, and the verdict at the exit
+
+`scan_loop` begins at the loop head with `LoopInv` already in hand; a run begins at
+`pc 0` with nothing but `memOf w f0`.  Three lemmas close that gap.
+`scan_prologue` walks the four prologue instructions (`[1] := 1`, `[12] := 0`,
+`acc := 0`, `k := 0`) to establish the invariant at `k = 0`, `acc = 0`; `scan_run`
+composes it with `scan_loop` at `m = N` and `scan_epilogue` into one statement at the
+fuel `4 + 12·N + 2 = 12·N + 6`; and `scan_run_eq_rowTest` rewrites that exit's
+`decide (0 < hitCount …)` into `Routines.rowTest` on the two payload blocks, which is
+§7 step 7's verdict on the memory the loop read.
+
+**The `1 ≤ w` hypothesis, and why it is not really a hypothesis.**  The prologue's
+first instruction writes the literal `1`, so re-establishing the fit invariant needs
+`1 < 2^w` — that is the whole of the missing ingredient (the loop body only ever
+writes `0`, sums and quotients of fitting words, so nothing in `scan_loop` needed it).
+The theorem below therefore carries `hw : 1 ≤ w` **as the arithmetic hypothesis its
+statement contemplates**, and `wordLength_ge_one` shows it is *free* at the lane's own
+word length: `wordLength`'s last summand is `+ 1`, so `1 ≤ wordLength n b` holds for
+every `n`, `b` — no `1 ≤ b` side condition, unlike `wordLength_ge_five`, which is used
+where a *five*-bit word is required.  `one_lt_two_pow` is the step from the hypothesis
+to the literal.
+
+**`1 ≤ N` is genuinely needed, and it is a fact about the program.**  `scanProg` is a
+do-while: the jump at `pc 17` is at the *bottom*, so the body at `pc 4` runs at least
+once and `k = 0` always reads the block's first word.  `scan_loop` records exactly
+this (`1 ≤ m`), so `scan_run` carries `hN1 : 1 ≤ N` rather than pretending that an
+empty block has a run. -/
+
+/-- `1 < 2^w` from `1 ≤ w` — the prologue's `[1] := 1` needs the word to have at
+least one bit. -/
+theorem one_lt_two_pow {w : Nat} (hw : 1 ≤ w) : 1 < 2 ^ w := by
+  have hp : (2 : Nat) ^ 1 ≤ 2 ^ w := Nat.pow_le_pow_right (by norm_num) hw
+  rw [show (2 : Nat) ^ 1 = 2 from rfl] at hp
+  omega
+
+/-- **`1 ≤ w` is free at the lane's word length.**  `wordLength`'s last summand is
+`+ 1`, so this needs no hypothesis on `n` or `b` — unlike `wordLength_ge_five`, which
+needs `1 ≤ b`. -/
+theorem wordLength_ge_one (n b : Nat) : 1 ≤ wordLength n b := by
+  unfold wordLength
+  omega
+
+/-- The payload base is past the scratch window (`Layout`'s seventh field, as an
+accessor so call sites need not spell out the conjunction). -/
+theorem Layout.baseA_ge {f0 : Nat → Nat} {N h baseA baseV : Nat}
+    (hL : Layout f0 N h baseA baseV) : 14 ≤ baseA := hL.2.2.2.2.2.2.1
+
+/-- The second payload base is past the scratch window. -/
+theorem Layout.baseV_ge {f0 : Nat → Nat} {N h baseA baseV : Nat}
+    (hL : Layout f0 N h baseA baseV) : 14 ≤ baseV := hL.2.2.2.2.2.2.2
+
+/-- **The prologue, walked** (`pc 0 → pc 4`, 4 steps): `[1] := 1`, `[12] := 0`,
+`acc := 0`, `k := 0`, leaving the loop invariant at `k = acc = 0`.  Agreement with the
+entry memory survives because cell `1` is written with the value it already holds
+(`Layout` fixes `f0 1 = 1`) and cell `12` with `0` (`Layout` fixes `f0 12 = 0`); the
+other two writes land on scratch cells. -/
+theorem scan_prologue {f0 : Nat → Nat} {N h baseA baseV : Nat}
+    (hL : Layout f0 N h baseA baseV) (hw : 1 ≤ w) (hfit0 : ∀ z, f0 z < 2 ^ w) (S : Nat) :
+    ∃ f', LoopInv w f0 f' 0 0
+      ∧ exec scanProg ρ (S + 4) 0 0 (memOf w f0) = exec scanProg ρ S 4 0 (memOf w f') := by
+  have hone : 1 < 2 ^ w := one_lt_two_pow hw
+  have hzero : 0 < 2 ^ w := twoPowPos w
+  have d0 : scanProg.getD 0 Instr.reject = Instr.one 1 := rfl
+  rw [exec_one_step (S := S + 4) (hS := by omega) d0]
+  rw [show S + 4 - 1 = S + 3 from rfl]
+  set s1 : Nat → Nat := up f0 1 1 with hs1
+  have hfit1 : ∀ z, s1 z < 2 ^ w := upFit hfit0 hone
+  have hs1eq : ∀ z, s1 z = f0 z := by
+    intro z
+    rw [hs1]
+    rw [up]
+    by_cases hz : z = 1
+    · rw [if_pos hz, hz]; exact hL.1.symm
+    · rw [if_neg hz]
+  have d1 : scanProg.getD 1 Instr.reject = Instr.sub 12 1 1 := rfl
+  rw [exec_sub_step (S := S + 3) (hS := by omega) d1 hfit1 (le_refl (s1 1))]
+  rw [show S + 3 - 1 = S + 2 from rfl, Nat.sub_self]
+  set s2 : Nat → Nat := up s1 12 0 with hs2
+  have hfit2 : ∀ z, s2 z < 2 ^ w := upFit hfit1 hzero
+  have d2 : scanProg.getD 2 Instr.reject = Instr.sub 3 1 1 := rfl
+  rw [exec_sub_step (S := S + 2) (hS := by omega) d2 hfit2 (le_refl (s2 1))]
+  rw [show S + 2 - 1 = S + 1 from rfl, Nat.sub_self]
+  set s3 : Nat → Nat := up s2 3 0 with hs3
+  have hfit3 : ∀ z, s3 z < 2 ^ w := upFit hfit2 hzero
+  have d3 : scanProg.getD 3 Instr.reject = Instr.sub 0 1 1 := rfl
+  rw [exec_sub_step (S := S + 1) (hS := by omega) d3 hfit3 (le_refl (s3 1))]
+  rw [show S + 1 - 1 = S + 0 from rfl, Nat.sub_self]
+  set s4 : Nat → Nat := up s3 0 0 with hs4
+  have hfit4 : ∀ z, s4 z < 2 ^ w := upFit hfit3 hzero
+  refine ⟨s4, ⟨?_, ?_, by omega, ?_, hfit4⟩, ?_⟩
+  · rw [hs4, up]; simp
+  · rw [hs4, up, if_neg (by omega), hs3, up, if_pos rfl]
+  · intro z hz
+    have hz0 : z ≠ 0 := fun hh => hz (hh ▸ scratch_zero)
+    have hz3 : z ≠ 3 := fun hh => hz (hh ▸ scratch_three)
+    rw [hs4, up, if_neg hz0, hs3, up, if_neg hz3, hs2, up]
+    by_cases h12 : z = 12
+    · rw [if_pos h12, h12]; exact hL.2.2.2.2.2.1.symm
+    · rw [if_neg h12]; exact hs1eq z
+  · rfl
+
+/-- **The run**: the whole program from `pc 0` on the entry memory, in `12·N + 6`
+instructions — the prologue (4), one iteration per pair (12 each, as `scan_body`
+fixes them) and the exit (2).  The accumulator it halts with is `hitCount` over the
+whole block, so the verdict is `decide (0 < hitCount …)`. -/
+theorem scan_run {f0 : Nat → Nat} {N h baseA baseV : Nat}
+    (hL : Layout f0 N h baseA baseV) (hw : 1 ≤ w) (hfit0 : ∀ z, f0 z < 2 ^ w)
+    (hN : N < 2 ^ w) (hh1 : 1 ≤ h) (hhlt : h < 2 ^ w)
+    (hbA : baseA + N < 2 ^ w) (hbV : baseV + N < 2 ^ w) (hN1 : 1 ≤ N) :
+    exec scanProg ρ (12 * N + 6) 0 0 (memOf w f0)
+      = some (decide (0 < hitCount h (wordList f0 baseV N) (wordList f0 baseA N))) := by
+  obtain ⟨fp, hinvp, hpro⟩ := scan_prologue (f0 := f0) hL hw hfit0 (S := 12 * N + 2)
+  have hinvp' : LoopInv w f0 fp (N - N) 0 := by rw [Nat.sub_self]; exact hinvp
+  obtain ⟨f', hinv', hloop⟩ :=
+    scan_loop (f0 := f0) (N := N) (h := h) (baseA := baseA) (baseV := baseV)
+      hL hN hh1 hhlt hbA hbV (Layout.baseA_ge hL) (Layout.baseV_ge hL)
+      N fp 0 2 hN1 (le_refl N) hinvp'
+  have h12 : f' 12 = 0 := by
+    rw [hinv'.2.2.2.1 12 scratch_const_twelve]
+    exact hL.2.2.2.2.2.1
+  have hepi : exec scanProg ρ (0 + 2) 18 0 (memOf w f') = some (decide (0 < f' 3)) :=
+    scan_epilogue hinv'.2.2.2.2 h12 0
+  rw [show (0 : Nat) + 2 = 2 from rfl] at hepi
+  rw [show 12 * N + 6 = (12 * N + 2) + 4 from by omega, hpro, hloop, hepi, hinv'.2.1]
+  simp only [Nat.zero_add, Nat.sub_self, Nat.add_zero]
+
+/-- **§7 step 7's verdict at the exit**: `Routines.rowTest` on the two payload blocks
+the loop actually read.  This is the composition the residual named, made mechanical —
+`hitCount_pos_iff` (a positive count *is* a hit), `anyHit_eq_rowTest` (a hit is the
+paper's `|V̂ − Â| ≥ 1/2`, at the layout's `h = 2^{fracBits−1}` by
+`hitWord_eq_ratTest`), and `payloadBlock_memOf` (the memory's words are
+`payloadBlock`'s `ℚ` estimates when every word fits). -/
+theorem scan_run_eq_rowTest {f0 : Nat → Nat} {N baseA baseV fracBits : Nat}
+    (hL : Layout f0 N (2 ^ (fracBits - 1)) baseA baseV) (hfrac : 1 ≤ fracBits)
+    (hw : 1 ≤ w) (hfit0 : ∀ z, f0 z < 2 ^ w) (hN : N < 2 ^ w)
+    (hHlt : 2 ^ (fracBits - 1) < 2 ^ w)
+    (hbA : baseA + N < 2 ^ w) (hbV : baseV + N < 2 ^ w) (hN1 : 1 ≤ N) :
+    exec scanProg ρ (12 * N + 6) 0 0 (memOf w f0)
+      = some (Routines.rowTest (payloadBlock fracBits baseA N (memOf w f0))
+          (payloadBlock fracBits baseV N (memOf w f0))) := by
+  rw [scan_run (h := 2 ^ (fracBits - 1)) hL hw hfit0 hN Nat.one_le_two_pow hHlt hbA hbV hN1]
+  have hb : ∀ v a, hitWord (2 ^ (fracBits - 1)) v a = 1
+      ↔ (1 / 2 : ℚ) ≤
+        |(v : ℚ) / (2 : ℚ) ^ fracBits - (a : ℚ) / (2 : ℚ) ^ fracBits| :=
+    fun v a => hitWord_eq_ratTest hfrac v a
+  have hstep : (decide (0 < hitCount (2 ^ (fracBits - 1)) (wordList f0 baseV N)
+        (wordList f0 baseA N)) : Bool)
+      = Routines.rowTest ((wordList f0 baseA N).map (toQ fracBits))
+          ((wordList f0 baseV N).map (toQ fracBits)) := by
+    by_cases hpos : 0 < hitCount (2 ^ (fracBits - 1)) (wordList f0 baseV N)
+      (wordList f0 baseA N)
+    · rw [decide_eq_true hpos,
+        ← anyHit_eq_rowTest hb (wordList f0 baseV N) (wordList f0 baseA N),
+        (hitCount_pos_iff (2 ^ (fracBits - 1)) (wordList f0 baseV N)
+          (wordList f0 baseA N)).mp hpos]
+    · have hne : anyHit (2 ^ (fracBits - 1)) (wordList f0 baseV N)
+          (wordList f0 baseA N) ≠ true :=
+        fun hc => hpos ((hitCount_pos_iff (2 ^ (fracBits - 1)) (wordList f0 baseV N)
+          (wordList f0 baseA N)).mpr hc)
+      have hfalse : anyHit (2 ^ (fracBits - 1)) (wordList f0 baseV N)
+          (wordList f0 baseA N) = false := by
+        cases hany : anyHit (2 ^ (fracBits - 1)) (wordList f0 baseV N)
+            (wordList f0 baseA N) with
+        | false => rfl
+        | true => exact absurd hany hne
+      rw [decide_eq_false hpos,
+        ← anyHit_eq_rowTest hb (wordList f0 baseV N) (wordList f0 baseA N), hfalse]
+  rw [hstep, ← payloadBlock_memOf (f := f0) hfit0 fracBits baseA N,
+    ← payloadBlock_memOf (f := f0) hfit0 fracBits baseV N]
+
+/-! ### The cost pair's absorption call site (residual piece 3, still stated)
+
+The exact `Instr`-step count is now a theorem rather than a hope: `scan_run`'s fuel is
+`12·N + 6`, i.e. `12·blockLen + 6` steps in the single-word regime.  The multi-word
+charge replaces each per-pair step's cost by a **nested** measure: §6.2's comparison
+of two `n²`-bit dyadics is itself a loop of `⌈n²/w⌉ + 1 ≤ wordOpFactor n`
+word-visits (`KapilaAlgo.wordOpFactor`, `n² + 1`), so one pair costs
+`2·wordOpFactor n + 3` word-ops and the block costs
+
+    scanWordOps n blockLen = blockLen · (2 · wordOpFactor n + 3).
+
+The two lemmas this section will state, in the shape the absorption needs:
+
+    scanWordOps_le      : blockLen · (2 · wordOpFactor n + 3) ≤ (n + b + 2) ^ 7
+    scan_cost_absorbed  : (R.cost + scanWordOps : ℕ) ≤ K₀ · 2^E · P^(K + 7)
+
+**The call site is `KapilaAlgo.withinEnvelope_wordop_absorb`, and the exponent it
+raises is `K + 3` — the scan needs `K + 7`.**  That `+3` is exactly
+`wordOpFactor n ≤ (n + b + 2) ^ 3` (`wordOpFactor_le_cube`), a *linear* charge.  The
+scan's charge carries `wordOpFactor` **squared** (the nested comparison loops *inside*
+an outer loop of `blockLen` iterations), so the same argument consumes
+`(n + b + 2) ^ 6` for the nested factor and one more unit for the constant `5` and the
+`blockLen ≤ n ≤ P` slack that the linear case folded into `R.cost`'s own polynomial:
+seven, not three.  So `withinEnvelope_wordop_absorb` cannot be *applied* here — it is
+the same argument at a larger exponent, and the lemma to write abstracts
+`wordOpFactor`'s exponent instead of quoting the `+3`.  That is why this stays a
+stated residual rather than a one-line citation, and why it does not weaken the row's
+`2^{(τ₀+20ε)n}` exponent: `K` is §7's to choose. -/
 
 end SubsetSumL25.Row

@@ -1356,3 +1356,103 @@ import, mirroring `KapilaTest`'s.
 
 Next single action: the prologue + `scan_run` (add `hw : 1 ≤ w`, then compose
 `scan_loop` at `m = N`), then its `rowTest` form, then the cost pair.
+
+## Row lane 2026-11-10 (10) — the prologue, the run at `12·N + 6`, and §7 step 7's verdict at the exit (LANDED)
+
+Same module (`SubsetSumL25/Row/KapilaLoop.lean`, now §L8 appended, a leaf of the
+import DAG; `Statement.lean` still `3dc6567e…34aa`; the barrel already imported
+`KapilaLoop`, so no barrel line moved this round). Two of the three residual pieces
+named at the bottom of round (9) are closed; the third is now stated in one place
+(the module's closing comment) instead of two.
+
+## Landed (no sorry, house triple)
+
+| declaration | content |
+|---|---|
+| `wordLength_ge_one` | **`1 ≤ w` is free at the lane's word length**: `1 ≤ wordLength n b` for every `n`, `b` — the definition's last summand is `+ 1`, so no `1 ≤ b` side condition (contrast `wordLength_ge_five`). Depends only on `[propext, Quot.sound]`. |
+| `one_lt_two_pow` | the step from the hypothesis to the literal `1 < 2^w` the prologue's `[1] := 1` needs |
+| `Layout.baseA_ge`, `Layout.baseV_ge` | the two payload bases past the scratch window, as accessors (`hL.2.2.2.2.2.2.1` no longer spelled at call sites) |
+| **`scan_prologue`** | `pc 0 → pc 4` in 4 steps: `[1] := 1`, `[12] := 0`, `acc := 0`, `k := 0`, leaving `LoopInv w f0 fp 0 0` |
+| **`scan_run`** | **the run assembly**: `exec scanProg ρ (12·N + 6) 0 0 (memOf w f0) = some (decide (0 < hitCount h (wordList f0 baseV N) (wordList f0 baseA N)))` — prologue (4) + `scan_loop` at `m = N` (12 each) + epilogue (2), composed at `S = 12·N + 2` / `S = 2` / `S = 0` |
+| **`scan_run_eq_rowTest`** | **§7 step 7's verdict at the exit**: the same run equals `some (Routines.rowTest (payloadBlock fracBits baseA N (memOf w f0)) (payloadBlock fracBits baseV N (memOf w f0)))`, by `hitCount_pos_iff` + `anyHit_eq_rowTest` + `payloadBlock_memOf` |
+
+## The `hw` question, answered twice
+
+The round (9) residual said the prologue was removed "for want of a `1 ≤ w`
+hypothesis (the literal `1 < 2^w`)". Two answers, and both are now in the module:
+
+1. **Carried, as the arithmetic hypothesis the statement contemplates.** `scan_run`
+   and `scan_prologue` take `hw : 1 ≤ w`; nothing else in the lane's loop statements
+   needed it, because the loop body only ever writes `0`, sums and quotients of
+   fitting words. The prologue is the only place a *literal* enters the state.
+2. **Proved free at the lane's own word, so the hypothesis never has to be supplied
+   by hand.** `wordLength n b = 4·(n+b) + log2((n+2)^4 − 1) + 1`, so
+   `1 ≤ 4·(n+b) + … + 1` is `omega` on the shape of the definition alone:
+   `wordLength_ge_one n b` holds for **every** `n`, `b`, with no `bits_pos` input.
+   The row's instance therefore discharges `hw` by `wordLength_ge_one` — unlike the
+   lane's other modules, which need `wordLength_ge_five (bits_pos x)`.
+
+So the honest verdict is: *not* an extra assumption on the row; it is a fact the
+definition already carries, stated once.
+
+## `1 ≤ N` is genuinely needed, and it is a fact about the program
+
+Found while assembling the run, and worth recording because it is not a proof
+nuisance: **`scanProg` is a do-while.** The jump is at the *bottom* (`pc 17`), so the
+body at `pc 4` runs at least once and `k = 0` always reads the block's first word.
+`scan_loop` records exactly this (`1 ≤ m`), so `scan_run` carries `hN1 : 1 ≤ N`
+rather than pretending an empty block has a run. A `for`-shaped reading of §7 step 7
+would have been wrong here.
+
+## Proof-engineering notes (each cost one typecheck cycle, ≈35 s)
+
+* **`simpa` will not close `1 < 2^w`.** The library's own `pow` simp set normalizes
+  `1 < 2^w` to `¬ w = 0`, so `simpa using hp` fails with *"expected `¬w = 0`"*.
+  The literal is closed by `rw [show (2:ℕ)^1 = 2 from rfl] at hp` then `omega`.
+* **`have hV := wordList f0 baseV N` does not abstract anything.** It is a local
+  definition, and `rw` matches syntactically — the goal keeps the expanded term and
+  `rw [hstep]` reports "did not find an occurrence". Either write the terms out or
+  use `set … with h`. (Written out here: four occurrences per line, but no trap.)
+* **`scan_loop` asks for `LoopInv w f0 f (N - m)`**, so instantiating at `m = N`
+  demands `LoopInv w f0 fp (N - N) 0`, while the prologue supplies `… 0 0`. One
+  `Nat.sub_self` transport (`hinvp'`) spans the two spellings. The statement is
+  contravariant in exactly this way; expect it at every composition.
+* **`scratch_twelve` is `scratch_const_twelve`.** The two families are named
+  differently (`scratch_zero`/`scratch_three`/`scratch_seven`… vs
+  `scratch_const_one`/`…_twelve`), and the error is `unknown identifier`.
+* **Agreement comes out *total* here, not just off-scratch.** The prologue writes
+  cell `1` with the value it already holds (`Layout` fixes `f0 1 = 1`) and cell `12`
+  with `0` (`Layout` fixes `f0 12 = 0`), so `s4 z = f0 z` for **every** `z`; only the
+  two cells `0` and `3` are genuinely overwritten, and both are scratch.
+
+## The residual, now one piece (plus `LeafTest`'s untouched two)
+
+1. **The word-op cost model** — stated in the module's closing comment with its call
+   site: `KapilaAlgo.withinEnvelope_wordop_absorb` raises `K` by **three**, which is
+   exactly `wordOpFactor n ≤ (n+b+2)^3` (`wordOpFactor_le_cube`), the *linear* charge.
+   The scan's charge carries `wordOpFactor` **squared** (a nested comparison loop
+   inside an outer `blockLen` loop), so the same argument gives `K + 7`, and the
+   `+3` lemma cannot be cited directly. Two lemmas named, neither proved:
+   `scanWordOps_le : blockLen·(2·wordOpFactor n + 3) ≤ (n+b+2)^7` and
+   `scan_cost_absorbed : (R.cost + scanWordOps : ℕ) ≤ K₀·2^E·P^(K+7)`.
+2. **`LeafTest`'s items 3 and 4** — the estimates' arithmetic relation and the
+   multi-word accumulator layout — untouched, as before.
+
+## Receipts
+
+`receipts/kapila-20261110T210808Z`: gate `swapouts_delta60=0 free_pct=72` (iter 2;
+iter 1 was `delta60=435` — the host was swapping, so the gate waited rather than
+building). Build exit 0 in 43.6 s (8933 jobs), with
+`⚠ [8933/8933] Built SubsetSumL25.Row.KapilaLoop (34s)` — the changed module
+**rebuilt**, not replayed (its olean mtime is this run: 2250072 bytes, sha256
+`e9e6deef…0bb7`; the other nine oleans are replays, as in every previous round).
+Axiom banner exit 0, `axiom_banner_house_triple_only: true` (81 banners; the five new
+declarations report `[propext, Classical.choice, Quot.sound]`, and
+`wordLength_ge_one` only `[propext, Quot.sound]`); no `declaration uses 'sorry'`.
+Lock: **DEVIATION, proceeded UNLOCKED after 241 s** (recorded in `lock.acquired` and
+`summary.json`) per the lane's hard-expiry rule — the fleet build lock was held
+throughout the bounded wait, and the two sibling lanes' lake jobs were live.
+
+Next single action: the cost pair — `scanWordOps_le` first (pure `ℕ` arithmetic:
+`blockLen ≤ n`, `2·(n²+1) + 3 ≤ (n+b+2)^4`), then `scan_cost_absorbed` by the same
+argument `withinEnvelope_wordop_absorb` runs, with the factor's exponent abstracted.

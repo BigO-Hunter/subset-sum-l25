@@ -113,3 +113,11 @@ open SubsetSumL25.Row
 #print axioms scan_loop
 #print axioms scan_epilogue
 #print axioms selfLoop_never_halts
+
+-- §L8: the prologue, the run at fuel `12·N + 6`, and §7 step 7's verdict at the
+-- exit (the `1 ≤ w` hypothesis and the fact that it is free at the lane's w)
+#print axioms wordLength_ge_one
+#print axioms one_lt_two_pow
+#print axioms scan_prologue
+#print axioms scan_run
+#print axioms scan_run_eq_rowTest
