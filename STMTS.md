@@ -1464,3 +1464,69 @@ position.
 them.**  The prime-dispatch input is our proved `L2_5_prime_collision_two`
 (OpenAI L2.5), the Corollary-D input our proved B2 machinery, the trial
 count our proved M2 `trial_count_ge`, the seam arithmetic our M4 chain.
+
+## DS-M6 — Lemma A7 (expected work) LANDED (Proofs/M6.lean)
+
+Thirteen theorems, all receipts [propext, Classical.choice, Quot.sound], no
+sorryAx, no native_decide. Consumes B5's `a7_envelope` (Proofs/Presearch.lean)
+by name for the closing line, and the O8 two-factor op-bound shapes. Chain:
+`a7_item_form` (the shared discharge poly·2^{exp·n} ≤ (b+2)·2^{K·n+δ}) →
+items 1–6 + item 8 (the seven cost kinds; item 8 = the exec-side mop-up,
+D7) → `a7_expected_work` (seven items within (b+2)·2^K sum to (b+2)·2^{K+3}).
+The clause discharges use the ε₀-slack form (e.g. (C6) as l + ε₀ ≤ τ₀ — ε₀ is
+the paper's «least slack in (C1)–(C8)»); the A3(3)/A3(2) F̂↔d(·) cancellations
+are proved for items 4/5/6a; the (S5) mask display 2^{h(1/2−a)m+2} is DERIVED
+from the (S5) pair + h(a) ≤ h(1/2−a) for item 2. Named (per the ladder):
+the per-trial expectation transfers (items 5/6, the 1/P′-listing — D7), the
+n³ candidate count (item 3, exec-side — D7), `hnum3` (1/2 + γμ/2 ≤ 2τ₀ − ε₀ —
+the «far below the bound» §2.2 numeric, NOT an Arb-certified clause; a
+(C1)-routed derivation is left at the D7 boundary), `hnum4` (r + 1/2 ≤
+2τ₀ − ε₀, r = 1−μ−l = 0.04323) and `hmu` (μ + ε₀ ≤ τ₀, μ = 0.473) — both
+§2.2-table instance numerics, flagged. arm2's grouped-form arm1 analogue.
+
+**Receipts:** full `lake build` green — exit 0, 8966 jobs, "Build completed
+successfully"; M6.olean fresh; `#print axioms` for all 13 =
+[propext, Classical.choice, Quot.sound] (probe-verified); zero sorries.
+
+### Gotchas banked (DS-M6 round)
+* `Real.rpow_add` takes y z EXPLICITLY at this pin: `(Real.rpow_add h2 p q).symm`
+  works; `(Real.rpow_add h2).symm` fails (Function.symm on a ∀-type). The
+  anonymous `rw [← Real.rpow_add]` form instantiates from the FIRST match and
+  rewrites the wrong product when both sides are rpow products — pin with
+  named-arg helper lemmas: `a7_two_pow_add (p := x) (q := y)`.
+* A bare `2 ^ (x : ℝ)` in a have/calc elaborates ℕ-pow and fails with
+  `HPow ℕ ℝ` — ascribe `(2 : ℝ) ^ x` EVERYWHERE in proof bodies (statements
+  inherit ℝ from the goal and are fine).
+* `positivity` does NOT close symbolic ℝ rpow nonnegativity — use
+  `Real.rpow_nonneg (by norm_num : (0 : ℝ) ≤ 2) x` / `Real.rpow_pos_of_pos`.
+  And `linarith` cannot see products — nonneg-product slots need explicit
+  `mul_nonneg` chains (`a7_prod2/3/4/5_nn`), not linarith.
+* `mul_le_mul'` at this pin needs `MulLeftMono ℝ` which does not synthesize
+  here — use the 4-arg `mul_le_mul h₁ h₂ hx0 hδ0` (order: (a ≤ b) (c ≤ d)
+  (0 ≤ c) (0 ≤ b)) or `mul_le_mul_of_nonneg_left/right`.
+* NESTED helper applications (`a7_right (a7_right h₁ h₂) h₃`) break the
+  metavariable propagation — the outer's h-slot assigns (k₁, k₂) from the
+  GOAL's top-split (e.g. k₁ := 4*n^7*(n+1)) and the inner's h-slot then
+  demands the ATOMIC form (4 ≤ 64). FLATTEN: bind every helper application
+  with `have hx : <concrete stated type> := helper …` first, then consume hx.
+* `rw`-conversion steps whose `show … from by ring` term spans MULTIPLE lines
+  fail to parse inside `rw [ … ]` ('unexpected token from') — write the
+  conversion as `have hconv : LHS = RHS := by ring; rw [hconv] at h` instead,
+  or single-line the show-term.
+* The calc-step stated LHS/RHS must match the producing term's conclusion
+  VERBATIM (association included): `mul_le_mul_of_nonneg_left (h : a ≤ b)
+  (hc : 0 ≤ c) : c * a ≤ c * b` — the c lands on the LEFT of both sides. When
+  the next step needs a different association, insert a `by ring` conversion
+  step whose LHS is the previous step's RHS VERBATIM and whose RHS is the new
+  shape. `nlinarith` is association-INSENSITIVE but times out at 200k
+  heartbeats on these 64·P-shaped goals — prefer the two-factor
+  of_nonneg_left/right steps.
+* `a7_prod4_nn`/`a7_prod5_nn` (nested mul_nonneg chains) give 0 ≤ a*b*c*(d*e)
+  in the LEFT-assoc shape the a7_left c-slots expect; a7_prod2_nn's conclusion
+  is a*b — pick the arity matching the slot's atom count (banked after the
+  799:26 round).
+
+**Credit: Lemma A7 and its proof are Base's (a-kapila/maths-proofs @
+44c34961, PROOF_0.4877.tex §5.7, sha256 b397531c…); this package formalizes
+it. The envelope consumes our proved B5 `a7_envelope`; the clause slacks and
+the A3/(S5)/(C2)–(C7) discharges are the §2.2 + §5.7 arithmetic.**

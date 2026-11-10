@@ -33,3 +33,4 @@ import SubsetSumL25.Proofs.DS
 import SubsetSumL25.Proofs.O57
 import SubsetSumL25.Proofs.M5
 import SubsetSumL25.Proofs.M5CorA6
+import SubsetSumL25.Proofs.M6

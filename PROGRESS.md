@@ -774,3 +774,28 @@ build form under contention; full `lake build` receipt banked at landing.
 
 Next: DS-M6 per the ladder — Lemma A7 (expected work — the seven-step cost
 ledger with (C2)–(C7); the v2-snapshot op-bound style applies).
+
+# DS-M6 COMPLETE — Lemma A7 (expected work, the (C2)–(C7) cost ledger) — 2026-11-09
+
+Thirteen theorems in `Proofs/M6.lean`, all receipts
+[propext, Classical.choice, Quot.sound], no sorryAx, no native_decide; full
+`lake build` green (8966 jobs). Structure: `a7_item_form` (the shared
+poly·2^{exp·n} ≤ (b+2)·2^{K·n+δ} discharge) → seven item theorems (items 1–6
++ the item-8 exec mop-up, D7) → `a7_expected_work` (consuming B5's proved
+`a7_envelope` by name: seven items within (b+2)·2^K sum to (b+2)·2^{K+3}).
+Proved content: the (C6)/(C7) clause chain (μ(1−2a) ≤ l ≤ τ₀ − ε₀) for item 1;
+the (S5)-pair derivation of the per-trial mask display 2^{h(1/2−a)m+2} plus
+the (C5) discharge for item 2; the A3(3) F̂↔d(L) cancellation (the paper's
+2^{ln+O} first summand) plus the hnum4-consumption for item 4; the same
+cancellation carrying (S5)'s C(m,k) ≤ 2^{h(a)m} into the (C2) exponent
+l + (h(a)−γ)μ for item 5; the A3(2) cancellation into the (C3) exponent for
+item 6a. Named (the ledger): the per-trial expectation transfers (items 5/6),
+the n³ candidate count (item 3), `hnum3`/`hnum4`/`hmu` (the §2.2 numeric rows
+not among the eight Arb-certified clauses — the (C1)-routed item-3 derivation
+left at the D7 boundary), and item 8's exec-side count. STMTS.md banked the
+round's gotchas (rpow_add's explicit y z; ℕ-pow ascription; no-positivity-on-
+rpow; the flattened-helper rule — nested a7_right/a7_left applications break
+metavariable propagation; multiline show..from inside rw fails to parse).
+
+Next: DS-M7 per the ladder — the Theorem A assembly (§5.8: five failure
+events, Markov on the cap, the 1/16 finite-precision bound).
