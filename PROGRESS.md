@@ -995,3 +995,62 @@ on the main branch, which is a property of the `Routines` value the row
 eventually instantiates, not of this module.
 
 Next single lever: `aliasProg` (Theorem A's alias phase), same pattern.
+
+## Row lane 2026-11-10 (6) — `aliasProg` authored: Theorem A's text, its witness leg proved sound, the `isSome` divergence isolated as a theorem, `LeafAnone` discharged (LANDED)
+
+New module `SubsetSumL25/Row/KapilaAlias.lean` (a leaf of the import DAG, so no
+built module's hash moved). `prelimProg`'s bootstrap layers 0–2 were **imported,
+not re-derived** — the reusability claim made when the prelim bootstrap was
+designed held on first use: `memOf`/`up`/`upFit`, `bv_add`/`bv_shr`/
+`ofNat_lt_ofNat`, all eight `exec_*_step` peelers, and the whole input layer
+came across unchanged. Exactly one new layer-2 fact was needed: `inF_two`.
+
+## What is proved (no sorry, house triple)
+
+| Declaration | Note |
+|---|---|
+| `aliasProg` | 20 instructions: `prog2` prologue + a second saved cell + the pair-witness decision |
+| `aliasSpec`, `aliasCost` | the phase's value (`Option (List ℚ)`), 20 word operations |
+| `inF_two` | cell 2 in `memOf` normal form (the only new layer-2 fact) |
+| `alias_run` | `run aliasProg x ρ 20 = some ((aliasSpec n x ω).isSome)` — 20-instruction walk |
+| `alias_sound`, `yes_of_pair`, `ofFn_sum_ite_pair` | every estimate reported is a genuine subset sum |
+| `aliasSpec_isSome` | the spec's `Bool` is its `isSome` |
+| `alias_run_of_field` | the field *is* the `Option`-free halt equation (nothing to peel) |
+| `isSome_ne_failToNo` | the two conventions disagree at `some false` — measured, not asserted |
+| `isSome_forgets_payload` | the verdict cannot see the estimate list (`LeafTest`'s residual) |
+| `LeafAnone_of_alias_agrees`, `LeafAnone_of_alias_run` | the leaf, modulo the cost collapse |
+
+**Two of four leaves closed** (`LeafP` + `LeafAnone`); `LeafBnone`, `LeafTest`
+untouched.
+
+## The divergence, resolved
+
+`Routines.alias_agrees` is `run … = some (… .isSome)`: an equation between
+`Option Bool`s with **no wrapper**, so unlike `prelim_agrees` it needs no
+`map_failToNo_bind_some`-style peel — the shape does not fight. What *does* need
+stating is that the conventions are not interchangeable:
+`isSome_ne_failToNo` proves `isSome (some false) = true` while
+`failToNo (some false) = false`. The phase succeeds or fails; it does not decide
+YES/NO, so `isSome` is the only faithful reading and `LeafAnone` the only leaf it
+can feed.
+
+## Proof-engineering notes (both cost a build cycle)
+
+1. **`omega` does not know `2^w` is even.** `2 * n < 2^w` does **not** give
+   `2 * n + 1 < 2^w` from it: a model with `2^w = 2n+1` satisfies the hypothesis.
+   The cure is to route through `2 * (n + 1) ≤ 2^w` and keep every step linear in
+   the opaque power atoms.
+2. **`unfold wordLength` after `rw [hw]` silently does not fire** when `w` is a
+   `set`-local; an explicit `show` of the unfolded form is what works.
+
+## Residual, stated plainly
+
+`aliasSpec` is the **witness-test leg** of Theorem A (the pair `{a₁, a₂}`), sound
+and entitled to FAIL — but its FAIL region is far wider than the paper's, whose
+`o(1)` failure probability is what `cor_A6_per_alias` / `o7_union_le` spend.
+Closing it is a backward jump (the first loop in this calculus) plus a word-op
+cost model, not a longer proof of the same equation. Also uncomputed: the `ℚ`
+accumulator with `n²` fractional bits, and the payload convention `LeafTest`
+needs.
+
+Next single lever: `checksumProg` (Theorem B), the same shape one step further.

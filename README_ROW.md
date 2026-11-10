@@ -361,3 +361,69 @@ pattern (bootstrap already designed; the phase's decision is
 `aliasA … .isSome`, so `LeafAnone` needs the `Option`-free `isSome` verdict, not
 `failToNo`). `checksumProg` follows it; both still lack an in-tree enumeration
 core, unlike `prelim`'s `prop_p_chebyshev`.
+
+## Row lane 2026-11-10 (5) — `aliasProg`: Theorem A's text, its witness leg's soundness, the `isSome` divergence proved, and `LeafAnone` discharged (LANDED)
+
+The second of the three phase programs is authored, its agreement is proved
+against the text, and the segment leaf it feeds is now closed. The bootstrap
+paid off: layers 0–2 are **imported, not re-derived**.
+
+* **`aliasProg`** — 20 instructions in `SubsetSumL25/Row/KapilaAlias.lean`. The
+  same `prog2` prologue `prelimProg` uses (constant block, `n ≥ 6` gate,
+  `saveAk`'s cursor trick), extended by one cell so the phase's decision can read
+  **two** input values: the cursor `2n` saves `a₁`, `2n+1` saves `a₂` (taken
+  *before* cell 2 is clobbered by the address computation), and `load 5 5` reads
+  the second save back by indirection — no register spent on the second pointer.
+  The decision is the pair witness: `a₁ + a₂ = t` accepts, both disagreements
+  FAIL.
+* **The reuse is real, and measured.** `KapilaAlias` imports
+  `SubsetSumL25.Row.KapilaPrelim` and takes `memOf`, `up`, `up_eq`/`up_ne`,
+  `upFit`, `bv_add`, `bv_shr`, `ofNat_lt_ofNat`, all eight `exec_*_step` peelers,
+  and the whole input layer (`inF`, `inF_zero`/`inF_one`/`inF_t`, `inF_lt`,
+  `wordLength_ge_five`, `bits_pos`, `le_maxValue_*`,
+  `maxValue_lt_two_pow_bits`). Exactly **one** new layer-2 fact was needed:
+  `inF_two` (cell 2 in `memOf` normal form). That was the claim made when the
+  prelim bootstrap was designed; it held on first use.
+* **The pattern divergence, and it is now a theorem instead of a worry.**
+  `Routines.alias_agrees` is already `run … = some (… .isSome)` — an equation
+  between `Option Bool`s with **no wrapper**. `prelim_agrees` needed
+  `map_failToNo_bind_some` to peel Lean's `pure`/`map some` lift; the alias field
+  needs nothing, and `alias_run_of_field` *is* the field. But the conventions are
+  genuinely not interchangeable: `isSome_ne_failToNo` proves they disagree on
+  `some false` (NO for `failToNo`, «succeeded» for `isSome`), which is why the
+  phase's verdict must be `isSome` and why the leaf it discharges is
+  `LeafAnone`, not `LeafP`. `isSome_forgets_payload` records the other half:
+  the verdict cannot see the estimate list, so `LeafTest` still needs a payload
+  convention.
+* **The witness leg is sound, not merely well-typed.** `alias_sound`: when the
+  phase reports success, its estimate is the sum of a genuine subset
+  (`yes_of_pair` via `ofFn_sum_ite_pair`). `aliasSpec` therefore carries the
+  paper's requirement on `Â_s` — and its FAIL region is honestly wider than the
+  paper's, which is the enumeration residual (§ named in the module).
+* **The walk.** `alias_run`:
+  `run aliasProg x ρ (aliasCost n x) = some ((aliasSpec n x ω).isSome)`, a
+  20-instruction step-by-step `exec` walk; the one genuinely new arithmetic
+  obligation is `2·maxValue < 2^w` (`a₁ + a₂` must fit one word), proved from
+  `maxValue_lt_two_pow_bits` plus `bits + 1 ≤ w`. `aliasCost = 20`.
+* **`LeafAnone` is discharged** — `LeafAnone_of_alias_agrees`: on the guard's
+  complement, if `R.cost` collapses to `R.aliasCost`, `R.alias_agrees` *is*
+  `LeafAnone R R.aliasProg`. **Two of the four segment leaves are now closed**
+  (`LeafP` + `LeafAnone`), the remaining two (`LeafBnone`, `LeafTest`) untouched.
+  The `FAIL → NO` control-flow fact stays the leaf's, as it must: a segment
+  verdict can only say «succeeded».
+* **A measurement worth recording for the next program author.** Two `omega`
+  calls in the cost block failed for the *same* reason and it is not obvious:
+  `2^w` is an **opaque atom** to `omega`, which does not know it is even, so
+  `2·n < 2^w` does **not** yield `2·n + 1 < 2^w` (a model with `2^w = 2n+1`
+  satisfies it). The cure is to go through `2·(n+1) ≤ 2^w` and keep everything
+  linear. Separately, `unfold wordLength` **after** `rw [hw]` silently does not
+  fire when `w` is a `set`-local; an explicit `show` is what works.
+* Statement.lean untouched (`3dc6567e…34aa`); the new module is a leaf of the
+  import DAG, so every built module's hash stayed valid — which is why the text
+  was authored in a new file rather than appended to a built one.
+
+Next (single lever): **`checksumProg`** — Theorem B's text, `LeafBnone`'s program
+side, the same shape at one further step (a three-cell witness needs a third
+save at `2n+2` and a `sum_triple` analogue of `ofFn_sum_ite_pair`). Then the
+program texts are complete and the seam is cut except `LeafTest`'s loop rules +
+multi-word charge.

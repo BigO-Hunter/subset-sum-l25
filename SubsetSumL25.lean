@@ -41,3 +41,4 @@ import SubsetSumL25.Row.KapilaRow
 
 import SubsetSumL25.Row.KapilaGuard
 import SubsetSumL25.Row.KapilaPrelim
+import SubsetSumL25.Row.KapilaAlias

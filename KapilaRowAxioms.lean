@@ -1,6 +1,7 @@
 import SubsetSumL25.Row.KapilaRow
 import SubsetSumL25.Row.KapilaGuard
 import SubsetSumL25.Row.KapilaPrelim
+import SubsetSumL25.Row.KapilaAlias
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -59,3 +60,15 @@ open SubsetSumL25.Row
 #print axioms run_of_prelim_agrees
 #print axioms LeafP_of_prelim_agrees
 #print axioms LeafP_of_prelim_run
+
+-- Theorem A's instruction text: the program, its witness leg's soundness, the
+-- `isSome` convention's divergence, and the leaf it discharges
+#print axioms inF_two
+#print axioms alias_run
+#print axioms alias_sound
+#print axioms yes_of_pair
+#print axioms alias_agrees_spec
+#print axioms alias_run_of_field
+#print axioms isSome_ne_failToNo
+#print axioms LeafAnone_of_alias_agrees
+#print axioms LeafAnone_of_alias_run
