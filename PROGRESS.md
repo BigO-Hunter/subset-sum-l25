@@ -1580,3 +1580,98 @@ arithmetic relation, then the multi-word accumulator layout. Item 3 is the lever
 the relation between the two stored `n²`-bit estimate blocks and the `ℚ` values
 `PayloadConvention.dAt` reads, so that `payloadBlock_memOf`'s word-level agreement
 becomes a claim about the *accumulators* rather than about pre-agreed memory.
+
+## Row lane 2026-11-10 (5) — item 3 lands: the accumulators, one denominator, and the proved limit of the one-word reading (LANDED)
+
+New module `SubsetSumL25/Row/KapilaEstimate.lean`, a leaf of the import DAG
+(imports `KapilaTest` + `KapilaLoop`), so no built module's hash moves and
+`Statement.lean` stays `3dc6567e…34aa`.  Statement **and proof**: no sorry, house
+triple.
+
+### The relation, stated and proved
+
+`payloadBlock_memOf` used to read as word-level agreement between a memory and a
+state function — a claim about *pre-agreed memory*.  `EstLayout` names the state
+as what it is (the exit memory's words *are* a `ℕ`-valued accumulator state,
+fit invariant included), and then the bridge is a claim about the accumulators:
+
+| Declaration | Content |
+|---|---|
+| `EstLayout` | the exit memory's words are an accumulator state, cell for cell (`mem_eq`) |
+| `Ahat_eq_toQ` / `Vhat_eq_toQ` | the stored blocks are `wordList f base len` mapped through the fixed-point scaler — no residual freedom, nothing threaded beside the memory |
+| `dAt_eq_accum_div` | `dAt i = (f (baseV+i) − f (baseA+i)) / 2^fracBits`: **one shared denominator**, so §7 step 7 compares one integer numerator |
+| `hitWord_eq_dAt` | the word test the program executes (`hitWord (2^(f−1))` on the two accumulator words) ⟺ §7 step 7's `ℚ` test `1/2 ≤ |dAt i|` |
+| `Ahat_getElem?` / `Vhat_getElem?` / `dAt_of_getElem?` | `dAt s` is the `s`-th entry difference of the two stored lists, so «`dAt` is `V̂_s − Â_s`» is a theorem about the blocks |
+| `rowTest_Ahat` | the verdict is a function of the `dAt` list alone (the test factors through the pointwise differences) |
+| `BinSumAgrees` + `rowTest_eq_binSum` | the residual's **exact contract**: supply `binSum` with `∀ i < blockLen, dAt i = binSum i` and the test on the payloads *is* the test on the bin sums |
+
+Not produced, and not producible here: the bin sums themselves.  No bin object
+exists in the tree and neither landed leg pins one (alias certifies `Â`'s
+support, checksum `V̂`'s magnitude).  `BinSumAgrees` is that obligation's shape —
+one equation per index — and `rowTest_eq_binSum` proves nothing else about `dAt`
+is consumed.
+
+### The finding: item 3 could not have been stated one-word-per-index
+
+`abs_dAt_mul_lt`: `|dAt i| · 2^fracBits` is a *single word's* numerator
+(`< 2^w`, `w = wordLength n x.bits`), whatever `fracBits` is set to.
+`abs_dAt_lt_half`: at `fracBits ≥ w + 1` — the regime `fracBits = n²` always
+lands in — `|dAt i| < 1/2`, so `1/2 ≤ |dAt i|` **can never fire**: `hitWord`
+computes `0` and §7 step 7's loop never takes its hit.  The per-index read of
+`Ahat`/`aAt`/`dAt` is a **truncation, not a layout**, at the paper's parameters.
+
+So items 3 and 4 are one seam, not two.  The reading that can carry `n²` bits is
+the place value: `payloadStride w fracBits = ⌈fracBits/w⌉ + 1` words per
+estimate, and `placeValue m base stride fracBits s` = the base-`2^w` sum of
+estimate `s`'s words over one shared `2^fracBits` scale.  `placeValue_one`
+proves the degenerate stride-1 instance **is** the module's `aAt`/`dAt` reading,
+so the existing defs are the `stride = 1` case of the layout rather than a
+competitor to it.
+
+### Item 4's position
+
+Shape named, layout not written.  `payloadStride`, `placeValue` and the stride-1
+reduction are the named targets; what is left is the word arithmetic that fills
+a stride-`k` block (its carry chain) and the restatement of `BinSumAgrees` about
+`placeValue`.  Untouched, as required: `KapilaAlgo.cost` and `D7.agrees`'s step
+horizon — the named application seam stays named.
+
+### Receipts
+
+**Final: `receipts/kapila-20261110T223724Z`** — gate `swapouts_delta60=0
+free_pct=74` (iter 1), lock **acquired after 60 s**, build exit 0 in 7.9 s
+(8934 jobs; **replay** — the new module's olean was compiled in
+`…T222210Z`, mtime 22:26:43Z, 374160 bytes, sha256 `511e1d5f…e32f5`, and this
+run replays it), axiom banner exit 0, `axiom_banner_house_triple_only: true`
+(109 banners; the twenty new declarations report `[propext, Classical.choice,
+Quot.sound]`, and `payloadStride`, a def, reports «does not depend on any
+axioms»); no `sorryAx`. `Statement.lean` still hashes `3dc6567e…34aa`.
+
+**Kept, and why — three aborted receipts before the green one, each a real
+defect in the *runner*, not in the proof:**
+
+* `receipts/kapila-20261110T221500Z` — `FAIL axiom gate: axiom banner exited 1`.
+  The runner's build-target and named-olean lists did not yet name
+  `KapilaEstimate`, so the module was never built and every new `#print axioms`
+  was an unknown identifier.  The lists now name it.
+* `receipts/kapila-20261110T222210Z` — `FAIL axiom gate: axiom banner exited 1`,
+  cause: `KapilaRowAxioms.lean` was missing
+  `import SubsetSumL25.Row.KapilaEstimate`.  This is also the run that **built**
+  the module (build exit 0, 8934 jobs, olean mtime 22:26:43Z).
+* `receipts/kapila-20261110T222836Z` — `FAIL axiom gate: axiom banner exited -9`:
+  the banner was SIGKILLed under host pressure.  That run's gate *waited*
+  correctly (iter 1 `swapouts_delta60=5153` wait, iter 2 `1828` wait, iter 3
+  `0` proceed) — the load-bearing half of the gate doing its job.  Re-running
+  the same tree gave the green receipt without changing a proof byte; between
+  the second and third aborted receipts the banner was also checked by hand
+  (`lake env lean KapilaRowAxioms.lean`, exit 0, 109 banners) to separate the
+  missing-import defect from the kill.
+
+Next single action: **item 4 — the stride-`k` word arithmetic.**  Concretely,
+`placeValue_scale`:
+`placeValue m base stride fracBits s * 2^fracBits = Σ_{j<stride} (m (base + s*stride + j)).toNat * 2^(w*j)`
+in `ℚ` — the one-denominator identity that makes a multi-word estimate
+comparable at all, since `placeValue_one` only settles the degenerate stride-1
+case.  Then the carry chain over `payloadStride w fracBits` words.  Item 3's
+bin-sum identity lands on top of that by restating `BinSumAgrees` about
+`placeValue` and reusing `rowTest_eq_binSum`.

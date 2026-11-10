@@ -1,0 +1,15 @@
+{
+  "receipt": "kapila-20261110T222836Z",
+  "lane": "wip-kapila-row",
+  "toolchain": "leanprover/lean4:v4.34.1",
+  "gate": {
+    "swapouts_delta60": 0,
+    "free_pct": 72
+  },
+  "lock": "DEVIATION: proceeded UNLOCKED after 241s wait",
+  "build_exit": 0,
+  "build_seconds": 5.9,
+  "axioms_exit": -9,
+  "axiom_banner_house_triple_only": false,
+  "head": "6b5963912ba9d61b8860e26ff752adc063871e87"
+}

@@ -5,6 +5,8 @@ import SubsetSumL25.Row.KapilaAlias
 import SubsetSumL25.Row.KapilaChecksum
 import SubsetSumL25.Row.KapilaTest
 import SubsetSumL25.Row.KapilaLoop
+import SubsetSumL25.Row.KapilaEstimate
+import SubsetSumL25.Row.KapilaEstimate
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -133,3 +135,28 @@ open SubsetSumL25.Row
 #print axioms withinEnvelope_add_absorb
 #print axioms scan_cost_absorbed
 #print axioms scan_cost_absorbed_pow7
+
+-- §L10: the estimates' arithmetic relation — the accumulators named, `dAt` as
+-- one-denominator accumulator difference and as the s-th entry difference, the
+-- verdict reading only the `dAt` list, the bin-sum seam's exact contract, and
+-- the proved limit of the one-word reading (item 4's shape)
+#print axioms memOf_toNat
+#print axioms Ahat_eq_toQ
+#print axioms Vhat_eq_toQ
+#print axioms dAt_eq_accum
+#print axioms dAt_eq_accum_div
+#print axioms abs_dAt_eq
+#print axioms hitWord_eq_dAt
+#print axioms Ahat_getElem?
+#print axioms Vhat_getElem?
+#print axioms dAt_of_getElem?
+#print axioms zipWith_diag
+#print axioms rowTest_Ahat
+#print axioms BinSumAgrees
+#print axioms rowTest_eq_binSum
+#print axioms est_lt_two_pow
+#print axioms abs_dAt_mul_lt
+#print axioms abs_dAt_lt_half
+#print axioms payloadStride
+#print axioms placeValue
+#print axioms placeValue_one
