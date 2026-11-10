@@ -34,3 +34,7 @@ import SubsetSumL25.Proofs.O57
 import SubsetSumL25.Proofs.M5
 import SubsetSumL25.Proofs.M5CorA6
 import SubsetSumL25.Proofs.M6
+import SubsetSumL25.Row.Statement
+import SubsetSumL25.Row.KapilaAlgo
+import SubsetSumL25.Row.KapilaAbsorb
+import SubsetSumL25.Row.KapilaRow

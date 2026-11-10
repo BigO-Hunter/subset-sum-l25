@@ -1,0 +1,369 @@
+/-
+Row assembly for `ss/kapila 0.4877` — **piece (b): the D7 seam** and
+**piece (c): the bound in the challenge's own vocabulary**.
+
+This module is the row's statement-of-record.  It proves
+`BigOSpeedrun.SubsetSum.SolvedInTime (4877 / 10000)` — the literal the board
+files — from three inputs:
+
+1. `Routines` (`SubsetSumL25.Row.KapilaAlgo`) — §7's procedure, executably;
+2. `CorrectAt` — §7's correctness paragraph in the trusted statement's own tape
+   vocabulary (its docstring names the measured in-tree cores and what the
+   hypothesis adds);
+3. `D7` — **the one named seam**: §7's bit-cost → `Instr`-step translation,
+   deliberately not imported.
+
+Everything else is proved here: §1's exponent gap and its absorption
+(`KapilaAbsorb`), the `BigO` at the row's literal, the tape/`count` transfer,
+and the horizon glide `exec` is inert once halted.
+-/
+import Mathlib
+import SubsetSumL25.Row.KapilaAlgo
+import SubsetSumL25.Row.KapilaAbsorb
+
+namespace SubsetSumL25.Row
+
+open BigOSpeedrun.SubsetSum
+
+/-! ### Glide: `exec` is inert once halted -/
+
+/-- Fuel monotonicity of the challenge's `exec`: once a run has halted (value
+not `none`), extra fuel does not change the value.  `SolvedInTime` fixes a
+single horizon `T n` for every random outcome, so halting must be monotone. -/
+theorem exec_eq_of_halted {w : ℕ} (P : List Instr) (ρ : ℕ → BitVec w) :
+    ∀ (t : ℕ) (pc r : ℕ) (m : ℕ → BitVec w),
+      exec P ρ t pc r m ≠ none → ∀ k : ℕ, exec P ρ (t + k) pc r m = exec P ρ t pc r m := by
+  intro t
+  induction t with
+  | zero => intro pc r m h k; exact absurd rfl h
+  | succ t ih =>
+    intro pc r m h k
+    rw [show t + 1 + k = (t + k) + 1 by omega]
+    simp only [exec] at h ⊢
+    rw [List.getD_eq_getElem?_getD] at h ⊢
+    generalize hS : P[pc]?.getD Instr.reject = S at h ⊢
+    cases S <;> (first | rfl | (exact ih _ _ _ h k))
+
+/-- `count` only sees its predicate pointwise. -/
+theorem count_congr {p q : ℕ → Prop} [DecidablePred p] [DecidablePred q]
+    (h : ∀ s, p s ↔ q s) : ∀ N : ℕ, count p N = count q N
+  | 0 => rfl
+  | N + 1 => by
+    rw [count, count, count_congr h N]
+    by_cases hp : p N
+    · have hq : q N := (h N).1 hp
+      simp only [hp, hq, ite_true]
+    · have hq : ¬ q N := fun hq => hp ((h N).2 hq)
+      simp only [hp, hq, ite_false]
+
+/-! ### What the row is allowed to assume
+
+Two hypotheses, both at the same documented boundary, both stated in the
+*paper's* vocabulary — never in terms of the program we do not have. -/
+
+/-- §7's correctness paragraph, as the trusted statement counts it: at the
+procedure's own horizon `t = R.cost n x`, the right verdict comes from at least
+two thirds of the `2^(w·t)` equally likely random prefixes.
+
+Why this is a hypothesis and not a theorem here.  Every *mathematical*
+ingredient is measured axiom-clean in-tree: Proposition P
+(`prop_p_chebyshev`, B5); Theorem A part 1 (`thmA_part1_fail_le`, consuming
+`cor_A6_per_alias` and the cap's Markov tail); Theorem B (B4's
+`lem_B2_domination`, `row_errors_le_six_eps`); isolation
+(`L2_1_isolation_prob`, 11/12).  What is not in-tree is the composition across
+this procedure's sample space — the union of §7's five failure events, and the
+identification of the abstract draws with the `Draws` stream.  That
+identification is the same exec-refinement boundary as `D7`; stating it
+explicitly keeps the row's remaining obligation visible instead of hiding it
+inside a proof term. -/
+def CorrectAt (R : Routines) (n : ℕ) (x : Instance n) : Prop :=
+  let t := R.cost n x
+  let N := 2 ^ (wordLength n x.bits * t)
+  (x.yes ∧ 2 * N ≤ 3 * count
+      (fun s => R.run n x (fun r => ((tape (wordLength n x.bits) s) r).toNat) = true) N) ∨
+  (¬ x.yes ∧ 2 * N ≤ 3 * count
+      (fun s => R.run n x (fun r => ((tape (wordLength n x.bits) s) r).toNat) = false) N)
+
+/-- **The D7 seam** — the campaign's one named seam, and the only
+program-side assumption in the row.
+
+The landed O4/O5/O7/O8 statements count in **Base's own counters** (word
+operations / elementary steps); the trusted statement counts in **its** `Instr`
+steps at word length `w = wordLength n b`.  Bridging the two is a translation:
+a program in the challenge's instruction set, plus the statement that at the
+abstract cost horizon its run reproduces the abstract decision on the same
+random words.
+
+Note what is *not* here: no correctness claim, no probability, no cost
+arithmetic.  Correctness is `CorrectAt`; the cost accounting is
+`Routines.WithinEnvelope` + `runtime_absorb`.  The seam is only the program and
+the outcome agreement. -/
+structure D7 (R : Routines) where
+  /-- One finite program for all `n` and `b` — the statement's `P : List Instr`.
+  The verified `α = 1/2` package (`subsetsum-v2-snapshot`) is a worked instance
+  of this field's shape: one `List Instr`, no advice, no dependence on `c`. -/
+  program : List Instr
+  /-- **The translation, outcome for outcome.**  At the abstract cost horizon
+  `R.cost n x`, the program's run on the random tape `ρ : ℕ → BitVec w` returns
+  exactly §7's decision read on the same words (`(ρ r).toNat` is the unsigned
+  word).  This single equation is the whole seam: it carries the instruction
+  selection, the cell allocation, indirect addressing, balanced trees,
+  finite-precision dyadic arithmetic and the `cap`'s fail-fast, because all of
+  those are *what the program does* between step `0` and step `R.cost n x`. -/
+  agrees : ∀ (n : ℕ) (x : Instance n) (ρ : ℕ → BitVec (wordLength n x.bits)),
+    run program x ρ (R.cost n x) = some (R.run n x (fun r => (ρ r).toNat))
+
+/-! ### The runtime envelope in reals, its monotonicity, and its absorption -/
+
+/-- §7's «Running time» envelope, with the input's own `b` replaced by the
+bound `n^c` the statement allows. -/
+noncomputable def envE (c K : ℕ) (n : ℕ) : ℝ :=
+  (2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ))
+    * ((n : ℝ) + (n : ℝ) ^ ((c : ℕ) : ℝ) + 2) ^ K
+
+theorem envE_pos (c K n : ℕ) : 0 < envE c K n := by
+  rw [envE]
+  refine mul_pos (Real.rpow_pos_of_pos (by norm_num) _) ?_
+  exact pow_pos (by positivity) _
+
+/-- `envE` is monotone in `n` — this is what lets the finite set of small `n`
+below the absorption threshold be absorbed by a single constant. -/
+theorem envE_mono (c K : ℕ) {n m : ℕ} (h : n ≤ m) : envE c K n ≤ envE c K m := by
+  rw [envE, envE]
+  have hn : (0 : ℝ) ≤ (n : ℝ) := by positivity
+  have hnm : (n : ℝ) ≤ (m : ℝ) := by exact_mod_cast h
+  have hexp : (tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ)
+      ≤ (tau0 + 20 * epsPat) * (m : ℝ) + 2 * (m : ℝ) ^ (0.7 : ℝ) := by
+    have ht : (0 : ℝ) ≤ tau0 + 20 * epsPat := by
+      rw [tau0, epsPat]; norm_num
+    have hpow : (n : ℝ) ^ (0.7 : ℝ) ≤ (m : ℝ) ^ (0.7 : ℝ) :=
+      Real.rpow_le_rpow hn hnm (by norm_num)
+    nlinarith
+  have h1 : (2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ))
+      ≤ (2 : ℝ) ^ ((tau0 + 20 * epsPat) * (m : ℝ) + 2 * (m : ℝ) ^ (0.7 : ℝ)) :=
+    (Real.rpow_le_rpow_left_iff (by norm_num : (1 : ℝ) < 2)).2 hexp
+  have h2 : ((n : ℝ) + (n : ℝ) ^ ((c : ℕ) : ℝ) + 2) ^ K
+      ≤ ((m : ℝ) + (m : ℝ) ^ ((c : ℕ) : ℝ) + 2) ^ K := by
+    apply pow_le_pow_left₀ (by positivity)
+    have hnc : (n : ℝ) ^ ((c : ℕ) : ℝ) ≤ (m : ℝ) ^ ((c : ℕ) : ℝ) :=
+      Real.rpow_le_rpow hn hnm (by positivity)
+    linarith
+  exact mul_le_mul h1 h2 (by positivity) (by positivity)
+
+/-- §1's gap applied to `envE`: past the threshold, the sub-exponential and
+polynomial factors are inside the slack. -/
+theorem envE_absorb (c K : ℕ) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → envE c K n ≤ (2 : ℝ) ^ (alphaRow * (n : ℝ)) := by
+  obtain ⟨N, hN⟩ := runtime_absorb c K
+  refine ⟨N, fun n hn => ?_⟩
+  have h := hN n hn
+  rw [envE, Real.rpow_add (by norm_num : (0 : ℝ) < 2)]
+  exact h
+
+/-! ### The horizon and the `BigO` -/
+
+/-- The row's horizon: `T n = 2^(⌈0.4877·n⌉ + C₀)`. -/
+noncomputable def rowHorizon (C₀ : ℕ) (n : ℕ) : ℕ := 2 ^ (Nat.ceil (alphaRow * (n : ℝ)) + C₀)
+
+/-- **The bound in the statement's own `BigO`**: `T n ^ 10000 ≤ K · 2^(4877·n)`
+with `K = 2^(10000·C₀ + 10000)`. -/
+theorem rowHorizon_bigO (C₀ : ℕ) : BigO (rowHorizon C₀) (4877 / 10000) := by
+  refine ⟨2 ^ (10000 * C₀ + 10000), ?_⟩
+  intro n _
+  have hden : (4877 / 10000 : Rat).den = 10000 := by norm_num
+  have hnum : (4877 / 10000 : Rat).num.toNat = 4877 := by norm_num
+  rw [hden, hnum]
+  have hceil : Nat.ceil (alphaRow * (n : ℝ)) ≤ 4877 * n / 10000 + 1 := by
+    rw [Nat.ceil_le]
+    have hgoal : alphaRow * (n : ℝ) ≤ ((4877 * n / 10000 + 1 : ℕ) : ℝ) := by
+      have hnat : 4877 * n ≤ 10000 * (4877 * n / 10000 + 1) := by
+        have h1 := Nat.div_add_mod (4877 * n) 10000
+        have h2 := Nat.mod_lt (4877 * n) (by norm_num : 0 < 10000)
+        omega
+      have hreal : 4877 * (n : ℝ) ≤ 10000 * ((4877 * n / 10000 + 1 : ℕ) : ℝ) := by
+        exact_mod_cast hnat
+      have ha : alphaRow * (n : ℝ) = 4877 * (n : ℝ) / 10000 := by
+        rw [alphaRow]; ring
+      rw [ha]
+      linarith
+    exact hgoal
+  have hexp : Nat.ceil (alphaRow * (n : ℝ)) + C₀ ≤ 4877 * n / 10000 + 1 + C₀ := by omega
+  have hmono : rowHorizon C₀ n ≤ 2 ^ (4877 * n / 10000 + 1 + C₀) := by
+    rw [rowHorizon]
+    exact Nat.pow_le_pow_right (by norm_num) hexp
+  have harith : (4877 * n / 10000 + 1 + C₀) * 10000 ≤ 4877 * n + 10000 + 10000 * C₀ := by
+    have h1 : (4877 * n / 10000) * 10000 ≤ 4877 * n := Nat.div_mul_le_self _ _
+    nlinarith
+  calc rowHorizon C₀ n ^ 10000
+      ≤ (2 ^ (4877 * n / 10000 + 1 + C₀)) ^ 10000 := Nat.pow_le_pow_left hmono 10000
+    _ = 2 ^ ((4877 * n / 10000 + 1 + C₀) * 10000) := by rw [← pow_mul]
+    _ ≤ 2 ^ (4877 * n + 10000 + 10000 * C₀) := Nat.pow_le_pow_right (by norm_num) harith
+    _ = 2 ^ (10000 * C₀ + 10000) * 2 ^ (4877 * n) := by
+      rw [← pow_add]
+      congr 1
+      omega
+
+/-! ### The row theorem -/
+
+/-- `K ≤ 2^C` in reals whenever `K ≤ C` — the constant-absorption step
+(we use the crude `K ≤ 2^K`, so the absorbed constant is generous and the
+arithmetic stays in `ℕ`). -/
+theorem const_le_two_pow {K C : ℕ} (h : K ≤ C) : (K : ℝ) ≤ (2 : ℝ) ^ (C : ℝ) := by
+  have h1 : K ≤ 2 ^ C :=
+    le_trans (le_of_lt (Nat.lt_two_pow_self (n := K)))
+      (Nat.pow_le_pow_right (by norm_num : 1 ≤ 2) h)
+  have h2 : (K : ℝ) ≤ ((2 ^ C : ℕ) : ℝ) := by exact_mod_cast h1
+  calc (K : ℝ) ≤ ((2 ^ C : ℕ) : ℝ) := h2
+    _ = (2 : ℝ) ^ (C : ℝ) := by
+        push_cast
+        rw [Real.rpow_natCast]
+
+/-- `(2 : ℝ)^(⌈0.4877·n⌉ + C₀) = 2^⌈0.4877·n⌉ · 2^C₀` in the ℕ power sense. -/
+theorem rowHorizon_eq (C₀ n : ℕ) :
+    (rowHorizon C₀ n : ℝ)
+      = (2 : ℝ) ^ (Nat.ceil (alphaRow * (n : ℝ)) : ℕ) * (2 : ℝ) ^ C₀ := by
+  rw [rowHorizon]
+  push_cast
+  rw [pow_add]
+
+/-- **`ss/kapila 0.4877` — the row's bound in the challenge's own vocabulary.**
+
+Hypotheses (all documented, all at the D7 boundary):
+`hcorr` = §7's correctness paragraph (`CorrectAt`); `henv` = §7's «Running
+time» counter envelope (`Routines.WithinEnvelope`, whose Theorem A bullet is
+in-tree via `o8_time_bound`/`thmA_part2`); `hD7` = the one named seam.
+
+Conclusion: the trusted statement's own `SolvedInTime` at the literal the board
+files, `4877 / 10000`. -/
+theorem kapila_row
+    (R : Routines)
+    (hcorr : ∀ (n : ℕ) (x : Instance n), 2 ≤ n → CorrectAt R n x)
+    (henv : ∀ c : ℕ, R.WithinEnvelope c)
+    (hD7 : D7 R) :
+    SolvedInTime (4877 / 10000 : Rat) := by
+  classical
+  refine ⟨hD7.program, ?_, ?_⟩
+  · -- correctness: `CorrectAt` transferred through `D7.agrees`
+    intro n x hn
+    have hc := hcorr n x hn
+    have htrue : count
+        (fun s => run hD7.program x (tape (wordLength n x.bits) s) (R.cost n x) = some true)
+        (2 ^ (wordLength n x.bits * R.cost n x))
+        = count
+          (fun s => R.run n x (fun r => ((tape (wordLength n x.bits) s) r).toNat) = true)
+          (2 ^ (wordLength n x.bits * R.cost n x)) := by
+      apply count_congr
+      intro s
+      rw [hD7.agrees n x (tape (wordLength n x.bits) s)]
+      simp
+    have hfalse : count
+        (fun s => run hD7.program x (tape (wordLength n x.bits) s) (R.cost n x) = some false)
+        (2 ^ (wordLength n x.bits * R.cost n x))
+        = count
+          (fun s => R.run n x (fun r => ((tape (wordLength n x.bits) s) r).toNat) = false)
+          (2 ^ (wordLength n x.bits * R.cost n x)) := by
+      apply count_congr
+      intro s
+      rw [hD7.agrees n x (tape (wordLength n x.bits) s)]
+      simp
+    refine ⟨R.cost n x, fun ρ => ?_, ?_⟩
+    · rw [hD7.agrees]; simp
+    · dsimp only
+      rw [htrue, hfalse]
+      unfold CorrectAt at hc
+      dsimp only at hc
+      exact hc
+  · -- the time bound: one horizon for every outcome
+    intro c
+    obtain ⟨K₀, K, henv⟩ := henv c
+    obtain ⟨Nabs, hNabs⟩ := envE_absorb c K
+    -- the constant that absorbs §7's `K₀` and the finitely many `n < Nabs`
+    set Big : ℕ := Nat.ceil ((K₀ : ℝ) * envE c K Nabs) + 1 with hBig
+    set C₀ : ℕ := K₀ + Big + 2 with hC₀
+    refine ⟨rowHorizon C₀, rowHorizon_bigO C₀, ?_⟩
+    intro n x hn hbits ρ
+    -- §7's envelope at this `c`, with `b ≤ n^c`
+    have hcost : (R.cost n x : ℝ) ≤ (K₀ : ℝ) * envE c K n := by
+      have h := henv n x hn hbits
+      rw [envE]
+      have hbits' : (x.bits : ℝ) ≤ (n : ℝ) ^ ((c : ℕ) : ℝ) := by exact_mod_cast hbits
+      have hbase : (0 : ℝ) ≤ (2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ)) :=
+        le_of_lt (Real.rpow_pos_of_pos (by norm_num) _)
+      have hle : (n : ℝ) + (x.bits : ℝ) + 2 ≤ (n : ℝ) + (n : ℝ) ^ ((c : ℕ) : ℝ) + 2 := by
+        linarith
+      have h2 : ((n : ℝ) + (x.bits : ℝ) + 2) ^ K
+          ≤ ((n : ℝ) + (n : ℝ) ^ ((c : ℕ) : ℝ) + 2) ^ K :=
+        pow_le_pow_left₀ (by positivity) hle K
+      calc (R.cost n x : ℝ)
+          ≤ (K₀ : ℝ) * (2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ))
+              * ((n : ℝ) + (x.bits : ℝ) + 2) ^ K := h
+        _ = (K₀ : ℝ) * ((2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ))
+              * ((n : ℝ) + (x.bits : ℝ) + 2) ^ K) := by ring
+        _ ≤ (K₀ : ℝ) * ((2 : ℝ) ^ ((tau0 + 20 * epsPat) * (n : ℝ) + 2 * (n : ℝ) ^ (0.7 : ℝ))
+              * ((n : ℝ) + (n : ℝ) ^ ((c : ℕ) : ℝ) + 2) ^ K) := by
+          refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+          exact mul_le_mul_of_nonneg_left h2 hbase
+        _ = (K₀ : ℝ) * envE c K n := by rw [envE]
+    -- the ceiling dominates the absorbed exponent (all in `rpow`)
+    set kR : ℝ := (Nat.ceil (alphaRow * (n : ℝ)) : ℝ) with hkR
+    have hkR_nonneg : (0 : ℝ) ≤ kR := by positivity
+    have hkR_ge : alphaRow * (n : ℝ) ≤ kR := by
+      rw [hkR]
+      exact Nat.le_ceil _
+    have hceil_le : (2 : ℝ) ^ (alphaRow * (n : ℝ)) ≤ (2 : ℝ) ^ kR :=
+      (Real.rpow_le_rpow_left_iff (by norm_num : (1 : ℝ) < 2)).2 hkR_ge
+    have hone : (1 : ℝ) ≤ (2 : ℝ) ^ kR := Real.one_le_rpow (by norm_num) hkR_nonneg
+    have hstep : (R.cost n x : ℝ) ≤ (2 : ℝ) ^ kR * (2 : ℝ) ^ (C₀ : ℝ) := by
+      rcases Nat.lt_or_ge n Nabs with hsmall | hbig
+      · -- below the threshold: the single constant `Big` covers it
+        have hmono : envE c K n ≤ envE c K Nabs := envE_mono c K (le_of_lt hsmall)
+        have hBig2 : (K₀ : ℝ) * envE c K n ≤ (Big : ℝ) := by
+          have h1 : (K₀ : ℝ) * envE c K n ≤ (K₀ : ℝ) * envE c K Nabs :=
+            mul_le_mul_of_nonneg_left hmono (by positivity)
+          have h3 : ((K₀ : ℝ) * envE c K Nabs) ≤ ((Nat.ceil ((K₀ : ℝ) * envE c K Nabs) : ℕ) : ℝ) :=
+            Nat.le_ceil _
+          have h4 : ((Nat.ceil ((K₀ : ℝ) * envE c K Nabs) : ℕ) : ℝ) ≤ (Big : ℝ) := by
+            have : Nat.ceil ((K₀ : ℝ) * envE c K Nabs) ≤ Big := by omega
+            exact_mod_cast this
+          linarith
+        have hBig3 : (Big : ℝ) ≤ (2 : ℝ) ^ (C₀ : ℝ) := const_le_two_pow (by omega)
+        calc (R.cost n x : ℝ) ≤ (K₀ : ℝ) * envE c K n := hcost
+          _ ≤ (Big : ℝ) := hBig2
+          _ ≤ (2 : ℝ) ^ (C₀ : ℝ) := hBig3
+          _ ≤ (2 : ℝ) ^ kR * (2 : ℝ) ^ (C₀ : ℝ) := le_mul_of_one_le_left (by positivity) hone
+      · -- past the threshold: §1's gap does the work
+        have habs : envE c K n ≤ (2 : ℝ) ^ (alphaRow * (n : ℝ)) := hNabs n hbig
+        have hKle : (K₀ : ℝ) ≤ (2 : ℝ) ^ (C₀ : ℝ) := const_le_two_pow (by omega)
+        have h1 : (K₀ : ℝ) * envE c K n
+            ≤ (2 : ℝ) ^ (C₀ : ℝ) * (2 : ℝ) ^ kR := by
+          exact mul_le_mul hKle (le_trans habs hceil_le) (le_of_lt (envE_pos c K n)) (by positivity)
+        calc (R.cost n x : ℝ) ≤ (K₀ : ℝ) * envE c K n := hcost
+          _ ≤ (2 : ℝ) ^ (C₀ : ℝ) * (2 : ℝ) ^ kR := h1
+          _ = (2 : ℝ) ^ kR * (2 : ℝ) ^ (C₀ : ℝ) := by ring
+    -- the program halts: `D7.agrees` at `cost`, then fuel is inert
+    have hhaltEq : exec hD7.program ρ (R.cost n x) 0 0
+        (loadWords (wordLength n x.bits) x.input) = some (R.run n x (fun r => (ρ r).toNat)) := by
+      have h := hD7.agrees n x ρ
+      rwa [run] at h
+    have hcostNat : R.cost n x ≤ rowHorizon C₀ n := by
+      have hcast : ∀ a : ℕ, ((2 ^ a : ℕ) : ℝ) = (2 : ℝ) ^ (a : ℝ) := by
+        intro a
+        push_cast
+        rw [Real.rpow_natCast]
+      have hrow : ((rowHorizon C₀ n : ℕ) : ℝ) = (2 : ℝ) ^ kR * (2 : ℝ) ^ (C₀ : ℝ) := by
+        rw [rowHorizon, hcast, hkR]
+        push_cast
+        rw [← Real.rpow_add (by norm_num : (0 : ℝ) < 2)]
+      have h : (R.cost n x : ℝ) ≤ (rowHorizon C₀ n : ℝ) := by
+        rw [hrow]
+        exact hstep
+      exact_mod_cast h
+    obtain ⟨k, hk⟩ : ∃ k, R.cost n x + k = rowHorizon C₀ n :=
+      ⟨rowHorizon C₀ n - R.cost n x, by omega⟩
+    have hglide := exec_eq_of_halted hD7.program ρ (R.cost n x) 0 0
+      (loadWords (wordLength n x.bits) x.input) (by rw [hhaltEq]; simp) k
+    show (exec hD7.program ρ (rowHorizon C₀ n) 0 0 (loadWords (wordLength n x.bits) x.input)).isSome
+    rw [← hk, hglide, hhaltEq]
+    simp
+
+end SubsetSumL25.Row
