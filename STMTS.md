@@ -1343,3 +1343,124 @@ Classical.choice, Quot.sound]`; no sorryAx, no native_decide.
 * rcases on `mem_union.mp` of a THREE-part union `A₁ ∪ A₂ ∪ A₃`
   (left-assoc!) yields `i ∈ A₁ ∪ A₂` in the FIRST branch — the inner rcases
   belongs there, not in the second.
+
+## DS-M5 — Step 6 product + Corollary A6 LANDED (Proofs/M5.lean + Proofs/M5CorA6.lean)
+
+Fourteen theorems, all receipts [propext, Classical.choice, Quot.sound], no
+sorryAx, no native_decide.  Consumes M4's `hit_prob_ge_of_sum_sq_le` +
+`card_sq_le_sum_sq_mul_occupied`, M2's `trial_count_ge`, and B3's
+`lem_A5_product` / `lem_A5_threshold` / `cor_A6_per_alias` (whose exponential
+engine is extracted and generalized as `exp_one_sub_pow_le`).
+
+* `min_two_pow_neg_ge_div` — **M4's recorded seam discharged**: the paper's
+  final squeeze `min(B_S 2^{−γm}, 1) ≥ B_S/C(σ,k)` — the two-case arithmetic
+  on C̄'s shape with `2^{γm} ≤ C(σ,k)` (S4) and `B_S ≤ C(σ,k)` (W_S is the
+  image of the k-subsets).  Case B_S ≤ 2^{γm}: min ≥ B_S·2^{−γm} ≥ B_S/C(σ,k);
+  case 2^{γm} < B_S: min = 1 ≥ B_S/C(σ,k).
+* `min_two_pow_neg_eq` — the display identity `min(B 2^{−γm}, 1) =
+  2^{−γm}·min(B, 2^{γm})` (same exponent both sides — no rpow-splitting).
+* `sq_div_ge_min_div` — the two-case second-moment arithmetic in algebraic
+  form: on the good-prime event `Σ_y z_y² ≤ C`, `B²/C ≥
+  min(B, 2^{γm})/(4c·2^{γm})` (the paper's «at least min(B_S, 2^{γm})/(4K₀n²)
+  residues are occupied» before the occupancy reading; the paper's two case
+  bounds fed as hypotheses for the Markov-inflated C).
+* `occupied_ge_min_div` — the occupancy display itself: C–S (M4) times the
+  above; the paper's min(B_S, 2^{γm})/(4K₀n²)-occupied statement, with
+  `c·2^{γm}` the paper's `K₀n²`.
+* `hit_prob_ge_min_display` — consumes M4's `hit_prob_ge_of_sum_sq_le` and
+  `P′ < 2^{1+γm}`: a uniform j′ hits with probability ≥
+  `min(B 2^{−γm}, 1)/(8c·2^{γm})` — the paper's display
+  `min(B_S 2^{−γm}, 1)/(8K₀n²)`.
+* `hit_prob_ge_seam` — the seam applied: hit ≥ `B/(8c·2^{γm}·C(σ,k))` — the
+  per-good-S leaf `B_S/(8K₀n²C(σ,k))` of the Step-6 product.
+* `step6_product_expect` — the Step-6 display line: the constant pulled
+  through the expectation (`Finset.mul_expect`), the trial transfer
+  «(1/(m+1))·(1/2)·(1/(8K₀n²))·E_S ≤ Pr» named (the independence of the F,
+  P′, j′ draws — exec-side, D7 boundary): per-trial ≥
+  `2^{−g_M}/(32c·2^{γm}(m+1)(v+1))`.
+* `step6_threshold` — `lem_A5_threshold`'s argument in the `c·2^{γm} = K₀n²`
+  parameterization: `G/(32c·2^{γm}(m+1)(v+1)) ≥ G/N⁶` under
+  `128c·2^{γm} ≤ N⁴` (the paper's `128K₀ ≤ N²` with n² absorbed).
+* `step6_pr_ge_threshold` — the abstract bridge: under the instance bridge
+  `c·2^{γm} = K₀·N²` the concrete display transfers into B3's `hstep5` form
+  and the per-trial probability beats `2^{−g_M}N^{−6}` — this is where B3's
+  `lem_A5_product` and `lem_A5_threshold` are consumed by name.
+* `exp_one_sub_pow_le` — `(1−p)^T ≤ e^{−pT}`, cor_A6_per_alias's engine
+  extracted and generalized.
+* `cor_A6_miss_le` — `Tp ≥ n` ⟹ `(1−p)^T ≤ e^{−n}`.
+* `cor_A6_coverageTp` — consumes M2's `trial_count_ge`: with the trial count
+  assembled from the n² deficiency draws and the per-trial probability
+  `2^{−g_M}/n⁶`, the pair satisfies `T·p ≥ n`.
+* `cor_A6_union_le` — the union bound: per-alias miss ≤ e^{−n} over a finite
+  family gives total ≤ `#A·e^{−n}`.
+* `cor_A6_union_o1` — the paper's «(nN₀+1)2^n e^{−n} = o(1)» as a Tendsto:
+  `(2/e)^n` geometric (`2 < e`), the polynomial factor absorbed by
+  `summable_pow_mul_geometric_of_norm_lt_one` at k = 1, `squeeze_zero` for
+  the (N₀+1)·(n+1) count bound; N₀ the exec-side (F1) constant, ≥ 0.
+
+**Named remainder (unchanged from the ladder convention):** the trial
+transfer «(1/(m+1))·(1/2)·(1/(8K₀n²))·E_S[1_good·B_S/C(σ,k)] ≤ Pr» (the
+independence of the F, P′, j′ draws + «a hit is recovered» — DS-M4's Step-5
+exec-side clauses), the Step-3 input `E_S[1_good·B_S/C(σ,k)] ≥ 2^{−g_M}/(2(v+1))`
+(DS-M3's discharged form, as `hQ`), the instance bridge `c·2^{γm} = K₀·N²`
+and the bit bound through `c = KBL/2^L` (instance data, D7 boundary), and the
+exec-side count constant N₀.  The paper's final squeeze
+`min(B_S 2^{−γm},1)/(8K₀n²) ≥ B_S/(8K₀n²·C(σ,k))` — M4's recorded seam — is
+DISCHARGED as `min_two_pow_neg_ge_div`.
+
+**Receipts:** full `lake build` green — exit 0, 8965 jobs, "Build
+completed successfully"; M5.olean (813072 bytes) + M5CorA6.olean (270896
+bytes) fresh; `#print axioms` for all 14 = `[propext, Classical.choice,
+Quot.sound]` (probe-verified against the lake-built oleans); no sorryAx, no
+native_decide; zero sorries in both files.
+
+**Structure note:** the two compilation-heavy Cor-A6 pieces
+(`cor_A6_coverageTp`, `cor_A6_union_o1`) live in `Proofs/M5CorA6.lean`
+(importing Proofs/M5) so each module compiles inside the host's lean-kill
+window — wound 2125609440.  Same milestone; M5.lean documents the ladder
+position.
+
+### Gotchas banked (DS-M5 round)
+* Untyped `by norm_num`/`by positivity` blocks in explicit-argument slots
+  elaborate against metavars (`0 ≤ ?m`) — ALWAYS ascribe: `(by norm_num :
+  (0:ℝ) ≤ 2)`, and supply rpow lemmas' exponent args explicitly
+  (`Real.rpow_pos_of_pos h (g:ℝ)`, `Real.rpow_nonneg hx (-(g:ℝ))`).
+* `Real.rpow_neg hx y : x^(-y) = (x^y)⁻¹` — the ⁻¹ form; a have stated with
+  `1 / x^y` mismatches (HDiv-vs-Inv) — bridge with `inv_eq_one_div` inside
+  the proof, or state the have in the ⁻¹ form and use `one_div_mul_cancel`
+  (no ₀ at this pin) at the use site.
+* `le_or_lt` is ABSENT (banked at B1, re-hit) — `by_cases` + `linarith`.
+* Right-multiplication strict-mono is `mul_lt_mul_of_pos_right`
+  (`_left` multiplies on the LEFT).
+* Division-lemma forms verified at this pin: `div_mul_eq_div_div :
+  a/(b*c) = a/b/c`; `div_mul_eq_mul_div : a/b*c = a*c/b`; `mul_div_assoc' :
+  a*(b/c) = a*b/c` (the UNPRIMED mul_div_assoc is the reverse); `div_right_comm`;
+  `div_le_one`/`one_lt_div₀`/`lt_div_iff₀`/`div_le_div_iff₀` ✓;
+  `mul_div_cancel_left₀` (banked) ✓; `div_mul_cancel_left₀` ABSENT — use
+  `field_simp [h.ne']` with explicit nonzero facts.
+* `Nat.cast_nonneg n` inside an nlinarith premise list → stuck
+  `IsOrderedRing ?m` — pre-type it as a have OUTSIDE the nlinarith call.
+* `(2:ℝ) ^ n` with `n : ℕ` is ℕ-pow on ℝ, NOT Real.rpow — Real.rpow_*
+  lemmas don't apply; use `pow_pos`/`pow_succ`/`mul_div_cancel_left₀` there.
+* An unbound `(n:ℝ)` in a theorem statement AUTO-BINDS `n : ℝ` — consuming
+  M2's `trial_count_ge` (n : ℕ) then fails with a confusing whnf timeout at
+  the application; declare `(n : ℕ)` explicitly.
+* Elaboration-order traps: by-blocks in `mul_nonneg`/`mul_le_mul`/
+  `min_eq_left` slots need pre-typed haves; `mul_nonneg (Real.rpow_nonneg hx)
+  (Real.exp_nonneg _)` sticks on `IsOrderedRing ?m` — pre-state `he0 :
+  (0:ℝ) ≤ Real.exp (-↑n) := Real.exp_nonneg _` first.
+* `mul_le_mul`'s nonneg slots at this pin: pass `by positivity` in BOTH
+  nonneg slots and let the terms speak (the hc/hb assignment order bit once).
+* Host lean-kill window (~60 s during a neighboring session's landing
+  battery — wound 2125609440): `nohup`+`trap "" TERM` does NOT survive;
+  opencode `background: true` does NOT survive; direct `lean` with
+  LEAN_PATH extracted from lake's trace line compiles a module in ~30-80 s —
+  split heavy theorems into their own module and copy the oleans into
+  `.lake/build` for dependents; bust the module `.trace` after any killed
+  build or lake silently skips the target.
+
+**Credit: Step 6 and Corollary A6 are Base's (a-kapila/maths-proofs @
+44c34961, PROOF_0.4877.tex §5.6, sha256 b397531c…); this package formalizes
+them.**  The prime-dispatch input is our proved `L2_5_prime_collision_two`
+(OpenAI L2.5), the Corollary-D input our proved B2 machinery, the trial
+count our proved M2 `trial_count_ge`, the seam arithmetic our M4 chain.

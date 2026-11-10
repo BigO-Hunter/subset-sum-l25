@@ -733,3 +733,44 @@ machinery (B4), the finite-circle data (O4), the word-RAM accounting (O8),
 and the checksum/alias-extraction cores (O5+O7) — with the procedures and
 certified numerics as named data, exactly the staged-ladder architecture
 BRIDGE milestone 1 prescribed. Three conditional rows inherit every rung.
+
+---
+
+# DS-M5 COMPLETE — Step 6 product + Corollary A6 (the e^{−n} coverage union bound) — 2026-11-09
+
+Fourteen theorems across `Proofs/M5.lean` + `Proofs/M5CorA6.lean`, all
+receipts `[propext, Classical.choice, Quot.sound]`, no sorryAx, no
+native_decide.  **M4's recorded seam is discharged** (`min_two_pow_neg_ge_div`):
+`min(B_S 2^{−γm}, 1) ≥ B_S/C(σ,k)` by two-case arithmetic on C̄'s shape with
+`2^{γm} ≤ C(σ,k)` (S4) and `B_S ≤ C(σ,k)`.
+
+Chain: `sq_div_ge_min_div` (two-case second moment: `B²/C ≥
+min(B,2^{γm})/(4c·2^{γm})`) → `occupied_ge_min_div` (the paper's occupancy
+display via M4's Cauchy–Schwarz) → `hit_prob_ge_min_display` (M4's
+`hit_prob_ge_of_sum_sq_le` + `P′ < 2^{1+γm}`: hit ≥
+`min(B 2^{−γm},1)/(8c·2^{γm})` — the paper's `min(B_S 2^{−γm},1)/(8K₀n²)`) →
+`hit_prob_ge_seam` (≥ `B/(8c·2^{γm}·C(σ,k))`, the per-good-S leaf) →
+`step6_product_expect` (the Step-6 display line through the expectation) →
+`step6_threshold` / `step6_pr_ge_threshold` (consuming B3's
+`lem_A5_product` + `lem_A5_threshold` under the instance bridge
+`c·2^{γm} = K₀·N²`) → per-trial ≥ `2^{−g_M}n^{−6}`.
+
+Corollary A6: `exp_one_sub_pow_le` (`(1−p)^T ≤ e^{−pT}`, cor_A6_per_alias's
+engine generalized) → `cor_A6_miss_le` (`Tp ≥ n ⟹ ≤ e^{−n}`) →
+`cor_A6_coverageTp` (consuming M2's `trial_count_ge`: `T·p ≥ n`) →
+`cor_A6_union_le` + `cor_A6_union_o1` (the paper's
+«(nN₀+1)2^n e^{−n} = o(1)» as a Tendsto — `summable_pow_mul_geometric_of_norm_lt_one`
+at 2/e, `squeeze_zero`; `2 < e` via `Real.exp_one_gt_two`).
+
+Named (unchanged): the trial transfer (independence of the F, P′, j′ draws +
+«a hit is recovered» — D7), the Step-3 input as `hQ`, the instance bridge and
+the bit bound through `c = KBL/2^L`, the exec-side count constant N₀.
+
+Structure note: `cor_A6_coverageTp` + `cor_A6_union_o1` live in
+`Proofs/M5CorA6.lean` so each module compiles inside the host's lean-kill
+window (wound 2125609440); M5.lean documents the ladder position.  The
+direct-`lean` route (LEAN_PATH from lake's trace line) was the working
+build form under contention; full `lake build` receipt banked at landing.
+
+Next: DS-M6 per the ladder — Lemma A7 (expected work — the seven-step cost
+ledger with (C2)–(C7); the v2-snapshot op-bound style applies).
