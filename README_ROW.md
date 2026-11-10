@@ -473,3 +473,79 @@ module's hash moved, `Statement.lean` still `3dc6567e…34aa`).
   `2·(n+1) ≤ 2^(n+1)` is not `omega`-provable either (two distinct pow atoms):
   `Nat.mul_le_mul_left 2 hhn` then `rw [hpow]`. And a `rw` that closes a goal
   followed by `; omega` errors with `No goals to be solved`.
+
+## 2026-11-10 (8) — residual (i) **re-specified as the digitwise comparison**: the decision lemma PROVED, the segment's shape stated (arithmetic landed; segment proof open)
+
+`SubsetSumL25/Row/KapilaDigitwise.lean` (leaf of the import DAG; `Statement.lean`
+still `3dc6567e…34aa`, no built module's hash moved).
+
+`KapilaWide` left (i) as a *verdict*, not a to-do: `numAt_not_word` proves a
+stride-`k` read's numerator is not word-resident, so «the loop's per-iteration
+read becomes the k-word summing read» is not implementable in the `BitVec w`
+state, and the remaining work was "a comparison re-shaping, not a read widening".
+This round does the re-specification as far as arithmetic goes.
+
+* **The predicate first, and stating it moved the walk.** §7 step 7's test at `F =
+  fracBits` fractional bits is the *integer* statement `2^(F−1) ≤ |numV − numA|`;
+  `halfTest_iff_wordDiff` derives that from the landed `hitWord_eq_ratTest`
+  (`h = 2^(F−1)`) composed with `hitWord_eq_one_iff`, so the predicate the walk
+  decides is literally the one `wideExit_eq_binSum` folds — not a proxy.
+* **Where the walk starts is not the top digit.** The `1/2` bit is bit `F−1`,
+  i.e. inside digit `p = (F−1)/w` at bit `r = (F−1)%w` — *not* at digit
+  `stride−1`. With `F ≤ w·stride` (the `+1` carry word `payloadStride_mul_spec`
+  buys) the digits **above** `p` are the carry word and vanish for a
+  scale-fitting payload: `numAt_eq_of_lt` proves a read below `2^(w·m)` has no
+  digit at position `≥ m`, so the whole block collapses to its `p+1`-digit prefix
+  and `numAt_split` splits it as `digit_p · 2^(w·p) + low`. **A walk that started
+  at `stride−1` and used a first-difference rule would be wrong**: at `|δ| = 1` on
+  the top digit `|V − A|` can be as small as `1`, far below `2^(F−1)`. That
+  correction is why (i) is a re-specification and not a widening.
+* **The walk, and what it reads.** `digHalf`: one digit from each side at `p`,
+  compared against `2^r`, four ways — *hit* (V's digit more than `2^r` above),
+  *hit* (A's digit more than `2^r` above), and the two **exact ties**, which alone
+  descend into `cmpDigitsFrom`, the top-down low-digit walk (`true` iff the V-side
+  low block is no smaller; its content is `mul_add_le_iff`, one digit-granular
+  comparison lemma with no bound on the digits). No cell holds a sum of two
+  digits, so `numAt_not_word`'s obstruction does not apply: the walk decides a
+  comparison, never forms a numerator.
+* **The decision lemma.** `digHalf_eq_threshold` (integer form) /
+  `digHalf_eq_ratTest` (`(1/2 : ℚ) ≤ |V̂ − Â|` on the two `placeValueAt`s) /
+  `digHalf_eq_placeValueTest` (at estimate `s`, i.e. on `placeV − placeA`).
+  The four arithmetic facts are separate theorems: `hit_of_above`,
+  `hit_of_below`, `tie_hit_iff`, `tieA_hit_iff`, `miss_of_close` — the last is the
+  one that makes the walk **one digit deep in the common case** (`(2^r−1)·P +
+  (P−1) = T−1 < T`).
+* **The scale-fit hypothesis is named, not assumed.** `numV, numA < 2^F` is the
+  paper's own regime (an estimate is a fraction of the complex square sum,
+  `V̂ ∈ [0,1)`). Without it one more digit is in play above `p` and the walk's
+  first stage becomes a comparison of the high digit *blocks* against `2^r` —
+  the same lemma one level up. Carried as `hVb`, `hAb` and flagged in the
+  docstring rather than silently dropped.
+* **The segment's shape, stated** (§D5): `cmpSeg cont` — 29 instructions,
+  `cmpSeg_length` by `rfl` (a constant `List Instr`, back-edges not unrolled);
+  `cmpSegFuel p = 13 + 9·p` (the A-side tie is worst: 11 to the walk entry, 9 per
+  digit, terminal test, exit), `cmpSegFuel_linear` proved. The **decided cases are
+  constant** (7 and 8 instructions) — the `O(p)` is paid only on an exact tie.
+  The segment's *correctness* is deliberately not here: the obligation is written
+  out in the section docstring (reach `cont` with cell 6 = `digHalf`'s verdict in
+  `cmpSegFuel p` steps from the stated register precondition), because a segment
+  proof against a wrong decision predicate would be a new `K+3`-versus-`K+7`
+  mistake wearing a loop.
+* **What is still open.** (i) is now *arithmetic DONE, segment proof OPEN*. (ii)
+  the bin sums remain the only remaining **mathematical** input (`wideExit_eq_binSum`
+  consumes them and nothing else). (iv) the cost re-measurement is untouched:
+  `cmpSegFuel`'s linearity is stated, but `D7.agrees`'s step horizon and
+  `KapilaAlgo.cost` are not re-derived at stride `k`.
+
+**Six `omega`/`rw` measurements for the next author.** (i) `rw [← h]` where
+`h : w*p + r = F−1` rewrites *inside* `(F−1)/w` and `(F−1)%w` and wrecks the goal;
+use `conv_lhs => rw [← h]`. (ii) A `calc` takes its relation from its **first**
+step: starting `<` and ending `≤` yields `<`, so a `≤` goal fails — start the
+calc `≤`. (iii) `Nat.succ_mul` (`(b+1)*P = b*P + P`) and `Nat.sub_mul` are the
+levers that let `omega` see a shifted product; without them it treats `b*P` and
+`(b+1)*P` as unrelated atoms. (iv) `omega` inside a pair constructor does **not**
+get the equality consumed by that constructor: `⟨heq, by omega⟩` fails where
+`have h' := h; rw [heq] at h'` then `omega` succeeds. (v) `Nat.mul_zero` matches
+`?n * 0`; for `0 * _` it is `Nat.zero_mul`. (vi) when an iff's branch goal is
+`false = true`, `False.elim` is needed — `Bool.false_ne_true hc` alone has type
+`False`.

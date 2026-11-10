@@ -7,6 +7,7 @@ import SubsetSumL25.Row.KapilaTest
 import SubsetSumL25.Row.KapilaLoop
 import SubsetSumL25.Row.KapilaEstimate
 import SubsetSumL25.Row.KapilaWide
+import SubsetSumL25.Row.KapilaDigitwise
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -218,3 +219,29 @@ open SubsetSumL25.Row
 #print axioms scanWordOpsWide_eq_scanWordOps
 #print axioms scanWordOpsWide_le
 #print axioms scanWordOpsWide_one
+
+-- residual (i) re-specified as the digitwise comparison: the decision lemma and
+-- the compare segment's shape
+#print axioms halfTest_iff_wordDiff
+#print axioms placeValueAt_eq_scale_numAt
+#print axioms numAt_add_one_le
+#print axioms numAt_lt_pow
+#print axioms numAt_eq_of_lt
+#print axioms numAt_split
+#print axioms mul_add_le_iff
+#print axioms cmpDigitsFrom
+#print axioms cmpDigitsFrom_iff
+#print axioms hit_of_above
+#print axioms hit_of_below
+#print axioms tie_hit_iff
+#print axioms tieA_hit_iff
+#print axioms miss_of_close
+#print axioms digHalf
+#print axioms digHalf_eq_threshold
+#print axioms digHalf_eq_ratTest
+#print axioms digHalf_eq_placeValueTest
+#print axioms cmpSeg
+#print axioms cmpSeg_length
+#print axioms cmpSegFuel
+#print axioms cmpSegFuel_linear
+#print axioms cmpSegFuel_zero

@@ -52,6 +52,7 @@ NAMED_OLEANS = [
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaLoop.olean",
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaEstimate.olean",
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaWide.olean",
+    ".lake/build/lib/lean/SubsetSumL25/Row/KapilaDigitwise.olean",
 ]
 
 HOUSE = {"propext", "Classical.choice", "Quot.sound"}
@@ -149,7 +150,8 @@ def main():
                                 "SubsetSumL25.Row.KapilaTest",
                                 "SubsetSumL25.Row.KapilaLoop",
                                 "SubsetSumL25.Row.KapilaEstimate",
-                                "SubsetSumL25.Row.KapilaWide"], cwd=str(LANE), capture_output=True,
+                                "SubsetSumL25.Row.KapilaWide",
+                                "SubsetSumL25.Row.KapilaDigitwise"], cwd=str(LANE), capture_output=True,
                                text=True, env=env, start_new_session=True)
         (RECEIPT / "build.log").write_text(build.stdout + build.stderr)
         (RECEIPT / "build.exit").write_text(str(build.returncode))
