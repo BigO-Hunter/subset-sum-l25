@@ -44,3 +44,4 @@ import SubsetSumL25.Row.KapilaPrelim
 import SubsetSumL25.Row.KapilaAlias
 import SubsetSumL25.Row.KapilaChecksum
 import SubsetSumL25.Row.KapilaTest
+import SubsetSumL25.Row.KapilaLoop

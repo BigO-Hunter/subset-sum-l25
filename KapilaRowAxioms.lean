@@ -4,6 +4,7 @@ import SubsetSumL25.Row.KapilaPrelim
 import SubsetSumL25.Row.KapilaAlias
 import SubsetSumL25.Row.KapilaChecksum
 import SubsetSumL25.Row.KapilaTest
+import SubsetSumL25.Row.KapilaLoop
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -101,3 +102,14 @@ open SubsetSumL25.Row
 #print axioms rowTest_separates_payloads
 #print axioms isSome_not_enough
 #print axioms LeafTest_of_payload_exit
+
+-- the loop (§7 step 7's scan): the three exit equations, the iteration, the loop
+#print axioms scan_fold_rules
+#print axioms anyHit_eq_rowTest
+#print axioms hitWord_eq_ratTest
+#print axioms payloadBlock_memOf
+#print axioms scan_head
+#print axioms scan_body
+#print axioms scan_loop
+#print axioms scan_epilogue
+#print axioms selfLoop_never_halts

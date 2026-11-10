@@ -1271,3 +1271,88 @@ log stops at the replay line for `Row.KapilaChecksum` and the buffered tail was
 lost with the process — and it is not re-run here: a whole-`SubsetSumL25` build
 drags in glob-matched modules outside this lane's targets, and the barrel's own
 compilation is the question this check exists to answer.
+
+## Row lane 2026-11-10 (9) — §7 step 7's scan: the loop, its three exit equations, the backwards jump (LANDED)
+
+New module `SubsetSumL25/Row/KapilaLoop.lean` (~960 lines, a leaf of the import DAG;
+`Statement.lean` still `3dc6567e…34aa`). This is the lane's **first backwards jump**
+and it is a *proved* loop, not a sketched one.
+
+## Landed (no sorry, house triple)
+
+| declaration | content |
+|---|---|
+| `selfLoop_never_halts` | the calculus's only termination mechanism is fuel: a program that jumps to itself unconditionally returns `none` at every fuel. Stated because the lane's previous texts had no backwards jump and the semantics were implicit. |
+| `bv_sub`, `exec_sub_step`, `bv_div`, `exec_div_step` | the two peelers the lane lacked (`sub`, `div`) |
+| `wordDiff`, `hitOf`, `hitWord` | `|v − a|` by one `blt`; and `(d/h)/(d/h)` — the branchless `1 iff h ≤ d` (division by a larger word is `0`, which is the `d < h` case; no sign test, no extra branch) |
+| **`hitWord_eq_ratTest`** | the computed word *is* the paper's test: with `h = 2^(fracBits−1)` and words at `fracBits` fractional bits, `hitWord = 1 ↔ 1/2 ≤ |V̂ − Â|` |
+| **`scan_fold_rules`** | **the three exit equations** of `payload_rules_iff` (nil/nil, nil/cons, cons/cons) proved of the object the instruction text computes, in the `ℚ` vocabulary |
+| **`anyHit_eq_rowTest`** | those three equations give `rowTest` on the two blocks |
+| `scanProg` | §7 step 7 as 21 instructions; the backwards jump is `pc 17 → pc 4` |
+| `scan_head`, `scan_branch_lt`, `scan_branch_ge`, `scan_suffix`, **`scan_body`** | one iteration walked: 12 steps, uniform across the data because the two `pc 8` paths are length-balanced; the invariant (`LoopInv`) re-established |
+| **`scan_loop`** | the loop rule: `m` iterations consume `12·m` steps and exit at `pc 18` with the accumulator `acc + hitCount` over the remaining block |
+| `scan_epilogue` | the exit test `0 < acc` → accept/reject, 2 steps |
+| `payloadBlock_memOf`, `wordList_one`, `agree_up`, `Scratch`/`Layout`/`LoopInv` | the layout vocabulary: the loop writes only `{0,3} ∪ 7…13`, so it is transparent on the payload blocks at `14` and above |
+
+## Design decisions that mattered (measured)
+
+1. **The iteration cost must not depend on the data.** The first draft branched
+   on `v < a` and then conditionally skipped the accumulator write, giving
+   per-iteration costs of 9–11 steps — which makes the loop's fuel a *sum of
+   data-dependent terms* instead of a multiplication. Two changes fixed it: the
+   accumulator became a **count** (`add`, never `or`, so no branch is needed to
+   set it) and the two branch paths were padded to equal length (both land on
+   `pc 13` after 7 steps). Result: exactly 12 steps per iteration, for every input.
+2. **The branchless comparison is `(d/h)/(d/h)`.** This calculus's division by a
+   larger word is `0` (`[j]/0 = 0` and `d/h = 0` for `d < h`), so the two-division
+   form is `1` exactly when `h ≤ d` and `0` otherwise — no sign test, no padding.
+3. **`Scratch` must enumerate the written cells, not bracket them.** The first
+   version was `{0,3} ∪ [7,13]`, which contains cell `12` — a *read-only constant*
+   (the zero the unconditional jumps use) — so the transparency lemma was proved
+   about the wrong region and `12` fell out of the invariant. The enumeration
+   `{0,3,7,8,9,10,11,13}` is the correct one.
+
+## Proof-engineering notes (each cost ≥1 build cycle)
+
+* `List.map_map` does not match this pin's `Functor.map` presentation of
+  `List.map`; `map_map'` (by induction) does. Same for the library's `zipWith`
+  commutations (`zipWith_map_map'`, `any_zip_with_congr`).
+* `(S + 4) - 1` is *defeq* to `S + 3` but not syntactically, so a peeler's
+  `S - 1` does not match the next peeler's `S` under `rw`. The cure is
+  `rw [show S + 4 - 1 = S + 3 from rfl]` after each step (or instantiating the
+  step at a fuel that already has the right shape).
+* `simp [up]` closes ground cell equalities (`up g 9 v 12` → `g 12`), so the
+  invariant's cell facts are one-liners once the state is `set`.
+* Section variables for `f0`/`N`/`h`/`baseA`/`baseV` must be passed **by name**
+  (`(f0 := f0)`) at the call site: with two `Nat → Nat` parameters in scope the
+  wrong one is inferred, and the failure surfaces as a `rewrite` "pattern not
+  found" two lines later.
+
+## The residual, exactly (three pieces, each named at the bottom of the module)
+
+1. Four-instruction **prologue** (`pc 0 → pc 4`) + the **run assembly**
+   (`12·N + 6` steps).  Removed from this landing for want of a `1 ≤ w`
+   hypothesis (the literal `1 < 2^w`); `scan_epilogue` (the exit) *is* landed.
+2. The **`rowTest` verdict at the exit** = (1) + `hitCount_pos_iff` +
+   `anyHit_eq_rowTest` + `payloadBlock_memOf`.  Every ingredient proved here.
+3. The **word-op cost model**: `blockLen·(2·wordOpFactor n + 3) ≤ (n+b+2)^7` and
+   `scan_cost_absorbed` with the envelope's `K` raised by **seven** (not three —
+   the nested multi-word loop squares `wordOpFactor`).  Stated, not proved.
+
+Also untouched (as before): `LeafTest`'s items 3 and 4 (the estimates'
+arithmetic relation and the multi-word accumulator layout).
+
+## Receipts
+
+`receipts/kapila-20261110T201147Z`: gate `swapouts_delta60=0 free_pct=72`;
+build exit 0 in 37.5 s (8933 jobs); `KapilaLoop.olean` 2085280 bytes, sha256
+`509a1517…6e98e`; axiom banner exit 0, `axiom_banner_house_triple_only: true`
+(76 banners, none outside `[propext, Classical.choice, Quot.sound]`); no
+`declaration uses 'sorry'`. Lock: **DEVIATION, proceeded UNLOCKED after 241 s**
+(recorded in `lock.acquired` and `summary.json`), per the lane's hard-expiry rule.
+The receipt's targets are the row closure; the `SubsetSumL25.lean` barrel import
+is *not* covered by it (same lane rule as the previous rounds) — the line is one
+import, mirroring `KapilaTest`'s.
+
+Next single action: the prologue + `scan_run` (add `hw : 1 ≤ w`, then compose
+`scan_loop` at `m = N`), then its `rowTest` form, then the cost pair.
