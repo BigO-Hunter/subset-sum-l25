@@ -1892,3 +1892,114 @@ decides `(1/2 : ℚ) ≤ |placeV − placeA|` **without** materialising either
 numerator (little-endian `numAt` needs the blocks addressed from `base + (stride−1−j)·stride`; `sum_base_digits` is the exactness input).  That is the arithmetic the
 program segment will then be proved against, and it is the only part of (i) that
 can be finished before the segment exists.
+
+## Row lane 2026-11-10 (13) — residual (i) re-specified as the digitwise comparison: the decision lemma PROVED, the segment's shape stated (arithmetic landed; segment proof open)
+
+`SubsetSumL25/Row/KapilaDigitwise.lean` (new, leaf of the import DAG;
+`Statement.lean` still `3dc6567e…34aa`; no built module's hash moved). Round
+(12)'s "next single action" is discharged as far as arithmetic goes: the walk that
+decides `(1/2 : ℚ) ≤ |placeV − placeA|` **without materialising either numerator**
+is now a theorem, and the program segment that would implement it is a stated
+skeleton with a proved fuel shape.
+
+### The correction that stating the predicate forced (read this first)
+
+The predicate is §7 step 7 at `F = fracBits` fractional bits:
+**`2^(F−1) ≤ |numV − numA|`** — an integer comparison, derived from the landed
+`hitWord_eq_ratTest` (`h = 2^(F−1)`) by `halfTest_iff_wordDiff`, so it is the same
+predicate `wideExit_eq_binSum` folds and not a proxy.
+
+**The walk does not start at digit `stride−1`.**  The `1/2` bit is bit `F−1`, i.e.
+inside digit `p = (F−1)/w` at bit `r = (F−1)%w`.  With `F ≤ w·stride` (the `+1`
+carry word `payloadStride_mul_spec` buys) the digits **above** `p` are the carry
+word and are zero for a scale-fitting payload — `numAt_eq_of_lt` (a read below
+`2^(w·m)` has no digit at position `≥ m`) collapses the block to its `p+1`-digit
+prefix, and `numAt_split` gives `numV = digit_p·2^(w·p) + low`.  A walk from the
+top with a first-difference rule would be **wrong**: at `|δ| = 1` on the top digit
+`|V − A|` can be as small as `1`, far below `2^(F−1)`.  (12)'s
+`base + (stride−1−j)·stride` phrasing was the walk *descending through the block
+of estimates*; what the predicate needs is the walk descending through the
+*digits* from `p`.
+
+### Landed (no sorry, house triple)
+
+| declaration | content |
+|---|---|
+| `halfTest_iff_wordDiff` | the `1/2` test **is** `2^(F−1) ≤ |V − A|` (from `hitWord_eq_ratTest` + `hitWord_eq_one_iff`) |
+| `placeValueAt_eq_scale_numAt` | the address-indexed reader over the one shared scale is `numAt/2^F` (the `placeValueAt` twin of the landed `placeValue_eq_scale_numAt`) |
+| `numAt_add_one_le`, `numAt_lt_pow` | `n` digits of `w` bits hold less than `2^(w·n)` |
+| **`numAt_eq_of_lt`** | **a read below `2^(w·m)` has no digits above `m`** — the collapse that puts the whole block inside digit `p` |
+| **`numAt_split`** | `numV = digit_p·2^(w·p) + numAt … p` — `sum_base_digits`' exactness seen from the top instead of the bottom |
+| `mul_add_le_iff` | digit-granular comparison: `Y + b·P ≤ X + a·P` ⟺ `b < a ∨ (b = a ∧ Y ≤ X)` when the low parts fit below `P` (no bound on the digits) |
+| **`cmpDigitsFrom`**, `cmpDigitsFrom_iff` | the top-down **low-digit walk** and its proof that it decides the block comparison — no accumulator, state = the two digits just read |
+| **`digHalf`** | the first stage: one digit from each side at `p` against `2^r`, four ways; only the two **exact ties** descend into the low walk |
+| `hit_of_above`, `hit_of_below`, `tie_hit_iff`, `tieA_hit_iff`, **`miss_of_close`** | the four arithmetic branches, each separate; `miss_of_close` is what makes the walk **one digit deep in the common case** (`(2^r−1)·P + (P−1) = T−1 < T`) |
+| **`digHalf_eq_threshold`** | **THE DECISION LEMMA** (integer form), by the five `if` branches of `digHalf` |
+| **`digHalf_eq_ratTest`** | `(1/2 : ℚ) ≤ |V̂ − Â|` on the two `placeValueAt`s — the paper's own test |
+| **`digHalf_eq_placeValueTest`** | the same at estimate `s`, i.e. on `placeV − placeA` |
+| `digHalf_spot_checks` | three concrete payloads (`w=2, F=4`: decided hit, decided miss, exact tie resolved by the low walk) kernel-checked by `decide` |
+| `cmpSeg`, `cmpSeg_length`, `cmpSegFuel`, `cmpSegFuel_linear`, `cmpSegFuel_zero` | the segment's **shape**: 29 instructions (constant), fuel `13 + 9p`, decided cases constant (7/8), `O(p)` only on a tie |
+
+**Scale-fit is named, not assumed.**  `numV, numA < 2^F` is the paper's own regime
+(`V̂ ∈ [0,1)`); it is carried as `hVb`/`hAb` and flagged.  Without it one more digit
+is in play above `p` and the walk's first stage becomes a comparison of the high
+digit *blocks* against `2^r` — the same lemma one level up.
+
+### What is open, precisely
+
+* **(i) segment proof.**  The obligation is written out in §D5's docstring: from
+  the stated register precondition (cells 0/1 = the two digit addresses at `p`,
+  cell 2 = `p`, cells 7/8/9 = `0`/`1`/`2^r`), the run of `cmpSeg cont` reaches
+  `cont` within `cmpSegFuel p` steps with cell 6 = `digHalf`'s verdict.  Not
+  proved, deliberately: a segment proof against a wrong decision predicate would
+  be a new `K+3`-versus-`K+7` mistake wearing a loop, and the arithmetic had to be
+  settled first.  It is now settled.
+* **(ii) the bin sums** — still the only remaining **mathematical** input.
+  `wideExit_eq_binSum` consumes `WideBinSumAgrees` and nothing else.
+* **(iv) the cost re-measurement** — untouched: `cmpSegFuel`'s linearity is stated,
+  but `D7.agrees`'s step horizon and `KapilaAlgo.cost` are not re-derived at
+  stride `k`.
+
+### Receipts
+
+**`receipts/kapila-20261110T233946Z`** — gate `swapouts_delta60=0 free_pct=67`
+(iter 1).  **Lock not acquired: bounded 240 s expired** (`acquired=False
+waited_s=240.3`), build proceeded with the deviation recorded in `lock.note` and
+`summary.json` — the policy working under fleet load, not a stall.  Build exit 0
+in **36.4 s** (10 targets) — **compile, not replay**: `KapilaDigitwise.olean`
+rebuilt this run (1051648 bytes, sha256 `d7a8e12e…3fa8`).  Axiom banner exit 0,
+**182 banners**, 23 new, `axiom_banner_house_triple_only: true`;
+`digHalf_eq_threshold` on `[propext, Classical.choice, Quot.sound]`,
+`mul_add_le_iff` on `[propext, Quot.sound]`, `digHalf` on `[propext]`,
+`cmpSeg`/`cmpSeg_length`/`cmpSegFuel`/`cmpSegFuel_zero` on **no axioms**; no
+`sorryAx`, no `native_decide`.  `sources.sha256` matches the committed tree
+byte for byte; `Statement.lean` still `3dc6567e…34aa`.
+
+**Runner lists:** both runners now build and receipt `KapilaDigitwise`
+(`NAMED_OLEANS` + `TARGETS` + the unbounded runner's inline `lake build`
+argument); `KapilaRowAxioms.lean` prints the new module's banner.
+
+### Six `omega`/`rw` measurements for the next author
+
+1. `rw [← h]` where `h : w*p + r = F−1` rewrites **inside** `(F−1)/w` and
+   `(F−1)%w` and wrecks the goal — use `conv_lhs => rw [← h]`.
+2. A `calc` takes its relation from its **first** step: starting `<` and ending
+   `≤` yields `<`, so a `≤` goal fails.  Start the calc `≤`.
+3. `Nat.succ_mul` (`(b+1)*P = b*P + P`) and `Nat.sub_mul` are the levers that let
+   `omega` see a shifted product; without them `b*P` and `(b+1)*P` are unrelated
+   atoms.
+4. `omega` inside a pair constructor does **not** get the equality that
+   constructor consumes: `⟨heq, by omega⟩` fails where `have h' := h; rw [heq] at
+   h'` then `omega` succeeds.
+5. `Nat.mul_zero` matches `?n * 0`; for `0 * _` it is `Nat.zero_mul`.
+6. When an iff branch's goal is `false = true`, `False.elim` is needed —
+   `Bool.false_ne_true hc` alone has type `False`.
+
+Next single action: **(ii) — fix the `binSum` and prove `WideBinSumAgrees`.**  The
+`binSum` is the checksum phase's own aggregate (§6's `V_ρ` at `ρ = t mod P`, the
+object `checksum_sound`/`checksum_support_in_bin` already carry); the obligation is
+the pointwise identity `placeValue … baseV − placeValue … baseA = binSum i` for
+the memory the checksum program writes, provable — if it is — from
+`placeValue_scale` + `sum_base_digits` on that memory.  If it needs more than the
+layout, name the missing input as one hypothesis in `D7`'s style rather than
+leaving the seam unnamed.
