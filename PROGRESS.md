@@ -1472,14 +1472,23 @@ exactly the shape that gets misread as a proof failure next time.
 
 ## Two facts the next mind should not have to re-derive
 
-* **The fleet build lock is effectively permanently held** by
-  `weil-verify-lane/closure_supervisor.py` (measured: 5 h 53 m at 21:02 UTC, still the
-  holder at 21:30). Every receipt in this round therefore landed on the 241 s
-  hard-expiry, UNLOCKED. That is the lane rule working as designed, not a defect — but
-  it means "acquired the lock" is not the signal to wait for; the gate is.
+* **The fleet build lock is held across a whole driver invocation, not across one
+  build** — so in practice no other lane ever acquires it. Measured: `.build.lock`
+  held by `weil-verify-lane/closure_supervisor.py` (PID 96202, ELAPSED 5 h 53 m at
+  21:02 UTC, still holder at 21:30). Every receipt this round landed on the 241 s
+  hard-expiry, UNLOCKED. The holder is **not** at fault in intent: it releases on
+  pressure-closed / backoff / stall, and its own docstring records learning exactly
+  this at 07:07 the same day ("the lock is a mutual-exclusion device for BUILDING,
+  not a reservation while waiting"). What is wrong is the *unit*: it acquires once
+  before `run_driver`, whose `BUDGET_S = 600_000` (~6.9 days) with `CHUNK = 24`,
+  `TIMEOUT_S = 5_400` is a multi-day chunked run — coextensive with a build in
+  intent, with a 6.9-day invocation in code. Filed as **R2125609684** (with the
+  correction recorded); the resulting unlocked-build kill is **R2125609683**. So:
+  "acquired the lock" is not the signal to wait for — the gate is, and the gate is
+  the only serialisation this lane actually gets.
 * **The build gate's `swapouts_delta60` is the load-bearing half**, not `free_pct`
-  (72–74 % throughout). `22372 → 0` between two gate iterations is the fleet settling;
-  a build launched inside that `22372` window is what got SIGKILLed.
+  (72–74 % throughout). `22372 → 0` between two gate iterations is the fleet
+  settling; a build launched inside that `22372` window is what got SIGKILLed.
 
 Next single action: `scanWordOps_le` — and the first job inside it is to find the
 *true* exponent rather than inherit the residual's `^7`. `scanWordOps` is
