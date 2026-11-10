@@ -46,3 +46,4 @@ import SubsetSumL25.Row.KapilaChecksum
 import SubsetSumL25.Row.KapilaTest
 import SubsetSumL25.Row.KapilaLoop
 import SubsetSumL25.Row.KapilaEstimate
+import SubsetSumL25.Row.KapilaWide

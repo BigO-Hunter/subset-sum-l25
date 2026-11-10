@@ -6,6 +6,7 @@ import SubsetSumL25.Row.KapilaChecksum
 import SubsetSumL25.Row.KapilaTest
 import SubsetSumL25.Row.KapilaLoop
 import SubsetSumL25.Row.KapilaEstimate
+import SubsetSumL25.Row.KapilaWide
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -184,3 +185,36 @@ open SubsetSumL25.Row
 #print axioms rowTest_eq_wideBinSum
 #print axioms dAt_eq_placeValue_one
 #print axioms wideBinSumAgrees_one_iff
+
+-- §W1–§W5: residual (i) — the stride-`k` block reader, its identity with the
+-- place value, the obstruction that the k-word sum is not word-resident, the
+-- loop's step at stride k with the wide exit shape, and the stated cost shape
+#print axioms numAt
+#print axioms numAt_zero
+#print axioms numAt_succ
+#print axioms numAt_one
+#print axioms numAt_one_lt
+#print axioms numBlock
+#print axioms numBlock_zero
+#print axioms numBlock_succ
+#print axioms numBlock_one_eq_wordList
+#print axioms numAt_cast
+#print axioms numAt_eq_placeValueAt_scale
+#print axioms placeValue_eq_scale_numAt
+#print axioms numBlock_map_toQ_eq_placeValue
+#print axioms wideLayout_of_numBlock
+#print axioms dAt_eq_reader
+#print axioms numAt_ge_top
+#print axioms numAt_not_word
+#print axioms numAt_not_word_one
+#print axioms hitCount_numBlock_step
+#print axioms sum_range_map_succ
+#print axioms hitCount_map_range
+#print axioms hitCount_numBlock_eq_sum
+#print axioms wideExit_eq_rowTest
+#print axioms wideExit_eq_binSum
+#print axioms wideExit_eq_binSum'
+#print axioms scanWordOpsWide
+#print axioms scanWordOpsWide_eq_scanWordOps
+#print axioms scanWordOpsWide_le
+#print axioms scanWordOpsWide_one
