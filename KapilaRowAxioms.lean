@@ -2,6 +2,7 @@ import SubsetSumL25.Row.KapilaRow
 import SubsetSumL25.Row.KapilaGuard
 import SubsetSumL25.Row.KapilaPrelim
 import SubsetSumL25.Row.KapilaAlias
+import SubsetSumL25.Row.KapilaChecksum
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -72,3 +73,17 @@ open SubsetSumL25.Row
 #print axioms isSome_ne_failToNo
 #print axioms LeafAnone_of_alias_agrees
 #print axioms LeafAnone_of_alias_run
+
+-- Theorem B's instruction text: the third input cell, the program, its witness
+-- leg's soundness (and its bin reading), the agreement, and the leaf it
+-- discharges
+#print axioms inF_three
+#print axioms ofFn_sum_ite_triple
+#print axioms yes_of_triple
+#print axioms checksum_run
+#print axioms checksum_sound
+#print axioms checksum_support_in_bin
+#print axioms checksum_agrees_spec
+#print axioms checksum_run_of_field
+#print axioms LeafBnone_of_checksum_agrees
+#print axioms LeafBnone_of_checksum_run

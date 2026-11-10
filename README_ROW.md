@@ -427,3 +427,49 @@ side, the same shape at one further step (a three-cell witness needs a third
 save at `2n+2` and a `sum_triple` analogue of `ofFn_sum_ite_pair`). Then the
 program texts are complete and the seam is cut except `LeafTest`'s loop rules +
 multi-word charge.
+
+## 2026-11-10 (7) — Theorem B's instruction text: `checksumProg`, `LeafBnone` discharged
+
+`SubsetSumL25/Row/KapilaChecksum.lean` (leaf of the import DAG; no built
+module's hash moved, `Statement.lean` still `3dc6567e…34aa`).
+
+* **`checksumProg` — 24 instructions, and one forced design change from alias.**
+  Alias put its constant `6` in cell 3 because `a₃` was not part of its decision;
+  the checksum phase reads `a₃`, so cell 3 must survive the bootstrap. With
+  `a₁, a₂, a₃` in cells 1–3 the only scratch cells are 4, 5, 6 — therefore the
+  **saves come first** (the cursor `2n` costs no constant, and `2n+1`, `2n+2`
+  reuse the literal `1`), the constant block is built afterwards as `1, 2, 3, 6`
+  in cells 6, 5, 4, 4 (the `6` as `3 + 3`), and the gate `n ≥ 6` compares
+  against cell 4. The read-back spends the whole register file: two fetches by
+  indirection through the surviving addresses (`load 6 0`, `load 5 1`) and the
+  third by rebuilding `2n + 2` from the unspent literal `2` in cell 5
+  (`add 3 0 5`, `load 3 3`).
+* **Exactly one new layer-2 fact**: `inF_three`. `memOf`/`up`/`upFit`, the eight
+  `exec_*_step` peelers, the input layer and the alias pair layer
+  (`inF_two`, `ofFn_sum_ite_pair`, `yes_of_pair`) all came across unchanged —
+  the reusability claim holds for the third program.
+* **The witness leg is sound *and* readable in §6's vocabulary.**
+  `checksum_sound`: a reported estimate is carried by a genuine subset
+  (`ofFn_sum_ite_triple`, `yes_of_triple`). `checksum_support_in_bin`: that
+  subset lies in the target's residue class **mod every `P`**, i.e. its term is
+  one of `V_ρ`'s summands at `ρ = t mod P` — that is the part of «genuine
+  checksum» this calculus can state (no `ℂ`, no phases, no bin density). The
+  `1/8` accuracy stays `o5_mse_le`'s.
+* **The walk.** `checksum_run`: 24 `exec_*_step` rewrites. The new arithmetic
+  obligation is `3·maxValue < 2^w` (the triple must fit one word), proved from
+  `maxValue_lt_two_pow_bits` plus `bits + 2 ≤ w` — a word-length fact, so proved
+  rather than carried as a hypothesis. `checksumCost = 24`.
+* **`LeafBnone` is discharged** — `LeafBnone_of_checksum_agrees`: on the guard's
+  complement, if `R.cost` collapses to `R.checksumCost`, `R.checksum_agrees`
+  *is* `LeafBnone R R.checksumProg`. **Three of four segment leaves are now
+  closed** (`LeafP`, `LeafAnone`, `LeafBnone`); `LeafTest` alone remains, and its
+  obligations are enumerated in `PROGRESS.md` (payload convention, the loop +
+  cost, the cross-estimate relation, the `ℚ` accumulator).
+* **Three `omega`/`rw` measurements for the next author.** (i) The alias trick
+  `2·(n+1) ≤ 2^w` gives `2n < 2^w`, `2n+1 < 2^w`, `n+1 < 2^w` but **not**
+  `2n+2 < 2^w` — `≤` where `upFit` needs `<`; route through
+  `k < 2^k ≤ 2^w` with `k = 2n+2 ≤ w`. (ii) Literal fits need one numeric fact
+  first (`32 ≤ 2^w`), since `omega` sees `2^w` only as an atom. (iii)
+  `2·(n+1) ≤ 2^(n+1)` is not `omega`-provable either (two distinct pow atoms):
+  `Nat.mul_le_mul_left 2 hhn` then `rw [hpow]`. And a `rw` that closes a goal
+  followed by `; omega` errors with `No goals to be solved`.

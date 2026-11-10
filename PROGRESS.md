@@ -1054,3 +1054,110 @@ accumulator with `n²` fractional bits, and the payload convention `LeafTest`
 needs.
 
 Next single lever: `checksumProg` (Theorem B), the same shape one step further.
+
+## Row lane 2026-11-10 (7) — `checksumProg` authored: Theorem B's text, its witness leg proved sound *and read in §6's bin vocabulary*, `LeafBnone` discharged (LANDED)
+
+New module `SubsetSumL25/Row/KapilaChecksum.lean` (a leaf of the import DAG, so
+no built module's hash moved; `Statement.lean` still `3dc6567e…34aa`). The
+prelim/alias bootstrap layers were imported, not re-derived, and exactly one new
+layer-2 fact was needed (`inF_three`) — the reusability claim holds for the third
+time.
+
+## What is proved (no sorry, house triple)
+
+| Declaration | Note |
+|---|---|
+| `checksumProg` | 24 instructions: cursor-first saves of all three inputs, then the constant block, then a three-cell read-back |
+| `checksumSpec`, `checksumCost`, `checksumYes` | the phase's value (`Option (List ℚ)`), 24 word operations |
+| `inF_three` | cell 3 in `memOf` normal form (the only new layer-2 fact) |
+| `checksum_run` | `run checksumProg x ρ 24 = some ((checksumSpec n x ω).isSome)` — 24-instruction walk |
+| `ofFn_sum_ite_triple`, `yes_of_triple` | the three-element indicator sums to `a₁+a₂+a₃`, so the triple witnesses `t` |
+| `checksum_sound` | every estimate reported is carried by a **genuine subset** (Theorem B's requirement on `V̂_ρ`'s support) |
+| `checksum_support_in_bin` | the same subset lies in the target's residue class **mod every `P`** — §6's eq. (6.1) bin, in the vocabulary this calculus has |
+| `checksum_agrees_spec`, `checksum_run_of_field` | the field shape, `Option`-free, nothing to peel |
+| `LeafBnone_of_checksum_agrees`, `LeafBnone_of_checksum_run` | the leaf, modulo the cost collapse |
+
+**Three of four leaves closed** (`LeafP` + `LeafAnone` + `LeafBnone`); `LeafTest`
+alone remains.
+
+## The design change that mattered (forced, not stylistic)
+
+Alias built its constant block into **cell 3** (`add 3 4 4` → `[3] = 6`) because
+`a₃` played no part in its decision. The checksum phase reads `a₃`, so cell 3
+must survive the bootstrap — and with `a₁, a₂, a₃` occupying cells 1–3 and `n` in
+0, the only scratch cells are 4, 5, 6. Consequences, both forced:
+
+1. **The saves come first, the constants after.** `2n` costs no constant
+   (`add 0 0 0`), and the two successors reuse the literal `1` still in cell 6
+   (`add 1 0 6`, `add 2 1 6`) — so each input cell is read on the instruction
+   that clobbers it and on no earlier one. The level `6` is then built *after*
+   the saves as `3 + 3` in cell 4 (`add 4 4 4`) and the gate compares against
+   cell 4, which is why the gate moved from `pc 3`/cell 3 to `pc 4`/cell 4.
+2. **The read-back spends the whole register file.** Cells 0 and 1 still hold the
+   addresses `2n` and `2n+1` when the saves finish, so two fetches are single
+   indirections (`load 6 0`, `load 5 1`); the third address is rebuilt as
+   `2n + 2` from the *unspent literal* `2` still in cell 5 (`add 3 0 5`) and
+   then self-loaded (`load 3 3`). The `2` in cell 5 is an address constant, not a
+   value — that is why it survives to `pc 15` and a₃'s fetch comes before a₂'s.
+
+## Proof-engineering notes (each cost one build cycle)
+
+1. **The strict/non-strict cliff is where the alias trick runs out.**
+   `2·(n+1) ≤ 2^w` (the alias `hfin`) proves `2n < 2^w`, `2n+1 < 2^w` and
+   `n+1 < 2^w`, but **not** `2n+2 < 2^w`: `≤` is all it gives, and `upFit` needs
+   `<`. The cure is a different route: `k < 2^k ≤ 2^w` with `k = 2n+2 ≤ w`
+   (which the word length supplies: `4(n+b) + 1 ≥ 2n+2`). `Nat.lt_two_pow_self`
+   then `Nat.pow_le_pow_right`.
+2. **`omega` cannot see `2^·` at all**, only atoms — so every *literal* fit
+   (`1, 2, 3, 6 < 2^w`) needs one numeric fact first (`hbig : 32 ≤ 2^w`, from
+   `5 ≤ w`). Without it `omega` reports a counterexample with `2^w ≤ 1`.
+3. **`2·(n+1) ≤ 2^(n+1)` is not omega-provable** either: the goal's
+   `2^(n+1)` and the hypothesis' `2^n` are distinct opaque atoms, so the
+   associativity that would join them is invisible. `Nat.mul_le_mul_left 2 hhn`
+   followed by `rw [hpow]` is the proof.
+4. **Peeling depth follows the *read* register's write distance, not the
+   instruction count.** `[6]` is written at `pc 14` (not `pc 13` as in alias), so
+   `s17 6 = a₁` needs three peels where the alias analogue needed one; a chain
+   copied from the alias file without re-counting the `up` layers is the failure
+   mode here.
+5. **`rw [...]` can close a goal**, after which a trailing `; omega` reports
+   `No goals to be solved` — an *error*, not a warning. `s14 0 + s14 5 = 2n+2`
+   by `rw [v140, v145]` is one such goal.
+
+## The §6 semantics, stated honestly
+
+`V_ρ` is a complex sum over a residue bin, one term per subset, with retained
+phases. The in-tree calculus has no `ℂ`, no phases (`Draws` is a word stream and
+this leg ignores it) and no bin density. What the leg certifies is the
+**support** of a checksum term — a subset in the bin exists — and
+`checksum_support_in_bin` states that in §6's own vocabulary
+(`∑ aᵢ ≡ t (mod P)` for every `P`). The magnitudes are `o5_mse_le`'s; nothing
+here touches them. That is the whole of the "genuine checksum" claim this text
+can carry, and it is stated as such rather than as the paper's `1/8`.
+
+## `LeafTest`'s obligations in final form (the residual seam, enumerated)
+
+Not proved, stated so the remaining work is exactly bounded. With
+`Â = R.aliasA n x ω` and `V̂ = R.checksumB n x ω` both `some`-valued, on
+`R.fallback n x = false`, the segment must establish **four** things:
+
+1. **Two payload programs.** `aliasProg` and `checksumProg` must leave their
+   estimate lists in memory — `isSome` (what both current fields certify)
+   *forgets* the payload (`isSome_forgets_payload`), so `LeafTest` needs the
+   payload convention both modules deliberately declined.
+2. **The scan's loop rules.** `rowTest_eq_of_rules` already reduces the test
+   itself to nil/nil, nil/cons, cons/nil and cons/cons — three equations at the
+   segment's exit, no reasoning about `rowTest` required. What is missing is the
+   loop: the first backwards jump in this calculus, plus a word-op cost model
+   for it.
+3. **The estimates' arithmetic relation.** The difference `V̂_s − Â_s` must be
+   the bin sum the test compares against `1/2`. Neither leg pins that relation —
+   alias certifies `Â`'s support, checksum certifies `V̂`'s — so this is a
+   *joint* obligation on the two payloads, not a consequence of either.
+4. **The multi-word accumulator.** Both estimate lists are `ℚ` values at `n²`
+   fractional bits while `w = O(n+b)`; the expansion is absorbed
+   (`withinEnvelope_wordop_absorb`) but the `ℚ` layout is not written.
+
+`LeafTest` therefore needs: the payload convention (1), the loop + cost (2),
+the cross-estimate relation (3), the accumulator layout (4) — and then
+`agrees_main` is assembled from four leaves.
