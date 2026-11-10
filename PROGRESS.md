@@ -1934,16 +1934,21 @@ of estimates*; what the predicate needs is the walk descending through the
 | **`cmpDigitsFrom`**, `cmpDigitsFrom_iff` | the top-down **low-digit walk** and its proof that it decides the block comparison — no accumulator, state = the two digits just read |
 | **`digHalf`** | the first stage: one digit from each side at `p` against `2^r`, four ways; only the two **exact ties** descend into the low walk |
 | `hit_of_above`, `hit_of_below`, `tie_hit_iff`, `tieA_hit_iff`, **`miss_of_close`** | the four arithmetic branches, each separate; `miss_of_close` is what makes the walk **one digit deep in the common case** (`(2^r−1)·P + (P−1) = T−1 < T`) |
-| **`digHalf_eq_threshold`** | **THE DECISION LEMMA** (integer form), by the five `if` branches of `digHalf` |
+| **`digHalf_eq_threshold_pow`** | **THE DECISION LEMMA in honest generality**: needs only `p + 1 ≤ stride` and `numV, numA < 2^(w·(p+1))` (nothing above digit `p`) — no scale-fit, no `1 ≤ F` |
+| **`digHalf_eq_threshold`** | the `F`-indexed corollary: `p = (F−1)/w`, `r = (F−1)%w`, scale-fit `numV < 2^F` used only to obtain the collapse, by the five `if` branches of `digHalf` |
 | **`digHalf_eq_ratTest`** | `(1/2 : ℚ) ≤ |V̂ − Â|` on the two `placeValueAt`s — the paper's own test |
 | **`digHalf_eq_placeValueTest`** | the same at estimate `s`, i.e. on `placeV − placeA` |
 | `digHalf_spot_checks` | three concrete payloads (`w=2, F=4`: decided hit, decided miss, exact tie resolved by the low walk) kernel-checked by `decide` |
 | `cmpSeg`, `cmpSeg_length`, `cmpSegFuel`, `cmpSegFuel_linear`, `cmpSegFuel_zero` | the segment's **shape**: 29 instructions (constant), fuel `13 + 9p`, decided cases constant (7/8), `O(p)` only on a tie |
 
-**Scale-fit is named, not assumed.**  `numV, numA < 2^F` is the paper's own regime
-(`V̂ ∈ [0,1)`); it is carried as `hVb`/`hAb` and flagged.  Without it one more digit
-is in play above `p` and the walk's first stage becomes a comparison of the high
-digit *blocks* against `2^r` — the same lemma one level up.
+**The scale-fit is weaker than first framed, and the general form is proved.**
+`digHalf_eq_threshold_pow` takes no scale-fit and no `1 ≤ F`: only `p + 1 ≤ stride`
+and `numV, numA < 2^(w·(p+1))` — *nothing above digit `p`*.  The `F`-indexed form is
+the corollary that computes `p`, `r` from `fracBits`; there `numV < 2^F` (the
+paper's regime, `V̂ ∈ [0,1)`) is used **only** to obtain that collapse via
+`numAt_eq_of_lt`.  The drafting claim "without scale-fit one more digit is in play"
+was stronger than the arithmetic warrants: the four branch facts consume only
+`Vlo, Alo < 2^(w·p)`.
 
 ### What is open, precisely
 
@@ -1962,13 +1967,16 @@ digit *blocks* against `2^r` — the same lemma one level up.
 
 ### Receipts
 
-**`receipts/kapila-20261110T233946Z`** — gate `swapouts_delta60=0 free_pct=67`
+**`receipts/kapila-20261110T235126Z`** (final; the earlier
+`receipts/kapila-20261110T233946Z` is the same gate/exit shape from before
+`digHalf_eq_threshold_pow` was added) — gate `swapouts_delta60=0 free_pct=63`
 (iter 1).  **Lock not acquired: bounded 240 s expired** (`acquired=False
-waited_s=240.3`), build proceeded with the deviation recorded in `lock.note` and
-`summary.json` — the policy working under fleet load, not a stall.  Build exit 0
-in **36.4 s** (10 targets) — **compile, not replay**: `KapilaDigitwise.olean`
-rebuilt this run (1051648 bytes, sha256 `d7a8e12e…3fa8`).  Axiom banner exit 0,
-**182 banners**, 23 new, `axiom_banner_house_triple_only: true`;
+waited_s=240.3`) on *both* passes, build proceeded each time with the deviation
+recorded in `lock.note` and `summary.json` — the policy working under fleet load,
+not a stall.  Build exit 0 in **50.9 s** (10 targets) — **compile, not replay**:
+`KapilaDigitwise.olean` rebuilt this run (1049184 bytes, sha256 `d35b9c0d…bdff`).
+Axiom banner exit 0, **183 banners**, 24 new, `axiom_banner_house_triple_only:
+true`;
 `digHalf_eq_threshold` on `[propext, Classical.choice, Quot.sound]`,
 `mul_add_le_iff` on `[propext, Quot.sound]`, `digHalf` on `[propext]`,
 `cmpSeg`/`cmpSeg_length`/`cmpSegFuel`/`cmpSegFuel_zero` on **no axioms**; no

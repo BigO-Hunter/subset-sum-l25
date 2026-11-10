@@ -515,12 +515,15 @@ This round does the re-specification as far as arithmetic goes.
   `hit_of_below`, `tie_hit_iff`, `tieA_hit_iff`, `miss_of_close` — the last is the
   one that makes the walk **one digit deep in the common case** (`(2^r−1)·P +
   (P−1) = T−1 < T`).
-* **The scale-fit hypothesis is named, not assumed.** `numV, numA < 2^F` is the
-  paper's own regime (an estimate is a fraction of the complex square sum,
-  `V̂ ∈ [0,1)`). Without it one more digit is in play above `p` and the walk's
-  first stage becomes a comparison of the high digit *blocks* against `2^r` —
-  the same lemma one level up. Carried as `hVb`, `hAb` and flagged in the
-  docstring rather than silently dropped.
+* **The scale-fit is only used for one thing, and the walk needs less.**
+  `digHalf_eq_threshold_pow` is the honest-general form: *no* scale-fit, *no*
+  `1 ≤ F` — the only hypotheses are `p + 1 ≤ stride` and `numV, numA <
+  2^(w·(p+1))`, i.e. **nothing sits above digit `p`**. The `F`-indexed form is
+  the corollary that computes `p = (F−1)/w`, `r = (F−1)%w` from `fracBits` and
+  uses `numV < 2^F` (the paper's own regime, `V̂ ∈ [0,1)`) only to obtain that
+  collapse via `numAt_eq_of_lt`. So the earlier framing — "without scale-fit one
+  more digit is in play" — was *stronger than necessary*: the four branch facts
+  consume only `Vlo, Alo < 2^(w·p)`, which the digit bound supplies.
 * **The segment's shape, stated** (§D5): `cmpSeg cont` — 29 instructions,
   `cmpSeg_length` by `rfl` (a constant `List Instr`, back-edges not unrolled);
   `cmpSegFuel p = 13 + 9·p` (the A-side tie is worst: 11 to the walk entry, 9 per
@@ -536,6 +539,17 @@ This round does the re-specification as far as arithmetic goes.
   consumes them and nothing else). (iv) the cost re-measurement is untouched:
   `cmpSegFuel`'s linearity is stated, but `D7.agrees`'s step horizon and
   `KapilaAlgo.cost` are not re-derived at stride `k`.
+
+**Receipt (final): `receipts/kapila-20261110T235126Z`** — gate
+`swapouts_delta60=0 free_pct=63`; build exit 0 in **50.9 s**, a *compile* not a
+replay (`KapilaDigitwise.olean` rebuilt this run, sha256 `d35b9c0d…bdff`); axiom
+banner exit 0, **house-triple only**, including `digHalf_eq_threshold_pow` and
+`digHalf_eq_threshold`; `cmpSeg`/`cmpSeg_length`/`cmpSegFuel` on no axioms;
+`sources.sha256` matching the tree byte for byte; `Statement.lean` still
+`3dc6567e…34aa`. Lock: **bounded 240 s wait expired on both passes**, deviation
+recorded in `lock.note`/`summary.json` — the policy working, not a stall. Both
+runners now name `SubsetSumL25.Row.KapilaDigitwise` in `TARGETS`/`NAMED_OLEANS`;
+`KapilaRowAxioms.lean` prints the module's banner.
 
 **Six `omega`/`rw` measurements for the next author.** (i) `rw [← h]` where
 `h : w*p + r = F−1` rewrites *inside* `(F−1)/w` and `(F−1)%w` and wrecks the goal;

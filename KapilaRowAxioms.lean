@@ -237,6 +237,7 @@ open SubsetSumL25.Row
 #print axioms tieA_hit_iff
 #print axioms miss_of_close
 #print axioms digHalf
+#print axioms digHalf_eq_threshold_pow
 #print axioms digHalf_eq_threshold
 #print axioms digHalf_eq_ratTest
 #print axioms digHalf_eq_placeValueTest

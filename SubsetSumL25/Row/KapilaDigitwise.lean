@@ -352,11 +352,53 @@ def digHalf (f g : Nat → Nat) (addrV addrA p r : Nat) : Bool :=
   else if g (addrA + p) = f (addrV + p) + 2 ^ r then cmpDigitsFrom g f addrA addrV p
   else false
 
+/-- **THE DECISION LEMMA, in its honest generality.**  The only hypotheses the
+walk needs are: the block holds digit `p` (`p + 1 ≤ stride`), and **nothing sits
+above `p`** (`numV, numA < 2^(w·(p+1))`).  No scale-fit, no `1 ≤ F`: with
+`T = 2^(w·p+r)` the four branch facts consume only `Vlo, Alo < 2^(w·p)`, which the
+digit bound supplies.  The threshold exponent is *given* here (`w·p + r`); the
+`F`-indexed form below is the corollary that computes it from `fracBits`. -/
+theorem digHalf_eq_threshold_pow {w p r : Nat} (f g : Nat → Nat)
+    (hf : ∀ z, f z < 2 ^ w) (hg : ∀ z, g z < 2 ^ w) {addrV addrA stride : Nat}
+    (hp : p + 1 ≤ stride)
+    (hV : numAt w f addrV stride < 2 ^ (w * (p + 1)))
+    (hA : numAt w g addrA stride < 2 ^ (w * (p + 1))) :
+    (digHalf f g addrV addrA p r = true)
+      ↔ 2 ^ (w * p + r) ≤ wordDiff (numAt w f addrV stride) (numAt w g addrA stride) := by
+  have hVs := numAt_split f hp hV
+  have hAs := numAt_split g hp hA
+  have hVlo : numAt w f addrV p < 2 ^ (w * p) := numAt_lt_pow w f hf addrV p
+  have hAlo : numAt w g addrA p < 2 ^ (w * p) := numAt_lt_pow w g hg addrA p
+  have hT : 2 ^ (w * p + r) = 2 ^ r * 2 ^ (w * p) := by
+    rw [Nat.pow_add, Nat.mul_comm]
+  rw [hVs, hAs, digHalf]
+  by_cases h1 : g (addrA + p) + 2 ^ r < f (addrV + p)
+  · rw [if_pos h1]
+    exact ⟨fun _ => hit_of_above hT hAlo h1, fun _ => rfl⟩
+  · rw [if_neg h1]
+    by_cases h2 : f (addrV + p) + 2 ^ r < g (addrA + p)
+    · rw [if_pos h2]
+      exact ⟨fun _ => hit_of_below hT hVlo h2, fun _ => rfl⟩
+    · rw [if_neg h2]
+      by_cases h3 : f (addrV + p) = g (addrA + p) + 2 ^ r
+      · rw [if_pos h3, cmpDigitsFrom_iff f g hf hg addrV addrA p]
+        exact (tie_hit_iff hT hVlo hAlo h3).symm
+      · rw [if_neg h3]
+        by_cases h4 : g (addrA + p) = f (addrV + p) + 2 ^ r
+        · rw [if_pos h4, cmpDigitsFrom_iff g f hg hf addrA addrV p]
+          exact (tieA_hit_iff hT hVlo hAlo h4).symm
+        · rw [if_neg h4]
+          have hlt1 : f (addrV + p) < g (addrA + p) + 2 ^ r := by omega
+          have hlt2 : g (addrA + p) < f (addrV + p) + 2 ^ r := by omega
+          refine ⟨fun hc => (Bool.false_ne_true hc).elim,
+            fun hbad => (miss_of_close hT hVlo hAlo hlt1 hlt2 hbad).elim⟩
+
 /-- **THE DECISION LEMMA.**  For a scale-fitting stride-`k` read (`numV`,
-`numA < 2^F`, `F ≥ 1`, `w ≥ 1`, and a block long enough to contain digit `p`),
-the digitwise walk decides §7 step 7's integer test — **without materialising
-either numerator**.  The walk reads one digit from each side and, on an exact tie,
-walks the low digits; the four arithmetic facts above are the whole proof. -/
+`numA < 2^F`, `F ≥ 1`, `w ≥ 1`, and a block long enough to contain digit `p`
+where the `1/2` bit lives), the digitwise walk decides §7 step 7's integer test —
+**without materialising either numerator**.  The scale-fit buys exactly one thing:
+that the digits above `p` are the carry word and vanish (`numAt_eq_of_lt`), which
+is what lets `digHalf_eq_threshold_pow` read a single digit at `p`. -/
 theorem digHalf_eq_threshold {w F : Nat} (hw : 1 ≤ w) (hF : 1 ≤ F) (f g : Nat → Nat)
     (hf : ∀ z, f z < 2 ^ w) (hg : ∀ z, g z < 2 ^ w) {addrV addrA stride : Nat}
     (hp : (F - 1) / w + 1 ≤ stride)
@@ -371,38 +413,9 @@ theorem digHalf_eq_threshold {w F : Nat} (hw : 1 ≤ w) (hF : 1 ≤ F) (f g : Na
     lt_of_lt_of_le hVb (Nat.pow_le_pow_right (by norm_num) hFle)
   have hA2 : numAt w g addrA stride < 2 ^ (w * ((F - 1) / w + 1)) :=
     lt_of_lt_of_le hAb (Nat.pow_le_pow_right (by norm_num) hFle)
-  have hVs := numAt_split f hp hV2
-  have hAs := numAt_split g hp hA2
-  have hVlo : numAt w f addrV ((F - 1) / w) < 2 ^ (w * ((F - 1) / w)) :=
-    numAt_lt_pow w f hf addrV _
-  have hAlo : numAt w g addrA ((F - 1) / w) < 2 ^ (w * ((F - 1) / w)) :=
-    numAt_lt_pow w g hg addrA _
-  have hT : 2 ^ (F - 1) = 2 ^ ((F - 1) % w) * 2 ^ (w * ((F - 1) / w)) := by
-    conv_lhs => rw [← hFr]
-    rw [Nat.pow_add, Nat.mul_comm]
-  rw [hVs, hAs, digHalf]
-  by_cases h1 : g (addrA + (F - 1) / w) + 2 ^ ((F - 1) % w) < f (addrV + (F - 1) / w)
-  · rw [if_pos h1]
-    exact ⟨fun _ => hit_of_above hT hAlo h1, fun _ => rfl⟩
-  · rw [if_neg h1]
-    by_cases h2 : f (addrV + (F - 1) / w) + 2 ^ ((F - 1) % w) < g (addrA + (F - 1) / w)
-    · rw [if_pos h2]
-      exact ⟨fun _ => hit_of_below hT hVlo h2, fun _ => rfl⟩
-    · rw [if_neg h2]
-      by_cases h3 : f (addrV + (F - 1) / w) = g (addrA + (F - 1) / w) + 2 ^ ((F - 1) % w)
-      · rw [if_pos h3, cmpDigitsFrom_iff f g hf hg addrV addrA ((F - 1) / w)]
-        exact (tie_hit_iff hT hVlo hAlo h3).symm
-      · rw [if_neg h3]
-        by_cases h4 : g (addrA + (F - 1) / w) = f (addrV + (F - 1) / w) + 2 ^ ((F - 1) % w)
-        · rw [if_pos h4, cmpDigitsFrom_iff g f hg hf addrA addrV ((F - 1) / w)]
-          exact (tieA_hit_iff hT hVlo hAlo h4).symm
-        · rw [if_neg h4]
-          have hlt1 : f (addrV + (F - 1) / w) < g (addrA + (F - 1) / w) + 2 ^ ((F - 1) % w) :=
-            by omega
-          have hlt2 : g (addrA + (F - 1) / w) < f (addrV + (F - 1) / w) + 2 ^ ((F - 1) % w) :=
-            by omega
-          refine ⟨fun hc => (Bool.false_ne_true hc).elim,
-            fun hbad => (miss_of_close hT hVlo hAlo hlt1 hlt2 hbad).elim⟩
+  have hkey := digHalf_eq_threshold_pow (w := w) (p := (F - 1) / w) (r := (F - 1) % w)
+    f g hf hg hp hV2 hA2
+  rwa [hFr] at hkey
 
 /-- **The decision lemma in §7 step 7's own vocabulary.**  `true` exactly when
 `(1/2 : ℚ) ≤ |V̂ − Â|` on the two place values — the walk decides the paper's test
