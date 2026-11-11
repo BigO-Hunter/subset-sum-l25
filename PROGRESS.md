@@ -2003,11 +2003,124 @@ argument); `KapilaRowAxioms.lean` prints the new module's banner.
 6. When an iff branch's goal is `false = true`, `False.elim` is needed —
    `Bool.false_ne_true hc` alone has type `False`.
 
-Next single action: **(ii) — fix the `binSum` and prove `WideBinSumAgrees`.**  The
-`binSum` is the checksum phase's own aggregate (§6's `V_ρ` at `ρ = t mod P`, the
-object `checksum_sound`/`checksum_support_in_bin` already carry); the obligation is
-the pointwise identity `placeValue … baseV − placeValue … baseA = binSum i` for
-the memory the checksum program writes, provable — if it is — from
-`placeValue_scale` + `sum_base_digits` on that memory.  If it needs more than the
-layout, name the missing input as one hypothesis in `D7`'s style rather than
-leaving the seam unnamed.
+## Round (14) — residual (ii) closed: the `binSum` fixed, the contract inhabited
+
+**`KapilaBinSum.lean` (new, leaf of the import DAG).**  Eleven new names, no
+displacement: `KapilaEstimate`'s `WideBinSumAgrees` was a contract with a hole
+where the paper's quantity belongs, and a contract nobody inhabits is not a
+residual — it is a hole in the statement of the theorem.  It is inhabited now.
+
+**What the `binSum` is.**  §6's `V_ρ` at the granularity §7 step 7 reads it: the
+**signed aggregate of the two payload blocks' digits at the same place**, over the
+one shared scale —
+
+`binSum i = (Σ_{j<stride} (f (baseV+i·stride+j) − f (baseA+i·stride+j))·2^{w·j}) / 2^F`.
+
+Why that object and not an arbitrary one: it is what `V_ρ`'s term becomes once the
+complex weight is dropped (the tree has no `ℂ`, no phases, and `Nat`-mod as its
+only residue machinery — `KapilaChecksum`'s header says so and keeps the support
+content: `checksum_sound`, `checksum_support_in_bin`), and it is the object a
+**digitwise** machine can form — no cell ever holds a wide numerator
+(`numAt_not_word` forbids that), which is exactly why the comparison had to be
+re-shaped in `KapilaDigitwise`.
+
+**Proved.**
+
+1. `binDigits_eq_numAt_sub` — the aggregate *is* the difference of the two carried
+   numerators (distributing the difference over the digits is exact: nothing
+   couples the two sides, so no carry is needed — `sum_base_digits`' linearity
+   seen from the sign).
+2. `placeValue_sub_scale` — `placeValue_scale` at the two bases, subtracted: the
+   scaled place-value difference is the numerator difference.  Two lines, and it
+   is the whole of the denominator step.
+3. `binSum_eq_placeValue_sub` — assembled in the order the arithmetic forces:
+   `placeValue_sub_scale` → `numAt_cast` (each numerator is its weighted digits)
+   → `binDigits_eq_numAt_sub` → `memOf_toNat` (the memory bridge).  Nothing about
+   the payload lists, `dAt`, or the program is consumed.
+4. **`wideBinSumAgrees_binSum` — `WideBinSumAgrees`, PROVED**, for every memory
+   and every stride, given only the digit fit.  The honest reading, stated plainly
+   rather than dressed up: `WideBinSumAgrees` has **no memory-side content**.  It
+   is not a constraint the layout must satisfy — it is the definition of what the
+   bin sum has to be for the wide test to be a test on bin sums.
+5. `wideExit_eq_binSumDigits` — `KapilaWide`'s `wideExit_eq_binSum'` with that
+   hypothesis discharged: the stride-`k` loop's exit *is* the test on the bin sums,
+   with no hypothesis about them left.
+6. `hitWord_binSumTest` / `binSumTest_iff_wordDiff` — the payoff: the loop's
+   `hitWord` at `h = 2^{F−1}`, `rowTest`'s `ℚ` test, and the digitwise
+   `digHalf`/`cmpSeg` decision are **one predicate**.  (ii) and (i) are the same
+   predicate, so the segment proof need not be re-argued in §6's vocabulary.
+
+**The one named input (D7-style, seam named not floating).**  `PayloadCarries w f
+numV numA baseV baseA stride len` — *the memory's digits at the two bases are the
+phases' independent numerators*.  This is the **accumulation stage**: §6.2's block
+tables write `⌈F/w⌉ + 1` words per estimate (`payloadStride`, and
+`placeValueAt_payloadStride` proves such a block carries an `F`-bit numerator
+exactly), and the tree's 24-instruction `checksumProg` **does not contain that
+stage** — it saves three inputs at `2n, 2n+1, 2n+2`, decides `a₁+a₂+a₃ = t`, and
+writes no payload block.  Not an arithmetic gap: one missing instruction block.
+`wideBinSumAgrees_carried` discharges `WideBinSumAgrees` from that premise alone,
+so the contract also holds in the form where the `binSum` is **not** defined from
+the memory.  Inherited and *not* supplied by it: the block tables, the
+inverse-multiplicity weights, the residue-bin enumeration, the `1/8` accuracy
+(that file's own residual), and Theorem B's `1 − o(1)` success region.
+
+**Residual after this round, exactly four, none of them floating.**
+
+* (i) **`cmpSeg`'s segment proof** — unchanged; new help: its verdict *is* the
+  bin-sum test (`hitWord_binSumTest`), so no §6 re-argument is owed.
+* (ii) **was a contract, is now a construction + one premise.**  Closed as
+  stated; what remains is `PayloadCarries`, i.e. the accumulation stage (above).
+* (iii) **the program-entry reach premise** — untouched.
+* (iv) **`KapilaAlgo.cost` and `D7.agrees`'s horizon** — untouched, and this file
+  adds no charge: `binSum` defines the compared quantity, it is not a computation
+  the program performs.
+
+### Receipts
+
+**`receipts/kapila-20261111T002540Z`** (final; **compile, not replay**) — gate
+`swapouts_delta60=0 free_pct=45`; lock **not acquired, bounded wait `0 s`**
+(`KAPILA_LOCK_WAIT=0`, deviation recorded in `lock.note` + `summary.json`);
+`✔ [8937/8937] Built SubsetSumL25.Row.KapilaBinSum (37s)`, build exit 0 in
+**45.3 s**; `KapilaBinSum.olean` 195528 bytes mtime 16:27:25 sha256 `822c61da…3fc6`
+— and the **same sha256 across three independent compiles** (16:04 foreground, 16:24
+orphaned `lean` after an external `SIGKILL` of its `lake` parent, 16:27 this run),
+which is the determinism check the byte count alone cannot give.  Axiom banner exit
+0, **194 banners**, 11 new, `axiom_banner_house_triple_only: true`; all new
+declarations on `[propext, Classical.choice, Quot.sound]`, `PayloadCarries` on
+`[propext]`; no `sorryAx`, no `native_decide`.  `sources.sha256` matches the
+committed tree; `Statement.lean` still `3dc6567e…34aa`.
+
+**Aborted receipts kept, both `build_exit=-9`:** `kapila-20261111T001326Z`
+(a foreground wrapper killed at the shell watchdog; the runner ignores `SIGTERM` by
+design and outlived it) and `kapila-20261111T001919Z` (detached runner, its `lake`
+child `SIGKILL`ed externally ~5 s into the compile while the `lean` child survived,
+orphaned, and completed).  Neither aborted run wrote a banner, and neither is cited
+as evidence.  Also kept: `kapila-20261111T000456Z` and `001052Z`, both `build_exit=0`
+but **replays** of the 16:04 olean (`build_seconds` 4.7 / 7.1, olean mtime *before*
+the receipt stamp) — recorded so the compile/replay distinction stays auditable.
+
+**Runners** now build and receipt `KapilaBinSum` (`NAMED_OLEANS` + `TARGETS` in both,
+plus the unbounded runner's inline `lake build` argument);
+`KapilaRowAxioms.lean` imports it and prints its eleven banners.
+
+### Four measurements for the next author
+
+1. `rw [← sub_div]` rewrites `a/c − b/c` → `(a−b)/c`; for the reverse direction the
+   pattern is the *whole* quotient, so `rw [sub_div]` is the one that fires.
+2. A `fun i => …` on a `∀ i` goal is not syntactically the body — `show` the
+   beta-reduced form first, or `rw` cannot find the term it is looking for.
+3. Lake hashes **content**, not mtimes: `touch`ing a source does not force a
+   rebuild.  Force one by deleting the module's `.olean`/`.trace` artefacts, or the
+   receipt will silently be a replay.
+4. `lake env lean` (the banner step) survives an external `SIGKILL` of `lake`: the
+   `lean` child is spawned in its own session, so an orphaned compile still finishes
+   and writes its olean after its parent is gone.
+
+Next single action: **(i) — `cmpSeg`'s segment proof.**  The obligation is written
+out in `KapilaDigitwise`'s §D5 docstring: from the register precondition (cells 0/1 =
+the two digit addresses at `p`, cell 2 = `p`, cells 7/8/9 = `0`/`1`/`2^r`), the run of
+`cmpSeg cont` reaches `cont` within `cmpSegFuel p` steps with cell 6 = `digHalf`'s
+verdict.  The arithmetic is settled (`digHalf_eq_threshold_pow`,
+`cmpSegFuel_linear`); what is owed is the straight-line walk over 29 instructions —
+and `hitWord_binSumTest` now says that walk's verdict is the bin-sum verdict, so
+the segment is not a separate §6 obligation but residual (i) alone.

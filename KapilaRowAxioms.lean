@@ -8,6 +8,7 @@ import SubsetSumL25.Row.KapilaLoop
 import SubsetSumL25.Row.KapilaEstimate
 import SubsetSumL25.Row.KapilaWide
 import SubsetSumL25.Row.KapilaDigitwise
+import SubsetSumL25.Row.KapilaBinSum
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -246,3 +247,16 @@ open SubsetSumL25.Row
 #print axioms cmpSegFuel
 #print axioms cmpSegFuel_linear
 #print axioms cmpSegFuel_zero
+
+-- residual (ii): the bin sums constructed — the aggregate fixed, the contract inhabited
+#print axioms binDigits_zero
+#print axioms binDigits_eq_numAt_sub
+#print axioms placeValue_sub_scale
+#print axioms binSum_eq_placeValue_sub
+#print axioms wideBinSumAgrees_binSum
+#print axioms PayloadCarries
+#print axioms wideBinSumAgrees_carried
+#print axioms wideExit_eq_binSumDigits
+#print axioms halfTest_diff_iff_wordDiff
+#print axioms binSumTest_iff_wordDiff
+#print axioms hitWord_binSumTest

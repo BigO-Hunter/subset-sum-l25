@@ -563,3 +563,76 @@ get the equality consumed by that constructor: `⟨heq, by omega⟩` fails where
 `?n * 0`; for `0 * _` it is `Nat.zero_mul`. (vi) when an iff's branch goal is
 `false = true`, `False.elim` is needed — `Bool.false_ne_true hc` alone has type
 `False`.
+
+## 2026-11-10 (9) — residual (ii) **closed**: the `binSum` fixed, `WideBinSumAgrees` PROVED, one premise named
+
+`SubsetSumL25/Row/KapilaBinSum.lean` (new, leaf of the import DAG; `Statement.lean`
+still `3dc6567e…34aa`, no built module's hash moved).
+
+`KapilaWide`'s §W4 composed `rowTest_eq_wideBinSum` into the stride-`k` exit and
+left (ii) as "the bin sums themselves — no bin object exists in the tree".  A
+contract with an existential hole is not a residual, it is a hole in the statement
+of the theorem.  This round fixes the object and inhabits the contract.
+
+* **Which object §6 leaves us.** Eq. (6.1)'s `V_ρ` is complex, over a residue bin;
+  the tree has no `ℂ`, no phases, and `Nat`-mod as its only residue machinery
+  (`KapilaChecksum` says so and keeps the support content: `checksum_sound`,
+  `checksum_support_in_bin`).  So the `binSum` is fixed at the granularity §7 step
+  7 reads it — **the signed aggregate of the two blocks' digits at the same place**:
+  `binSum i = (Σ_{j<stride} (v_j − a_j)·2^{w·j}) / 2^F`.  It is `V_ρ`'s term with
+  the weight dropped, and — the reason it is *this* and not something arbitrary —
+  it is the one form a **digitwise** machine can build, since no cell may hold a
+  wide numerator (`numAt_not_word`).
+* **Proved.** `binDigits_eq_numAt_sub` (the aggregate *is* the difference of the two
+  numerators — distributing a difference over digits is exact, no carry couples the
+  sides); `placeValue_sub_scale` (`placeValue_scale` at both bases, subtracted — two
+  lines, and the whole denominator step); `binSum_eq_placeValue_sub`
+  (`placeValue_sub_scale` → `numAt_cast` → `binDigits_eq_numAt_sub` → `memOf_toNat`);
+  **`wideBinSumAgrees_binSum`** — `WideBinSumAgrees C (memOf w f) stride binSum`,
+  for every memory and every stride, given only digit fit; and
+  `wideExit_eq_binSumDigits`, `KapilaWide`'s exit with the hypothesis discharged.
+* **The honest reading, not dressed up.** `WideBinSumAgrees` has **no memory-side
+  content**: it is not a constraint the layout must satisfy, it is the *definition*
+  of what the bin sum must be for the wide test to test bin sums.  So the claim
+  with content is stated the other way too — `PayloadCarries w f numV numA …`, the
+  one named input: **the memory's digits at the two bases are the phases'
+  independent numerators.**  That is §6.2's accumulation stage, and the tree's
+  24-instruction `checksumProg` does not contain it (it saves three inputs at
+  `2n, 2n+1, 2n+2`, decides `a₁+a₂+a₃ = t`, writes no payload block;
+  `placeValueAt_payloadStride` proves such a block *can* carry an `F`-bit numerator
+  exactly).  `wideBinSumAgrees_carried` discharges the contract from it alone.  Not
+  supplied by it: the block tables, the inverse-multiplicity weights, the
+  residue-bin enumeration, the `1/8` accuracy (`KapilaChecksum`'s residual), and
+  Theorem B's `1 − o(1)` region.
+* **The payoff for (i).** `hitWord_binSumTest` / `binSumTest_iff_wordDiff`: the
+  loop's `hitWord` at `h = 2^{F−1}`, `rowTest`'s `ℚ` test, and the digitwise
+  `digHalf`/`cmpSeg` decision are **one predicate**.  So the segment proof is not a
+  second §6 obligation — it is residual (i) alone, in the vocabulary it was already
+  being written in.
+
+Residual after this round, exactly four, none floating: (i) `cmpSeg`'s segment
+proof; (ii) now a construction plus the named `PayloadCarries` premise; (iii) the
+reach premise; (iv) `KapilaAlgo.cost`/`D7.agrees`'s horizon — untouched, and this
+file adds no charge, since `binSum` defines the compared quantity rather than
+computing it.
+
+**Receipt.** `receipts/kapila-20261111T002540Z` — **compile, not replay**:
+`✔ [8937/8937] Built SubsetSumL25.Row.KapilaBinSum (37s)`, exit 0 in 45.3 s, olean
+195528 bytes sha256 `822c61da…3fc6` (the *same* sha across three independent
+compiles, which is the determinism check a byte count cannot give); gate
+`swapouts_delta60=0 free_pct=45`; lock not acquired at a `0 s` bounded wait
+(`KAPILA_LOCK_WAIT=0`, deviation recorded); banner exit 0, 194 banners, house triple
+only (`PayloadCarries` on `[propext]`).  **Aborted receipts kept**:
+`001326Z` and `001919Z`, both `build_exit=-9` (the second: an external `SIGKILL` of
+`lake` ~5 s into the compile, while its `lean` child survived orphaned and finished)
+— neither wrote a banner, neither is cited.
+
+**Four `rw`/tooling measurements for the next author.** (i) `rw [← sub_div]`
+rewrites `a/c − b/c` → `(a−b)/c`; the reverse direction needs the *whole* quotient
+as the pattern, so `rw [sub_div]` is the one that fires. (ii) A `fun i => …` RHS is
+not syntactically the body of a `∀ i` goal — `show` the beta-reduced form first.
+(iii) Lake hashes **content**, not mtimes: `touch` does not force a rebuild, so a
+receipt can silently be a replay — delete the module's `.olean`/`.trace` artefacts
+to force one. (iv) `lake env lean` (the banner step) survives a `SIGKILL` of `lake`:
+the `lean` child is in its own session, so an orphaned compile still writes its
+olean after its parent dies.
