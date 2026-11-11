@@ -12,6 +12,7 @@ import SubsetSumL25.Row.KapilaBinSum
 import SubsetSumL25.Row.KapilaCmpSeg
 import SubsetSumL25.Row.KapilaCmpSegLoop
 import SubsetSumL25.Row.KapilaCmpSegStride
+import SubsetSumL25.Row.KapilaCmpSegStrideProg
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -366,3 +367,7 @@ open SubsetSumL25.Row
 #print axioms estFuel_fits
 #print axioms digitwise_is_wide_at_digit
 #print axioms digitwiseWordOps_le_wide
+#print axioms cmpSegStride_reaches_program
+#print axioms cmpSegStride_iter
+#print axioms cmpSegStride_loop
+#print axioms strideHits_le
