@@ -2215,19 +2215,25 @@ branch gets the exact price and a caller that does not gets `14 + 9p`.
 
 ### Receipts
 
-**`receipts/kapila-20261111T011020Z`** (final) — gate
-`swapouts_delta60=0 free_pct=48`; lock **acquired after 105.1 s** of the bounded
-240 s wait (`KAPILA_LOCK_WAIT=240` — another lane held the shared build lock; the
-bounded policy did its job and no deviation was recorded); build exit 0 in
-**43.3 s**; `✔ Built SubsetSumL25.Row.KapilaCmpSeg` **this run**, with the rest of
-the closure *replayed* (their oleans are from this session's earlier compiles — so
-this receipt is a **compile** for the new module and a **replay** for its
-dependencies, which is the honest label); `KapilaCmpSeg.olean` **3145104 bytes**,
-mtime 17:08:03, sha256 `d7f4c93d…29b`.
+**`receipts/kapila-20261111T011020Z`** (final; **the new module replayed, its
+neighbour compiled** — the labels are inverted from the obvious guess, so they are
+stated rather than assumed) — gate `swapouts_delta60=0 free_pct=48`; lock **acquired
+after 105.1 s** of the bounded 240 s wait (`KAPILA_LOCK_WAIT=240`, and the wait was
+real: a concurrent runner in this same worktree, `receipts/jv1000-20261111T011110Z`,
+waited 40 s of its own on the same lock ten seconds later); build exit 0 in
+**43.3 s**.  In the build log `⚠ Replayed SubsetSumL25.Row.KapilaCmpSeg` and
+`✔ Built SubsetSumL25.Row.KapilaBinSum (34s)`: `KapilaCmpSeg.olean`'s mtime
+(17:08:03) is **two minutes before** the receipt stamp, i.e. it is this session's own
+compile of the module, and the receipt's build **replayed** it; what that build
+actually compiled is `KapilaBinSum`, whose dependency `KapilaDigitwise` changed
+underneath it.  `KapilaCmpSeg.olean` **3145104 bytes**, sha256 `d7f4c93d…29b`.
 
-**Determinism, by double compile.**  The olean, its `.ilean` and its `.trace` were
-deleted and the module rebuilt from scratch: **the same sha256 `d7f4c93d…29b`**, so
-the byte count is not the only evidence — the compile is reproducible.
+**Determinism, by double compile — and it is what carries the compile claim.**
+Because the receipt replayed the module, the receipt alone is not evidence that the
+final bytes compile: the olean, its `.ilean` and its `.trace` were therefore
+deleted and the module rebuilt **from scratch**, giving **the same sha256
+`d7f4c93d…29b`**.  That rebuild is the compile of record, and it reproduces the
+receipt's hash byte for byte.
 
 Axiom banner exit 0, **196 banners**, `axiom_banner_house_triple_only: true`; the new
 declarations are on the house triple or a subset of it — `cmpSeg_reaches`,
