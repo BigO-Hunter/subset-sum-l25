@@ -2888,8 +2888,16 @@ inventing them, and places `carries` in this row's own record instead.
 edit.  Axiom banner exit 0, **244** `depends on axioms` lines, house-triple only: the `decide`
 evidentials on `[propext]`, `payloadCarries_iff_numBlock` on `[propext, Quot.sound]`,
 `PayloadSeam`/`PayloadSeam.agrees` on the full house triple.  No `sorryAx`, no `native_decide`;
-`Statement.lean` still `3dc6567e…34aa`.  Receipt `receipts/kapila-20261111T031907Z` from the
-bounded runner (gate, lock, oleans, sources, head).
+`Statement.lean` still `3dc6567e…34aa`.  Receipt `receipts/kapila-20261111T031713Z` from the
+bounded runner — **gate** `swapouts_delta60=0 free_pct=54`; **lock DEVIATION, recorded**:
+bounded 240 s wait expired, the build proceeded UNLOCKED (`lock.note`, `summary.json`) — the
+policy working, not a stall; `build_exit=0` in **39.4 s**, which is a **replay** of this round's
+own double-compiled oleans (`KapilaBinSum.olean` 362 168 bytes sha256 `05ef66ef…360a4a`, i.e. the
+compile of record above), so the runner's 39.4 s is *not* cited as compile evidence; banner exit
+0, 244 lines, house-triple only.  **`head` at receipt time = `76f9fdc`** — the peer jv1000
+(strip-analyticity) lane's commit, which landed in this shared worktree during the receipt; my
+commit `6a1cfac` stacks under it and is on `origin/wip-kapila-row` by ancestry
+(`git branch -r --contains`), not by a push of mine.
 
 ### Measurements for the next author
 
