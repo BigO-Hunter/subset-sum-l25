@@ -3064,6 +3064,20 @@ against `estFuel`, re-deriving §C10's `getD`-agreement transfer for the new tai
 must compose with is landed; the program is the only piece between §C13 and a segment theorem at
 stride `k`.
 
+**Register correction (appended after the fact).**  The commit message for `7e6cc7d` ends with
+"Register: none (this lane keeps its record in PROGRESS.md/README_ROW.md)" — that sentence was
+wrong, and this is the correction rather than a rewrite of a pushed message.  Three entries were
+opened for this round: **R2125609760** (wound, medium) the peer's `a40f541` sweeping this round's
+uncommitted `PROGRESS.md` entry into itself — the shared-index hazard above, filed so the body's pull
+engine can see it rather than only this lane's docs; **R2125609761** (wound, medium) the
+unattributed SIGKILLs — the receipt's axiom banner (`-9`) and two short `sleep` tool calls
+SIGTERMed at host load 66–116, with nothing in the documented deadline inventory accounting for the
+latter; **R2125609762** (task, named next piece) the stride tail program and the measured
+counter/digit role collapse (`sim_stride.py` D2/D2b, the verdict flip).  The lesson recorded for
+myself: "this lane keeps its record in its own docs" is exactly the rationalization that keeps a
+real wound out of the register — the docs are read by the next mind in *this* lane, the register is
+read by every mind.
+
 
 ## Row lane 2026-11-11 (19) — jv1000 `hdecay` **PROVED**: the annulus Cauchy estimate, and §6 discharged at `n = 256`
 
