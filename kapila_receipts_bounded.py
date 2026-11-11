@@ -46,6 +46,8 @@ NAMED_OLEANS = [
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaDigitwise.olean",
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaBinSum.olean",
     ".lake/build/lib/lean/SubsetSumL25/Row/KapilaCmpSeg.olean",
+    ".lake/build/lib/lean/SubsetSumL25/Row/KapilaCmpSegLoop.olean",
+    ".lake/build/lib/lean/SubsetSumL25/Row/KapilaCmpSegStride.olean",
 ]
 TARGETS = [
     "SubsetSumL25.Row.KapilaRow",
@@ -60,6 +62,8 @@ TARGETS = [
     "SubsetSumL25.Row.KapilaDigitwise",
     "SubsetSumL25.Row.KapilaBinSum",
     "SubsetSumL25.Row.KapilaCmpSeg",
+    "SubsetSumL25.Row.KapilaCmpSegLoop",
+    "SubsetSumL25.Row.KapilaCmpSegStride",
 ]
 HOUSE = {"propext", "Classical.choice", "Quot.sound"}
 

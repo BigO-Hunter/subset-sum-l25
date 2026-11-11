@@ -11,6 +11,7 @@ import SubsetSumL25.Row.KapilaDigitwise
 import SubsetSumL25.Row.KapilaBinSum
 import SubsetSumL25.Row.KapilaCmpSeg
 import SubsetSumL25.Row.KapilaCmpSegLoop
+import SubsetSumL25.Row.KapilaCmpSegStride
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -339,3 +340,29 @@ open SubsetSumL25.Row
 #print axioms payloadCarries_iff_numBlock
 #print axioms PayloadSeam
 #print axioms PayloadSeam.agrees
+
+-- §C13: residual (iv)'s last gap — the stride-`k` payload read in the test segment
+#print axioms strideFold
+#print axioms strideFold_zero
+#print axioms strideFold_succ
+#print axioms strideFold_eq_numAt
+#print axioms strideFold_eq_numAt_block
+#print axioms numAt_term_at_estimate
+#print axioms numAt_split_at_estimate
+#print axioms digHalf_estimate_eq_threshold
+#print axioms payloadStride_fits_digit
+#print axioms digHalf_estimate_payloadStride
+#print axioms isLoad
+#print axioms readPositions
+#print axioms cmpSeg_readPositions
+#print axioms cmpSegReload_couples_roles
+#print axioms estFuel
+#print axioms estFuel_zero
+#print axioms estFuel_succ
+#print axioms estFuel_le
+#print axioms estFuel_le_landed
+#print axioms estFuel_eq_sum
+#print axioms estFuel_le_paper
+#print axioms estFuel_fits
+#print axioms digitwise_is_wide_at_digit
+#print axioms digitwiseWordOps_le_wide

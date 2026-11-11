@@ -748,3 +748,52 @@ lines, house-triple only (the `decide` evidentials on `[propext]`); `Statement.l
 **Next single action:** the stride-`k` payload read in the test segment — a `stride`-fold of loads
 with `2^{w·j}` weights, proved equal to `numAt`, charged `stride` words per estimate into §C12's
 per-comparison figure.
+
+### Round 20 — the stride-`k` payload read: the fold is `numAt`, and the charge is *stride-invariant*
+
+`Row/KapilaCmpSegStride.lean` (§C13).  **The fold verdict:** `strideFold` (the read as a running
+accumulator) is `numAt` **by definition** — `strideFold_eq_numAt` is an identity, and §C13 says so.
+The content is the consequence: `numAt_split_at_estimate` (estimate `i`'s block splits at the digit
+the segment loads) and `digHalf_estimate_eq_threshold` (§7 step 7's integer test on the two folds at
+each estimate's address — free, because `digHalf_eq_threshold` was stated at an abstract address),
+with `payloadStride_fits_digit` discharging the one layout premise at §6.2's `payloadStride` and
+`digHalf_estimate_payloadStride` the result with no fit left to supply.
+
+**The restated §C12 charge, and why `cmpSegCost · stride` is wrong.**  Machine-checked
+(`cmpSeg_readPositions`): `cmpSeg` has exactly **four** `load`s, at positions `[0,1,21,22]`.  A
+comparison reads **one word per side per digit position** and descends at most `p` digits on a tie —
+the stride is in the **addresses** (`baseV + i·stride + p`), not the read count.  With `p = (F−1)/w`
+**fixed** per comparison, the per-comparison charge is `cmpSegCost + 6 ≤ 20 + 9p` and the run is
+**`blockLen · (20 + 9p)`** — the `+9m` drift in §C12's `m·(20 + 9·(p+m))` was a stride-1 artifact
+(the landed counter carried the digit *address* offset and the digit *position* at once).  Landed:
+`estFuel`, `estFuel_le` (drift-free), `estFuel_le_landed` (still under §C12's — no contradiction),
+`estFuel_eq_sum`, `estFuel_le_paper`, `estFuel_fits`.  The `stride`-word charge
+(`scanWordOpsWide blockLen stride = blockLen·(2·stride+3)`) is the charge of the **whole-block** read
+`numAt_not_word` proves unrepresentable; the digitwise read's charge is that shape at `p+1`
+(`digitwise_is_wide_at_digit`) and `digitwiseWordOps_le_wide` bounds it by the whole-block figure at
+`p+1 ≤ stride` — an upper bound, not the cost.
+
+**Not landed, and measured:** the stride **program**.  `sim_stride.py` (six arms, 3 fixed + 60 swept
+blocks) shows the landed tail's reload (`.add 2 13 7`) collapses the two counter roles at
+`stride > 1`: the walk's span becomes `i·k + p` digits and spills into earlier estimates
+(`{4,6,6,6}` vs `{4,4,4,4}` loads), and on a constructed block it **flips a verdict** (`acc 0` vs
+`1`, D2b).  The correct shape (cell 2 from a `p` constant, counter advanced by the stride, limit
+`blockLen·k + p`) reads exactly the fold's `p`-th term at each estimate's address, charges exactly
+`cmpSegCost + 6` per comparison, and its accumulator is the per-estimate `digHalf` count on every
+block measured.  The stride tail program and its §C10-style reach are the named next piece.
+
+**Receipts:** determinism double-compile, `KapilaCmpSegStride.olean` twice from scratch to sha256
+`3943edfa…ed2859` (355 352 B); banner exit 0, 266 banner lines, house-triple only (two declarations,
+`digitwise_is_wide_at_digit` and `cmpSegReload_couples_roles`, on **no** axioms); `Statement.lean`
+still `3dc6567e…34aa`.  Two receipts are kept, neither retracted:
+`kapila-20261111T035056Z` (**FAIL**) — the bounded 240 s lock wait expired (build UNLOCKED) and the
+runner's banner was **SIGKILLed** by the host (`axioms_exit = -9`) under load 66–116; its `NOTE.md`
+says what the −9 is and carries an `axioms.independent.txt` labelled *not* the runner's own banner.
+`kapila-20261111T035701Z` (**DONE**) — `KAPILA_LOCK_WAIT=900`, **lock acquired** after 180.2 s, the
+runner's own banner exit 0, 266 lines, house-triple only, and the same olean hash
+`3943edfa…ed2859`.  `head` at receipt time `a40f541` is the peer jv1000 lane's commit, which also
+swept this round's `PROGRESS.md` entry into itself (shared-index hazard, content intact,
+re-attributed in `PROGRESS.md`).
+
+**Next single action:** the stride tail program — the `cmpSeg` variant (cell 2 reloaded from a `p`
+constant, stride-advanced counter, `blockLen·k+p` limit) and its reach against `estFuel`.

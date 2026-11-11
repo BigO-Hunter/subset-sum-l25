@@ -3030,6 +3030,34 @@ The jv1000/strip lane's files (`JV1000Decay.lean`, `JV1000DecayAxioms.lean`,
 `jv1000_decay_receipts.py`, `sim/sim_decay.py`) are untracked in this shared worktree and are
 **not** in this commit.
 
+**Receipts `kapila-20261111T035056Z` (FAIL, host kill) and `kapila-20261111T035701Z` (DONE) — both
+kept, neither retracted.**  The first attempt passed the gate on iteration 1
+(`swapouts_delta60=0 free_pct=64`) and then hit **two recorded deviations**: the bounded 240 s lock
+wait expired so the build proceeded UNLOCKED (`lock.note`, `summary.json` — the policy working, not a
+stall), and the axiom banner was **SIGKILLed** by the host (`axioms_exit = -9`) under load 66–116, so
+its `STATUS` reads `FAIL axiom gate` with the kill as the reason.  Its `build_seconds = 4.1` is a
+*replay*, so its `oleans.txt` hash (`3943edfa…ed2859`, 355 352 B) **is** the double-compile's — the
+bytes of record, not a compile.  `receipts/kapila-20261111T035056Z/NOTE.md` says what the −9 is, and
+`axioms.independent.txt` beside it carries a separate foreground run of the identical command on the
+identical oleans (exit 0, 266 lines, house-triple only) **explicitly labelled as not the runner's own
+banner** — "the banner was proved to pass out-of-band, the runner's copy was SIGKILLed" is the honest
+sentence and it is the one written there.
+
+**The second attempt is the clean receipt:** `kapila-20261111T035701Z`, launched with
+`KAPILA_LOCK_WAIT=900`, **lock acquired** after 180.2 s, gate PROCEED (`delta60=0 free_pct=65`),
+`build_exit = 0` in 6.1 s (a replay — the olean's mtime `19:49:34` is the double-compile's), the
+runner's **own** banner exit **0**, 266 lines, house-triple only (`axiom_banner_house_triple_only:
+true`), and `oleans.txt` again `3943edfa…ed2859`, 355 352 B.  So the one deviation that mattered in
+attempt one (the 240 s bound) is cured by the bound's own parameter, and the kill is superseded by a
+receipt that carries the runner's own banner.
+
+**head at receipt time = `a40f541` — the peer jv1000 lane's round-19 commit, which landed in this
+shared worktree mid-receipt and which also swept this round's `PROGRESS.md` entry into itself.**  The
+shared-index hazard, in its ordinary form: one file, two authors, one `git add`.  **No content was
+lost** — the entry is intact in `a40f541` — but it landed under the jv1000 commit's message, and this
+paragraph is the re-attribution.  This round's own commit carries the module, `README_ROW.md`,
+`sim_stride.py`, `KapilaRowAxioms.lean` (the banner) and the receipt, and nothing of the peer lane's.
+
 Next single action: **the stride tail program** — land the `cmpSeg` variant (cell 2 reloaded from a
 `p` constant, counter advanced by the stride constant, limit `blockLen·k + p`) and its reach proof
 against `estFuel`, re-deriving §C10's `getD`-agreement transfer for the new tail.  The arithmetic it
