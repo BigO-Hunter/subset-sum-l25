@@ -2921,3 +2921,231 @@ per index (`addrV + p`), while the estimates `PayloadSeam.carries` speaks about 
 blocks; write the k-word read (a fold of `stride` loads with `2^{w·j}` place weights), prove the
 fold *is* `numAt` at each estimate's address, and charge `stride` words per estimate into §C12's
 per-comparison figure — the last gap between the data contract and the segment's cost.
+
+## Row lane 2026-11-11 (20) — the stride-`k` payload read: the fold is `numAt`, and the charge is *stride-invariant* (LANDED)
+
+Round 19 closed with: *"the stride-`k` payload read in the test segment — a `stride`-fold of loads
+with `2^{w·j}` weights, proved equal to `numAt`, charged `stride` words per estimate into §C12's
+per-comparison figure."*  This round does it, and the measurement changes the charge's **shape**,
+not only its constant.  New module `Row/KapilaCmpSegStride.lean` (§C13), a leaf of the import DAG.
+
+### The fold verdict: the fold *is* `numAt`, and that identity is not the content
+
+`strideFold` is the read written as the running accumulator a program produces
+(`Σ_{j<n} f (addr+j)·2^{w·j}`, built left to right), and `strideFold_eq_numAt` is `numAt_succ`
+read the other way.  **It is an identity, and §C13 says so** rather than dressing it: `numAt`'s
+definition *is* this fold, so «the fold is `numAt`» costs nothing to prove.  What has content is
+the consequence, and it is two landed theorems:
+
+* **`numAt_term_at_estimate` + `numAt_split_at_estimate`** — at estimate `i` the block starts at
+  `baseV + i·stride`, so the digit the segment loads is the fold's `p`-th term
+  `f ((baseV + i·stride) + p)·2^{w·p}`, and `numAt_split` at that address says the block *splits*
+  there.  So the landed digitwise segment is **already** a read of the stride-`k` fold — it never
+  materialises a numerator, which is exactly why `numAt_not_word`'s obstruction does not bite.
+* **`digHalf_estimate_eq_threshold`** — `digHalf_eq_threshold` was stated at an *abstract* address,
+  so transferring the decision lemma from stride 1 to stride `stride` is free: the segment's
+  verdict at estimate `i` *is* §7 step 7's integer test on the two folds.
+  **`payloadStride_fits_digit`** discharges its one layout premise (`(F−1)/w + 1 ≤ payloadStride w F`)
+  at §6.2's own layout, and **`digHalf_estimate_payloadStride`** is the result with no hand-supplied
+  fit left.  Proved, not assumed: `decide`-free, `omega` + `Nat.div_le_div_right`.
+
+**Named remainder: none at the arithmetic level.**  The fold's *program* is a different object and
+is named below.
+
+### The restated §C12 charge: `blockLen · (20 + 9p)` with `p` FIXED — the drift was a stride-1 artifact
+
+The obvious reading of «charge `stride` words per estimate» is `cmpSegCost · stride`.  **That is not
+what the segment pays, and the difference is the whole point of (i)'s re-specification.**
+Machine-checked (`cmpSeg_readPositions`, by `rfl`): `cmpSeg` has exactly **four** `load`
+instructions, at positions `[0, 1, 21, 22]` — two prologue digit reads, two walk-head reads.  A
+comparison reads **one word per side per digit position** and descends at most `p` digits on a tie.
+**The stride lives in the addresses (`baseV + i·stride + p`), not in the read count.**  So:
+
+    per comparison:   cmpSegCost h (baseV + i·stride) (baseA + i·stride) p r + 6  ≤  20 + 9p
+
+with **`p = (F−1)/w` a constant** — the digit holding the `1/2` bit — not a drifting counter.  That
+changes the *shape*: §C12's `m · (20 + 9·(p+m))` drifts because the landed loop's counter carries two
+roles at once (the digit *address* offset and the digit *position*), which coincide only at
+`stride = 1`.  `estFuel` is the same run at the fold's addresses with the roles separated
+(`estFuel_succ` advances **both bases by `stride`** — `numBlock_succ`'s shift one level up), and:
+
+| declaration | content |
+|---|---|
+| **`estFuel_le`** | `estFuel … n ≤ n · (20 + 9p)` — **no drift term** |
+| `estFuel_le_landed` | `≤ n · (20 + 9·(p+n))` — so the restated figure fits under §C12's; nothing landed is contradicted |
+| `estFuel_eq_sum` | the charge is a Σ over the fold's drifting addresses at the fixed digit (`estFuel`'s `cmpLoopFuel_eq_sum` twin) |
+| `estFuel_le_paper` | the same bound at `p := (F−1)/w`, `r := (F−1)%w` |
+| `estFuel_fits` | the horizon-fit form `D7.agrees` consumes, at the restated charge |
+
+**And the `stride`-word charge exists — for a read the row proves impossible.**  `scanWordOpsWide
+blockLen stride = blockLen·(2·stride+3)` prices a whole-block read; `numAt_not_word` proves that
+numerator does not fit a state word, so the digitwise segment does not perform it.  Its word-op
+charge is the same shape at the digit count it visits (`digitwise_is_wide_at_digit`:
+`scanWordOpsWide blockLen (p+1) = blockLen·(2·(p+1)+3)`), and `digitwiseWordOps_le_wide` bounds it by
+the whole-block figure at any `p+1 ≤ stride`.  So charging `stride` words per estimate into §C12
+would be charging, inside the digitwise accounting, for the read the digitwise re-specification
+exists to avoid — it is a valid *upper bound*, and that is how it is stated.
+
+### The program is NOT landed, and the simulation says why (`sim_stride.py`, kept)
+
+Everything above is arithmetic, at §C12's own level.  The **program** does not follow for free.  The
+landed tail reloads the walk's counter from the loop counter (`.add 2 13 7`); at `stride = 1` the two
+roles coincide, at `stride = k > 1` they do not.  Six arms, 3 fixed blocks + 60 swept, all pass:
+
+* **D1** with the counter at `i·k + p` and cell 2 reloaded from a `p` **constant**, iteration `i`
+  reads exactly `(baseV + i·k + p, baseA + i·k + p)` — the fold's `p`-th term at the estimate's
+  address — and every load stays inside a block (measured on all three blocks).
+* **D2** keeping the landed reload, the walk's span becomes `i·k + p` digits instead of `p` and
+  spills into earlier estimates: measured loads per iteration `{4,6,6,6}` vs `{4,4,4,4}` (k=2),
+  `{6,8,8}` vs `{6,6,6}`, `{8,10}` vs `{8,8}`.  It stays *inside* the arrays, which is why this
+  defect is arithmetic and not a crash.
+* **D2b** on a block built for it, the collapse **flips a verdict**: `acc = 0` where the
+  per-estimate test gives `1` (k=2, p=1, r=2; estimate 0 a close unequal pair `5` vs `6`, estimate 1
+  a V-side tie whose spill reaches estimate 0's digit).  So the counter/digit separation is a
+  correctness fix, not a taste.
+* **D3** the guard's limit must be `blockLen·k + p`, not `blockLen` — the stride-1 shape stops the
+  run early (measured: 1 comparison of 3, 1 of 2).
+* **D4** the per-comparison charge is exactly `cmpSegCost + 6` (+1 halting step) on every block: the
+  stride advance is one instruction either way, so §C13's `+6` is measured, not assumed.
+* **D5/D6** the correct shape's accumulator equals the per-estimate `digHalf` count on all 3 fixed
+  and all 60 swept blocks.  (Honest note: the collapse's accumulator also matched on all 60 swept
+  blocks — random low digits almost always decide inside the estimate's own block.  D2b's
+  constructed block is the arm that exhibits the verdict flip.)
+
+**Named as the next piece, not claimed:** the stride tail program — a `cmpSeg` variant whose walk
+counter is reloaded from a `p` constant, with a stride-advanced loop counter and a `blockLen·k + p`
+limit — and its §C10-style reach against `estFuel`.
+
+### Receipt
+
+**Determinism double-compile** (the compile of record): `KapilaCmpSegStride`'s `.olean`/`.ilean`/
+`.trace` deleted and rebuilt **twice from scratch**, both to sha256
+`3943edfa2798acc5274aa44295978e10732dd584bbdf23dcd81539f4b2ed2859` (355 352 bytes); the second
+compile 33 s, the first 40 s, at a host load of 66–116 (other lanes).  Axiom banner exit 0,
+**266** `depends on axioms` lines (was 244; +22 for this round): 151 house-triple, 68
+`[propext, Quot.sound]`, 47 `[propext]`, and two on **no axioms** at all —
+`digitwise_is_wide_at_digit` and `cmpSegReload_couples_roles`, both definitional equations.  No `sorryAx`, no `native_decide`.  `Statement.lean` still
+`3dc6567e…34aa`; family files 0-diff (the only tracked edit is `KapilaRowAxioms.lean`, the banner).
+The jv1000/strip lane's files (`JV1000Decay.lean`, `JV1000DecayAxioms.lean`,
+`jv1000_decay_receipts.py`, `sim/sim_decay.py`) are untracked in this shared worktree and are
+**not** in this commit.
+
+Next single action: **the stride tail program** — land the `cmpSeg` variant (cell 2 reloaded from a
+`p` constant, counter advanced by the stride constant, limit `blockLen·k + p`) and its reach proof
+against `estFuel`, re-deriving §C10's `getD`-agreement transfer for the new tail.  The arithmetic it
+must compose with is landed; the program is the only piece between §C13 and a segment theorem at
+stride `k`.
+
+
+## Row lane 2026-11-11 (19) — jv1000 `hdecay` **PROVED**: the annulus Cauchy estimate, and §6 discharged at `n = 256`
+
+Round 18 (`76f9fdc`) landed the strip-analyticity quadrature lemma
+(`trapezoid_error_le_of_decay`) and left one hypothesis open — `hdecay :
+∀ k ≠ 0, ‖c k‖ ≤ M q^{|k|}` — with the route described as «Cauchy's theorem on the closed
+annulus `e^{−a} ≤ |z| ≤ e^{a}`», the Laurent development of `G(z) = g(−i log z)`.  **That
+route is both unnecessary and weaker than the honest statement.**  Unnecessary: Mathlib's
+rectangle Cauchy–Goursat (`Complex.integral_boundary_rect_eq_zero_of_differentiableOn`) plus
+periodicity gives the coefficient bound directly.  Weaker: passing to the annulus drags in a
+sup-control question (the round-18 note correctly flagged the temptation to reach for
+three-lines/Phragmén–Lindelöf) that never has to be asked, because the **strip sup is itself
+the hypothesis** — it is not a consequence of holomorphy, and it is exactly what the
+certifier's machinery carries (`|2+2cos z| ≤ 2+2cosh(2β)`, sup `2^{p(Δ+U*)}`, both taken on
+`|Im z| ≤ 2β = 0.2`).
+
+### What landed — `SubsetSumL25/Row/JV1000Decay.lean`, 11 theorems, house triple
+
+| theorem | content |
+|---|---|
+| `abs_le_abs_of_mem_uIcc` | `y ∈ uIcc 0 s ⇒ \|y\| ≤ \|s\|` (keeps both the rectangle and its vertical sides inside the strip) |
+| `shift_integral_eq` | **the contour shift**: `∫₀^{2π} H(x)dx = ∫₀^{2π} H(x+is)dx` for `\|s\| < a`, `H z = g z e^{−ikz}` — the two vertical sides cancel by periodicity (`e^{−2πik} = 1`), the surviving factor is the *real* `e^{ks}` |
+| `abs_fourierCoeff_le_of_shift` | `‖ĉ_k‖ ≤ M e^{ks}` at every interior `s` |
+| `le_exp_endpoint_of_lt` / `le_exp_endpoint_of_gt` | the endpoint passage (`le_of_tendsto_of_tendsto`, one-sided `nhdsWithin`) |
+| **`abs_fourierCoeff_le_decay`** | **`‖ĉ_k‖ ≤ M e^{−a\|k\|}`** — the estimate; `k = 0` is included and is `M` |
+| `fourierCoeff_le_pow` / `hdecay_of_strip` | the same as `M q^{\|k\|}` with `q = e^{−a}`, i.e. §6's `hdecay` verbatim |
+| `trapezoid_error_le_of_strip` | **§6 discharged**: `trapezoid_error_le_of_decay` with `hdecay` supplied from the strip — the quadrature bound is no longer conditional on decay |
+| `exp_neg_fifth_pow_256_le` | `q²⁵⁶ = e^{−51.2} ≤ 10⁻²⁰`, **proved** from `e > 2.7182818283` alone |
+| `quadrature_at_256_of_strip` | **`n = 256`, both moments**: strip sup `M ≤ 8472775`, `K ≤ 32`, tail `ε ≤ 10⁻²⁰` ⇒ `‖circleMean F − trapMean 256 F‖ ≤ 10⁻⁶` |
+
+### The two places the tempting argument is wrong (both measured before writing Lean)
+
+1. **`le_of_forall_lt` "strictness" does not close the endpoint.**  With the shift factor
+   `e^{ks}`, for `k > 0` the decaying endpoint is `s → −a`, and at any *interior* `s` the bound
+   `M e^{ks}` is **larger** than `M e^{−a|k|}` — the strictness one wants is in the wrong
+   direction.  `sim/sim_decay.py` §2 measured it: `e^{k(s−a)} = 0.93 < 1` at `s = 0.19` holds
+   only on the *other* side.  So the honest passage is a limit (`le_of_tendsto_of_tendsto` with
+   `tendsto_const_nhds`), and nothing is lost: the strip is open, the limit takes the sup over it.
+2. **The sup is hypothesis, not consequence.**  Round 18's own worry («sup on the strip gives
+   sup on the circle only via three-lines») dissolves once one stops moving to the annulus: the
+   shift never needs the sup on a circle at all, only on the horizontal segments `Im z = s`,
+   `|s| < a`, which is inside the hypothesis.
+
+### Measurements (`sim/sim_decay.py`, run before any Lean)
+
+* **The shift identity is exact, not approximate.**  On the sharp test case
+  `F(z) = 1/(b − cos z)`, `b = cosh 0.3`, `a = 0.2`, whose TRUE coefficients are
+  `r^{|k|}/sinh(a')`, the shifted and unshifted quadratures agree with the exact values to
+  `1e-16` — the float floor, i.e. the identity as an identity.
+* **The bound is not vacuous at the rate.**  `|c_k|/(M e^{−a|k|})` decays exactly like
+  `e^{−(a'−a)k}` (`0.0830 → 0.0170` over `k = 0…16`), so the hypothesis is tight in the rate and
+  the constant `M = 1/(b − cosh a)` does the work — the same situation the moment integrands are
+  in (entire, but the bound only knows `a = 0.2`).
+* **Satisfiable by the actual integrands**: holding at every `k ≤ 8` with ≥ 4 orders of slack at
+  `M = W_out·2^{ceil(sup)}` for both moments.
+* **§7 covers both moments in one statement** because `q²⁵⁶` is proved to `10⁻²⁰`: at
+  `M = 8472775 = ⌈W_out·2²¹⌉` (`2²¹` is the ceiling the certifier's own sup already carries),
+  `K = 32`, the `q`-term is `8472775·10⁻²⁰·65 = 5.5·10⁻⁹` — fourteen orders below the `10⁻⁶`
+  target, so the larger ceiling costs nothing.  (Round 18's §6 note listed `16549` for moment 1;
+  §7 now takes the *second* moment's ceiling so a single theorem subsumes both.)
+* `n = 256` is the certifier's own inner grid `N_in`, so §6/§7 land on the node count the
+  enclosures actually use, not a convenient one.
+
+### Residue, named precisely (this round does NOT fake it)
+
+The **instantiation** passage is not in this file: `u`, `v` are `log₂` of positive strip-analytic
+integrals, so they are holomorphic on the strip, and the sup composition is the measured
+`W_out·2^{ceil(sup)}`.  Writing that composition down is the next round's job; what this round
+proves is the analysis lemma it feeds.  `ε` (the partial-sum tail `‖F − Σ_{|k|≤K} ĉ_k e^{ikx}‖`
+on the circle) is likewise a named premise with its size measured (`~10⁻¹⁶` at `K = 32`; §7
+allows `10⁻²⁰` per the `q`-term budget, i.e. the tail is **not** the binding constraint).
+The contour-split `U*`/`W*` bound and the rational comparison are untouched and remain the
+post-decay residue.
+
+### Mathlib diamond facts for the next author (all `#check`-verified on the pin)
+
+1. `Complex.integral_boundary_rect_eq_zero_of_differentiableOn` is exactly the right shape; the
+   `Complex.re/im` coercions normalize with a single `simpa using hrect` **once** the
+   `DifferentiableOn` is stated on the closed rect `uIcc ×ℂ uIcc` (state it via `.mono` from the
+   strip, never pointwise).
+2. `Differentiable.cexp` exists; `Complex.differentiable_cexp.comp` does not.
+3. `le_of_tendsto (hf) (h : f ≤ᶠ bound) : lim ≤ bound` — the **wrong** direction for `C ≤ lim`.
+   Use `le_of_tendsto_of_tendsto tendsto_const_nhds htend`.
+4. `𝓝` inside a `have`-type is fine with `open Filter`; the one-sided forms are
+   `nhdsWithin a (Set.Iio a)` / `nhdsWithin (-a) (Set.Ioi (-a))`, and `self_mem_nhdsWithin` is
+   the "eventually on the correct side" supplier.
+5. `Nat.cast_natAbs : ↑n.natAbs = ↑|n|` then `Int.cast_abs : ↑|a| = |↑a|` then `abs_of_neg` /
+   `abs_of_pos` — the ℤ-`|·|` → ℝ-`|·|` chain.  (No `Int.cast_natAbs`.)
+6. `pow_le_pow_left` is **`pow_le_pow_left₀`** in this pin (`0 ≤ a → a ≤ b → ∀ n`), and the
+   zero-hypothesis must be typed — `pow_le_pow_left₀ (by norm_num) (le_of_lt h) 51` — otherwise
+   `le_of_lt h` fills the `0 ≤ a` slot and unification picks the wrong metavariable.
+7. `IntervalIntegrable F volume …` **auto-binds `volume` as a variable** when it appears in a
+   *statement*; write `MeasureTheory.volume` explicitly or the composition with
+   `JV1000Strip`'s hypotheses silently fails to unify.
+8. `Real.exp_nat_mul (x) (n) : exp (↑n * x) = exp x ^ n` — the ℕ comes **first**, so
+   `rw [← Real.exp_nat_mul]` turns `(exp a)^n` into `exp (↑n * a)`.
+
+### Receipts
+
+`receipts/jv1000decay-…` (bounded runner, same discipline as the moment receipts): live-pressure
+gate, bounded lock wait with any expiry recorded as a deviation, detached `lake build`, named
+olean hash, **double-compile determinism**, and the banner `JV1000DecayAxioms.lean` (11
+`#print axioms`) fail-closed on `sorryAx` / `native_decide` / non-house axioms.  Banner exit 0,
+all 11 in the house triple.  `Statement.lean` sha256 `3dc6567e…34aa` — **0-diff**.  (Small
+discipline note: the lane's `Statement.lean` invariant is a **sha256**, and the git blob sha1 of
+the same file is `9ece8585…`; both are correct measurements of different things.  Checking with
+the wrong tool produces a phantom deviation.)
+
+Next single action: **the instantiation of §6/§7 at the moment integrands** — write
+`u`, `v` as `log₂` of the strip-analytic integrals, prove the composite integrand holomorphic on
+`|Im z| < 1/5` with sup `≤ W_out·2^{ceil sup}` (the measured `16548.4` / `8.4728·10⁶`), and feed
+`quadrature_at_256_of_strip`.  After that the residue is exactly the contour-split `U*`/`W*`
+bound plus the rational comparison.
