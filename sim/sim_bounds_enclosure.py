@@ -198,6 +198,12 @@ F1k = (2 + 2 * np.cos(thk)) * np.exp(p * (Delta - u[np.searchsorted(xt2, thk) % 
 print(f"  trapMean-256 vs true mean (same u field): {F1k.mean() - M1:+.3e}")
 print(f"  quadrature error bound at n=256 (JV1000Decay): 1e-6  [consumed by §7]")
 print(f"  room left for the enclosure: {(w1new - M1) - 1e-6:+.3e}")
+# The falsity of `eps <= 1e-20` at K=32 is NOT a tail-sum estimate that could be loose: the
+# residual r_K(x) = sum_{|k|>K} c_k e^{ikx} has sup-norm at least its mean square, so a single
+# measured coefficient already refutes the premise.
+rms32 = math.sqrt(2 * sum(abs(c) ** 2 for c in
+                          [c1k for c1k in np.fft.fft(F1) / len(F1)][33:len(F1) // 2]))
+print(f"  residual RMS lower bound at K=32: {rms32:.3e}  (so sup|r_32| >= {rms32:.3e} >> 1e-20)")
 # what precision on P does 3e-7 on M demand?
 dM_dP = (F1 * (-p * LN2) * (1.0 / P)).mean()
 rel = 3e-7 / abs((F1 * (-p * LN2)).mean() * 1.0)
