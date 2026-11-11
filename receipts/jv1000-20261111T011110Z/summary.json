@@ -1,0 +1,32 @@
+{
+  "receipt": "jv1000-20261111T011110Z",
+  "lane": "wip-kapila-row",
+  "target": "SubsetSumL25.Row.JV1000Instance",
+  "toolchain": "leanprover/lean4:v4.34.1",
+  "gate": {
+    "swapouts_delta60": 0,
+    "free_pct": 49
+  },
+  "lock": {
+    "acquired": true,
+    "waited_s": 40.0,
+    "bounded_s": 240
+  },
+  "build_exit": 0,
+  "build_seconds": 21.8,
+  "determinism": {
+    "sha_run1": "04827386217c8d249017fe7ec15fc02697b97184a01674b40531e5f6d3cc2419",
+    "sha_run2": "04827386217c8d249017fe7ec15fc02697b97184a01674b40531e5f6d3cc2419",
+    "size_run1": 4360968,
+    "size_run2": 4360968,
+    "identical": true,
+    "build2_exit": 0,
+    "build2_seconds": 4.7
+  },
+  "axioms": {
+    "exit": 1,
+    "banners_parsed": 0,
+    "house_triple_only": false
+  },
+  "head": "3229cc3c537baa84cf5bc1b72f280e8b0d0eaefb"
+}

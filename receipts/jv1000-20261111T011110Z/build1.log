@@ -1,0 +1,20 @@
+⚠ [8928/8930] Replayed SubsetSumL25.Proofs.O4
+warning: SubsetSumL25/Proofs/O4.lean:40:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+warning: SubsetSumL25/Proofs/O4.lean:74:56: Unused tactic linter: `push_cast` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Proofs/O4.lean:219:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+✔ [8930/8930] Built SubsetSumL25.Row.JV1000Instance (16s)
+Build completed successfully (8930 jobs).
