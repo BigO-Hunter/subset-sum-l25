@@ -30,9 +30,10 @@ so §C10's transfer applies to the variant verbatim (cmpSegStride_getD).
   the segment did (positions 0,1,21,22).
 * cmpSegStride_reaches_program: §C10's reach, transferred — the segment of the variant
   reaches position 29 in exactly cmpSegCost steps with the verdict in cell 6.
-* cmpSegStride_tail_step: the six tail instructions reach position 0 in exactly 6 steps,
-  leaving acc + verdict, the advanced counter, and the segment's precondition
-  re-established at the next estimate's digit addresses.
+* cmpSegStride_tail_step: the tail's first five instructions reach position 34 — the guard
+  itself — in exactly 5 steps, leaving acc + verdict, the advanced counter, and the segment's
+  precondition re-established at the next estimate's digit addresses.  The sixth instruction
+  is the guard, split off as cmpSegStride_guard_taken / cmpSegStride_guard_exit.
 * cmpSegStride_iter: one comparison, end to end — cmpSegCost + 6 steps.
 * cmpSegStride_loop: m comparisons at estFuel h (baseV + j·k) (baseA + j·k) k p r m steps,
   accumulating strideHits.
@@ -141,15 +142,16 @@ theorem cmpSegStride_reaches_program (tail : List Instr) {ρ : Nat → BitVec w}
 
 /-! ### §C14.3 — the tail: six instructions, and the roles separated -/
 
-/-- **THE TAIL, RUN.**  From position 29 with the counter in cell 13, the six tail
-instructions reach position 0 in exactly 6 steps, leaving
+/-- **THE TAIL, RUN.**  From position 29 with the counter in cell 13, the tail's first five
+instructions reach position 34 — the guard — in exactly 5 steps, leaving
 
 * cell 15 = acc + verdict (the accumulator threaded),
 * cell 13 = c + k (the counter advanced by the STRIDE, not by one),
 * cells 0/1 = the next estimate's digit addresses, cell 2 = p (the digit position
   UNCHANGED, read from cell 17 and not from the counter).
 
-The guard is taken here; cmpSegStride_guard_exit is the other branch. -/
+The sixth tail instruction is the guard at 34, and it is SPLIT OFF: cmpSegStride_guard_taken
+is the continue branch, cmpSegStride_guard_exit the halt. -/
 theorem cmpSegStride_tail_step (tail : List Instr) {ρ : Nat → BitVec w} {h : Nat → Nat}
     {baseV baseA k p c limit acc : Nat} {st : Nat → Nat}
     (h7 : h 7 = 0) (h11 : h 11 = baseV) (h12 : h 12 = baseA)
@@ -532,5 +534,202 @@ theorem cmpSegStride_loop (tail : List Instr) {ρ : Nat → BitVec w} {h : Nat �
             = S + estFuel h (baseV + j * k + k) (baseA + j * k + k) k p r m
               + (cmpSegCost h (baseV + j * k) (baseA + j * k) p r + 6) from by omega]
       exact hstep1.trans hstep2
+
+/-! ### §C14.6 — THE EXIT COMPOSITION: the segment run halts at 35 -/
+
+/-- **TO THE GUARD — position 0 to position 34.**  One comparison's segment and tail WITHOUT
+executing the guard: the counter lands in cell 13 advanced by the stride, cell 14 still holds
+the limit, and the frame is re-established at the next estimate's digit addresses.  This is
+cmpSegStride_iter's prefix, both halves unchanged, stopped one instruction short. -/
+theorem cmpSegStride_to_guard (tail : List Instr) {ρ : Nat → BitVec w} {h : Nat → Nat}
+    {baseV baseA aV aA k p c limit acc r : Nat} {st : Nat → Nat}
+    (hfitH : ∀ z, h z < 2 ^ w) (hV : 16 ≤ aV) (hA : 16 ≤ aA)
+    (h7 : h 7 = 0) (h8 : h 8 = 1) (h9 : h 9 = 2 ^ r)
+    (h11 : h 11 = baseV) (h12 : h 12 = baseA) (h14 : h 14 = limit)
+    (h16 : h 16 = k) (h17 : h 17 = p)
+    (k0 : st 0 = aV + p) (k1 : st 1 = aA + p) (k2 : st 2 = p)
+    (hbV : aV + p = baseV + c) (hbA : aA + p = baseA + c)
+    (hadA : h (aA + p) + 2 ^ r < 2 ^ w) (hadV : h (aV + p) + 2 ^ r < 2 ^ w)
+    (hag : ∀ z, ¬ CmpCell z → st z = CmpLoopFrame h c acc z)
+    (hfit : ∀ z, st z < 2 ^ w) (hacc1 : acc + 1 < 2 ^ w)
+    (hcw : c + k < 2 ^ w) (hvw : baseV + (c + k) < 2 ^ w) (haw : baseA + (c + k) < 2 ^ w)
+    (hpw : p < 2 ^ w) (S : Nat) :
+    ∃ st', (st' 0 = aV + p + k) ∧ (st' 1 = aA + p + k) ∧ (st' 2 = p) ∧
+        (st' 13 = c + k) ∧ (st' 14 = limit) ∧
+        (st' 15 = acc + (if digHalf h h aV aA p r then 1 else 0)) ∧
+        (∀ z, ¬ CmpCell z →
+          st' z = CmpLoopFrame h (c + k)
+            (acc + (if digHalf h h aV aA p r then 1 else 0)) z) ∧
+        (∀ z, st' z < 2 ^ w) ∧
+      exec (cmpSegStrideProgram tail) ρ (S + (cmpSegCost h aV aA p r + 5)) 0 0 (memOf w st)
+        = exec (cmpSegStrideProgram tail) ρ S 34 0 (memOf w st') := by
+  set g : Nat → Nat := CmpLoopFrame h c acc with hg
+  have g13 : g 13 = c := by rw [hg]; exact cmpLoopFrame_13 h c acc
+  have g15 : g 15 = acc := by rw [hg]; exact cmpLoopFrame_15 h c acc
+  have g7 : g 7 = 0 := by rw [hg, cmpLoopFrame_7]; exact h7
+  have g8 : g 8 = 1 := by rw [hg, cmpLoopFrame_8]; exact h8
+  have g9 : g 9 = 2 ^ r := by rw [hg, cmpLoopFrame_9]; exact h9
+  have g11 : g 11 = baseV := by rw [hg, cmpLoopFrame_11]; exact h11
+  have g12 : g 12 = baseA := by rw [hg, cmpLoopFrame_12]; exact h12
+  have g14 : g 14 = limit := by rw [hg, cmpLoopFrame_14]; exact h14
+  have g16 : g 16 = k := by
+    rw [hg, cmpLoopFrame_digit (by omega) (by omega)]; exact h16
+  have g17 : g 17 = p := by
+    rw [hg, cmpLoopFrame_digit (by omega) (by omega)]; exact h17
+  have gfit : ∀ z, g z < 2 ^ w := by
+    intro z; rw [hg]
+    exact cmpLoopFrame_fit (h := h) (p := c) (acc := acc) hfitH (by omega) (by omega) z
+  have gdigV : ∀ i, g (aV + i) = h (aV + i) := by
+    intro i; rw [hg, cmpLoopFrame_digit (by omega) (by omega)]
+  have gdigA : ∀ i, g (aA + i) = h (aA + i) := by
+    intro i; rw [hg, cmpLoopFrame_digit (by omega) (by omega)]
+  have hadAg : g (aA + p) + 2 ^ r < 2 ^ w := by rw [gdigA p]; exact hadA
+  have hadVg : g (aV + p) + 2 ^ r < 2 ^ w := by rw [gdigV p]; exact hadV
+  have hcost : cmpSegCost g aV aA p r = cmpSegCost h aV aA p r :=
+    cmpSegCost_congr gdigV gdigA
+  obtain ⟨s1, h6, hags, hfits, hstep1⟩ :=
+    cmpSegStride_reaches_program tail (ρ := ρ) (h := g) (addrV := aV) (addrA := aA)
+      (p := p) (r := r) (st := st) (S := S + 5)
+      gfit (by omega) (by omega) g7 g8 g9 k0 k1 k2 hadAg hadVg hag hfit
+  rw [hcost] at hstep1
+  have s13 : s1 13 = c := (hags 13 (not_cmpCell_high (by omega))).trans g13
+  have s15 : s1 15 = acc := (hags 15 (not_cmpCell_high (by omega))).trans g15
+  have s11 : s1 11 = baseV := (hags 11 (not_cmpCell_high (by omega))).trans g11
+  have s12 : s1 12 = baseA := (hags 12 (not_cmpCell_high (by omega))).trans g12
+  have s14 : s1 14 = limit := (hags 14 (not_cmpCell_high (by omega))).trans g14
+  have s16 : s1 16 = k := (hags 16 (not_cmpCell_high (by omega))).trans g16
+  have s17 : s1 17 = p := (hags 17 (not_cmpCell_high (by omega))).trans g17
+  have s7 : s1 7 = 0 := (hags 7 not_cmpCell_seven).trans g7
+  obtain ⟨s2, r0, r1, r2, r13, r15, r6, rframe, rfit, hstep2⟩ :=
+    cmpSegStride_tail_step tail (h := g) (baseV := baseV) (baseA := baseA) (k := k)
+      (p := p) (c := c) (limit := limit) (acc := acc) (st := s1) (S := S)
+      g7 g11 g12 g14 g16 g17 hags hfits s13 s15 (by rw [h6]; split <;> omega)
+      hacc1 hcw hvw haw hpw
+  have s2f : s2 14 = limit := by
+    rw [rframe 14 (not_cmpCell_high (by omega))]
+    rw [up_ne (by decide : (14 : Nat) ≠ 13), up_ne (by decide : (14 : Nat) ≠ 15)]
+    exact g14
+  have dh : (if digHalf g g aV aA p r then 1 else 0)
+      = (if digHalf h h aV aA p r then 1 else 0) := by
+    rw [digHalf_congr (f := g) (g := g) (f' := h) (g' := h) (addrV := aV)
+      (addrA := aA) (p := p) (r := r) gdigV gdigA]
+  refine ⟨s2, ?_, ?_, r2, r13, s2f, ?_, ?_, rfit, ?_⟩
+  · rw [r0]; omega
+  · rw [r1]; omega
+  · rw [r15, h6, dh]
+  · intro z hz
+    have key := congrFun (up_up_absorb h c acc
+      (acc + (if digHalf h h aV aA p r then 1 else 0)) (c + k)) z
+    simp only [CmpLoopFrame] at key ⊢
+    rw [rframe z hz, h6, dh]
+    rw [show g = up (up h 13 c) 15 acc from by rw [hg]; rfl]
+    exact key
+  · rw [show S + (cmpSegCost h aV aA p r + 5) = S + 5 + cmpSegCost h aV aA p r from by omega]
+    exact hstep1.trans hstep2
+
+/-- **THE EXIT STEP — one comparison, and the run ENDS.**  The guard at 34 is NOT taken, so the
+program leaves the loop at position 35 with the verdict accumulated and the counter advanced.
+This is the one-lemma wrap the composition below consumes. -/
+theorem cmpSegStride_run_step (tail : List Instr) {ρ : Nat → BitVec w} {h : Nat → Nat}
+    {baseV baseA aV aA k p c limit acc r : Nat} {st : Nat → Nat}
+    (hfitH : ∀ z, h z < 2 ^ w) (hV : 16 ≤ aV) (hA : 16 ≤ aA)
+    (h7 : h 7 = 0) (h8 : h 8 = 1) (h9 : h 9 = 2 ^ r)
+    (h11 : h 11 = baseV) (h12 : h 12 = baseA) (h14 : h 14 = limit)
+    (h16 : h 16 = k) (h17 : h 17 = p)
+    (k0 : st 0 = aV + p) (k1 : st 1 = aA + p) (k2 : st 2 = p)
+    (hbV : aV + p = baseV + c) (hbA : aA + p = baseA + c)
+    (hadA : h (aA + p) + 2 ^ r < 2 ^ w) (hadV : h (aV + p) + 2 ^ r < 2 ^ w)
+    (hag : ∀ z, ¬ CmpCell z → st z = CmpLoopFrame h c acc z)
+    (hfit : ∀ z, st z < 2 ^ w) (hacc1 : acc + 1 < 2 ^ w)
+    (hcw : c + k < 2 ^ w) (hvw : baseV + (c + k) < 2 ^ w) (haw : baseA + (c + k) < 2 ^ w)
+    (hpw : p < 2 ^ w) (hl : ¬ c + k < limit) (S : Nat) :
+    ∃ st', (st' 0 = aV + p + k) ∧ (st' 1 = aA + p + k) ∧ (st' 2 = p) ∧
+        (st' 13 = c + k) ∧ (st' 14 = limit) ∧
+        (st' 15 = acc + (if digHalf h h aV aA p r then 1 else 0)) ∧
+        (∀ z, ¬ CmpCell z →
+          st' z = CmpLoopFrame h (c + k)
+            (acc + (if digHalf h h aV aA p r then 1 else 0)) z) ∧
+        (∀ z, st' z < 2 ^ w) ∧
+      exec (cmpSegStrideProgram tail) ρ (S + (cmpSegCost h aV aA p r + 6)) 0 0 (memOf w st)
+        = exec (cmpSegStrideProgram tail) ρ S 35 0 (memOf w st') := by
+  obtain ⟨s, s0, s1, s2, s13, s14, s15, sframe, sfit, hstep⟩ :=
+    cmpSegStride_to_guard tail (S := S + 1) hfitH hV hA h7 h8 h9 h11 h12 h14 h16 h17
+      k0 k1 k2 hbV hbA hadA hadV hag hfit hacc1 hcw hvw haw hpw
+  have hgx := cmpSegStride_guard_exit tail (ρ := ρ) (st := s) (c := c + k) (limit := limit)
+    s13 s14 hl sfit (S := S)
+  refine ⟨s, s0, s1, s2, s13, s14, s15, sframe, sfit, ?_⟩
+  rw [show S + (cmpSegCost h aV aA p r + 6) = S + 1 + (cmpSegCost h aV aA p r + 5) from by omega]
+  exact hstep.trans hgx
+
+/-- **THE SEGMENT RUN AT STRIDE k HALTS AT 35.**  m full comparisons (cmpSegStride_loop, which
+carries the induction), then ONE last comparison whose guard is not taken (cmpSegStride_run_step):
+the program stops at position 35 — past the tail, off the loop — with the accumulator holding
+every verdict it gathered.  This is §C14's segment theorem at stride k; the paper's statement
+adds only the frame wrapper around the register file. -/
+theorem cmpSegStride_run_halts (tail : List Instr) {ρ : Nat → BitVec w} {h : Nat → Nat}
+    {baseV baseA k p r limit : Nat}
+    (hfitH : ∀ z, h z < 2 ^ w) (hV : 16 ≤ baseV) (hA : 16 ≤ baseA)
+    (h7 : h 7 = 0) (h8 : h 8 = 1) (h9 : h 9 = 2 ^ r)
+    (h11 : h 11 = baseV) (h12 : h 12 = baseA) (h14 : h 14 = limit)
+    (h16 : h 16 = k) (h17 : h 17 = p) (hpw : p < 2 ^ w) :
+    ∀ (m j acc : Nat) (st : Nat → Nat),
+      st 0 = baseV + (j * k + p) → st 1 = baseA + (j * k + p) →
+      st 2 = p → st 13 = j * k + p →
+      (∀ z, ¬ CmpCell z → st z = CmpLoopFrame h (j * k + p) acc z) →
+      (∀ z, st z < 2 ^ w) → acc + m + 1 < 2 ^ w →
+      (∀ i, i < m → (j + i) * k + p + k < limit) →
+      (∀ i, i < m → (j + i) * k + p + k < 2 ^ w) →
+      (∀ i, i < m → baseV + ((j + i) * k + p + k) < 2 ^ w) →
+      (∀ i, i < m → baseA + ((j + i) * k + p + k) < 2 ^ w) →
+      (∀ i, i < m → h (baseV + ((j + i) * k + p)) + 2 ^ r < 2 ^ w) →
+      (∀ i, i < m → h (baseA + ((j + i) * k + p)) + 2 ^ r < 2 ^ w) →
+      ¬ ((j + m) * k + p + k < limit) →
+      (j + m) * k + p + k < 2 ^ w →
+      baseV + ((j + m) * k + p + k) < 2 ^ w →
+      baseA + ((j + m) * k + p + k) < 2 ^ w →
+      h (baseV + (j + m) * k + p) + 2 ^ r < 2 ^ w →
+      h (baseA + (j + m) * k + p) + 2 ^ r < 2 ^ w →
+      ∀ (S : Nat),
+      ∃ st', (st' 0 = baseV + ((j + m) * k + p) + k) ∧
+          (st' 1 = baseA + ((j + m) * k + p) + k) ∧ (st' 2 = p) ∧
+          (st' 13 = (j + m) * k + p + k) ∧
+          (st' 15 = acc + strideHits h (baseV + j * k) (baseA + j * k) k p r m
+            + (if digHalf h h (baseV + (j + m) * k) (baseA + (j + m) * k) p r then 1 else 0)) ∧
+          (∀ z, st' z < 2 ^ w) ∧
+        exec (cmpSegStrideProgram tail) ρ
+            (S + (estFuel h (baseV + j * k) (baseA + j * k) k p r m
+              + (cmpSegCost h (baseV + (j + m) * k) (baseA + (j + m) * k) p r + 6)))
+            0 0 (memOf w st)
+          = exec (cmpSegStrideProgram tail) ρ S 35 0 (memOf w st') := by
+  intro m j acc st k0 k1 k2 k13 hag hfit hacc hg1 hg2 hg3 hg4 hg5 hg6 hexit hcw hvw haw hadV hadA S
+  -- the loop consumes estFuel; giving it the exit's budget too is what lets the two chain
+  obtain ⟨s1, n0, n1, n2, n13, nframe, nfit, hloop⟩ :=
+    cmpSegStride_loop tail (h := h) (baseV := baseV) (baseA := baseA) (k := k) (p := p)
+      (r := r) (limit := limit) hfitH hV hA h7 h8 h9 h11 h12 h14 h16 h17 hpw
+      m j acc st k0 k1 k2 k13 hag hfit (by omega) hg1 hg2 hg3 hg4 hg5 hg6
+      (S + (cmpSegCost h (baseV + (j + m) * k) (baseA + (j + m) * k) p r + 6))
+  have hacc' : acc + strideHits h (baseV + j * k) (baseA + j * k) k p r m + 1 < 2 ^ w := by
+    have := strideHits_le h (baseV + j * k) (baseA + j * k) k p r m
+    omega
+  obtain ⟨s2, o0, o1, o2, o13, o14, o15, oframe, ofit, hstep⟩ :=
+    cmpSegStride_run_step tail (h := h) (baseV := baseV) (baseA := baseA)
+      (aV := baseV + (j + m) * k) (aA := baseA + (j + m) * k) (k := k) (p := p)
+      (c := (j + m) * k + p) (limit := limit)
+      (acc := acc + strideHits h (baseV + j * k) (baseA + j * k) k p r m)
+      (r := r) (st := s1) (S := S)
+      hfitH (by omega) (by omega) h7 h8 h9 h11 h12 h14 h16 h17
+      (by omega) (by omega) n2 (by omega) (by omega)
+      hadA hadV
+      nframe nfit hacc' (by omega) (by omega) (by omega)
+      hpw hexit
+  refine ⟨s2, ?_, ?_, o2, ?_, o15, ofit, ?_⟩
+  · rw [o0]; omega
+  · rw [o1]; omega
+  · rw [o13]
+  · rw [show S + (estFuel h (baseV + j * k) (baseA + j * k) k p r m
+        + (cmpSegCost h (baseV + (j + m) * k) (baseA + (j + m) * k) p r + 6))
+        = S + (cmpSegCost h (baseV + (j + m) * k) (baseA + (j + m) * k) p r + 6)
+          + estFuel h (baseV + j * k) (baseA + j * k) k p r m from by omega]
+    exact hloop.trans hstep
 
 end SubsetSumL25.Row

@@ -371,3 +371,6 @@ open SubsetSumL25.Row
 #print axioms cmpSegStride_iter
 #print axioms cmpSegStride_loop
 #print axioms strideHits_le
+#print axioms cmpSegStride_to_guard
+#print axioms cmpSegStride_run_step
+#print axioms cmpSegStride_run_halts
