@@ -1,0 +1,2 @@
+2026-11-11T02:16:21.333090+00:00 iter=1 swapouts_delta60=240 free_pct=61 verdict=wait
+2026-11-11T02:17:21.396294+00:00 iter=2 swapouts_delta60=0 free_pct=60 verdict=PROCEED

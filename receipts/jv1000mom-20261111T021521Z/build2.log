@@ -1,0 +1,26 @@
+⚠ [8928/8932] Replayed SubsetSumL25.Proofs.O4
+warning: SubsetSumL25/Proofs/O4.lean:40:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+warning: SubsetSumL25/Proofs/O4.lean:74:56: Unused tactic linter: `push_cast` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Proofs/O4.lean:219:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+⚠ [8931/8932] Replayed SubsetSumL25.Row.JV1000Quadrature
+warning: SubsetSumL25/Row/JV1000Quadrature.lean:55:2: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+warning: SubsetSumL25/Row/JV1000Quadrature.lean:241:27: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+Build completed successfully (8932 jobs).

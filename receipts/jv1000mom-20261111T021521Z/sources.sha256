@@ -1,0 +1,7 @@
+ba3e9df8f564d4bf8feb45124762e48de7dc8e402451325ebdaa912e071cac78  SubsetSumL25/Row/JV1000Moments.lean
+921563aba37894f0f72dbe5e5fa224425af550704b9c1a942a16324d37302254  SubsetSumL25/Row/JV1000Quadrature.lean
+83d43e714cc84ca9e2911b5825dd34e85f35ecd98dcf93b0136e4d4b8476347d  JV1000MomentsAxioms.lean
+2ce482a70cf931282b2b4ebeb8e71f59d94a5625bf3470ebf666e373b90e4ef6  SubsetSumL25/Row/JV1000Instance.lean
+6c532e03bb63142642ec886e989f42646ee784844f08f499bed2f97b3e9d09e5  JV1000Axioms.lean
+# ^ JV1000Instance.lean (+ its own banner file) hashed post-hoc: they were compiled
+#   in this receipt's build but the runner only pinned the two new modules + banner.

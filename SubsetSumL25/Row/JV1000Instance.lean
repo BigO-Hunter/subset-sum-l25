@@ -26,9 +26,13 @@ Division of labour, stated plainly:
   absorb at `α − T = 9.64·10⁻⁸` — 100× tighter than `ss/kapila 0.4877`'s (§2), **25 of
   the 34 checks** (`repro_run1.json`), the amplitude certificate (§4), and the `J = 1`
   collapse shape (§7).
-* **Not here: the nine goals.**  Seven entropy-bearing checks (C1–C5, C5L, A5) need
-  rational `log₂` enclosures tight to ≪ 10⁻⁶; `M₁`/`M₂` need a verified quadrature.
-  Both are stated in `JV1000Residue` with their exact shapes (§7).
+* **Not here: the seven entropy goals.**  C1–C5, C5L and A5 need rational `log₂`
+  enclosures tight to ≪ 10⁻⁶; they are stated in `JV1000Residue` (§7).
+* **The two moment goals have moved — and the shapes that were here are refuted.**
+  `M₁`/`M₂` stated against the *raw* log-densities `r`, `s` are **false**: measured
+  `log₂ = 9.1347 / 8.5400` against `ρ_c = 0.5162696` (`Row.JV1000Moments` §2 proves
+  both refutations and §3 states the corrected obligations against the
+  strip-corrected `u`, `v` the certifier actually integrates).
 * **Nothing here is a claim about `Race.bound`.**  `SolvedInTime (975151/2000000)`
   additionally needs the shared `Routines`/`D7`/`CorrectAt` frame (ASSEMBLY §6 class B),
   which is the family lane's work, not this file's.
@@ -898,11 +902,15 @@ the multiplier vector `z = (p, 0)`; ρ₁–ρ₈ use `z = (q, 0, 0)`; ρ₉ (on
 not a proof obligation — its proof content is B4's specialisation, which is gated on
 B1's transfer and is the family lane's work.
 
-The two moment integrals themselves are stated in the collapse vocabulary below.  Their
-**analytic transcription is part of C6's open work**: the certifier's `I1`/`I2` carry
-strip corrections (`L`, `B`, `H_`, and the perturbed `u`, `v` of `certify_c5`), and
-those are not transcribed here — the shapes below are the raw-density versions, marked
-as such.  Stating a transcription I have not verified would be worse than naming the gap.
+The two moment integrals are stated in the collapse vocabulary below.  Their transcription
+into the certifier's strip-corrected `u`, `v` lives in `Row.JV1000Moments` §3, and the
+shapes kept here are the **raw-density** ones — which are now *measured and proved to be
+false* as residue goals (`log₂ jvMomentRho0 = 9.1347`, `log₂ jvMomentBand = 8.5400`
+against `ρ_c = 0.5163`; refutations `JV1000Moments.jv_m1_stated_false`,
+`jv_m2_stated_false`).  They are kept as *definitions* — the raw shape is the right thing
+to measure against, and §2 of `JV1000Moments` uses it — but they are no longer residue
+goals.  Stating a transcription I have not verified would be worse than naming the gap;
+keeping a false goal in a residue structure is worse still.
 -/
 
 /-- Region ρ₀'s multiplier vector, in the `J = 1` collapse: `z = (p, 0)`. -/
@@ -947,12 +955,13 @@ noncomputable def jvMomentBand : ℝ :=
     (2 + 2 * Real.cos x)
       * (2 : ℝ) ^ ((jvQmQ : ℝ) * ((jvAGammaQ : ℝ) * jvLogDensityS x - jvLogDensityR x))
 
-/-- **The residue: exactly nine named goals.**
+/-- **The residue's entropy half: seven named goals.**
 
 Seven entropy-bearing checks (margins ~1.3·10⁻⁶, so rational `log₂` enclosures tight to
-≪ 10⁻⁶ are required — a shared helper other rows will want), and the two moments (no
-in-tree Lean quadrature for `2^{trig}` integrals exists; this is the tall pole, and it is
-the only place jv1000 differs *mathematically* from `ss/kapila 0.4877`).
+≪ 10⁻⁶ are required — a shared helper other rows will want).  The two moment goals that
+used to sit here are refuted in their raw-density form and restated against the
+certified strip-corrected densities in `Row.JV1000Moments` (§2, §3); the count is
+unchanged at nine obligations (`jv_residue_is_nine` documents the 25 + 9 = 34 split).
 
 `eps0_lower_bound` is the bridge the Lemma A7 group of §5 is stated against: it says the
 C1–C5 margins' minimum is at least `10⁻⁶`, which is what makes `jv_check_A71_*` /
@@ -975,17 +984,22 @@ structure JV1000Residue where
   /-- C5-7 (`A5`): `1/2 − τ₀ + ζ < δ` with `δ = (η − (μ/2)log₂3)/2`. -/
   a5 : 1 / 2 - (jvTau0Q : ℝ) + (jvZetaQ : ℝ)
         < ((jvEtaQ : ℝ) - ((jvMuQ : ℝ) / 2) * (Real.log 3 / Real.log 2)) / 2
-  /-- `M₁` (region ρ₀, `z = (p, 0)`): `log₂ M₁ < ρ_c`. -/
-  m1 : Real.log jvMomentRho0 / Real.log 2 < (jvRhoCQ : ℝ)
-  /-- `M₂` (regions ρ₁–ρ₉, `z = (q, 0, 0)`): `log₂ M₂ < ρ_c`. -/
-  m2 : Real.log jvMomentBand / Real.log 2 < (jvRhoCQ : ℝ)
+  /-! `M₁` and `M₂` are **not** fields of this structure.  As stated against
+  `jvMomentRho0`/`jvMomentBand` (raw densities `r`, `s`) they are false — see
+  `Row.JV1000Moments.jv_m1_stated_false` / `jv_m2_stated_false`, and the corrected
+  statements `Row.JV1000Moments.jvMomentRho0Cert`/`jvMomentBandCert` with structure
+  `Row.JV1000Moments.JV1000Moments`.  A false field left in a residue structure is a
+  trap for the next author; it is removed rather than weakened. -/
 
 /-- The residue's own derived goal, recorded because §5's Lemma A7 group is stated
 against it: the margin minimum is at least `10⁻⁶`.  It follows from the C1–C4 group,
 whose certifier margins are `1.3156…·10⁻⁶`. -/
 def jvEps0LowerBoundGoal : Prop := (jvEps0LBQ : ℝ) ≤ jvH2 (2 * (jvAQ : ℝ)) / 2 - (jvGammaQ : ℝ)
 
-/-- **The residue is nine goals, and 24 + 9 + S3 + S5 partition the 34 checks.** -/
+/-- **The residue is nine goals, and 25 + 9 partition the 34 checks.**  Nine *obligations*,
+not nine fields here: seven entropy goals (`JV1000Residue`) plus the two moments, whose
+corrected statements live in `Row.JV1000Moments` (`JV1000Moments`, and
+`jv_residue_partition_relocated : 25 + 7 + 2 = 34`). -/
 theorem jv_residue_is_nine : 25 + 9 = 34 := by norm_num
 
 end SubsetSumL25.Row

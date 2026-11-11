@@ -1,0 +1,22 @@
+SUPERSEDED by receipts/jv1000mom-20261111T021521Z (timestamp order); its build is green
+and deterministic, and its axiom banner is clean — nothing is retracted here.
+
+Why a second run exists, stated accurately (the first guess was wrong, and the
+measurement corrects it): a doc-only edit landed in
+`SubsetSumL25/Row/JV1000Quadrature.lean` after this receipt (the measured trapezoid
+error in the module comment was sharpened from `7.7·10⁻¹²` to "of order 10⁻¹²" once
+`sim/sim_m1.py` recomputed it against a self-consistent reference), so I re-ran the
+receipt believing the `.olean` bytes had changed.  **They had not:**
+`JV1000Moments.olean` sha256 `dc7e61f4…a669` is byte-identical in both receipts, because
+the edit was inside a `/-! … -/` **module comment**, which Lean does not store in the
+olean.  So this receipt's sources were in fact already current, and the pair is a free
+determinism data point: same olean bytes across two independent runs with a comment-only
+source delta in between.
+
+Kept, not deleted, because it is the only record of this round's first lock deviation:
+`acquired=False waited_s=240.2 bounded=240` — a peer held
+`/Volumes/Substrate-1/bigo/.build.lock` for the entire bounded wait (the second run
+recorded the same deviation, again 240.2 s).
+
+Sources this receipt verified: `sources.sha256` (Quadrature `7e32d4bc…`, i.e. the
+pre-edit comment text).
