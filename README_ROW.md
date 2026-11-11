@@ -524,21 +524,41 @@ This round does the re-specification as far as arithmetic goes.
   collapse via `numAt_eq_of_lt`. So the earlier framing — "without scale-fit one
   more digit is in play" — was *stronger than necessary*: the four branch facts
   consume only `Vlo, Alo < 2^(w·p)`, which the digit bound supplies.
-* **The segment's shape, stated** (§D5): `cmpSeg cont` — 29 instructions,
-  `cmpSeg_length` by `rfl` (a constant `List Instr`, back-edges not unrolled);
-  `cmpSegFuel p = 13 + 9·p` (the A-side tie is worst: 11 to the walk entry, 9 per
-  digit, terminal test, exit), `cmpSegFuel_linear` proved. The **decided cases are
-  constant** (7 and 8 instructions) — the `O(p)` is paid only on an exact tie.
-  The segment's *correctness* is deliberately not here: the obligation is written
-  out in the section docstring (reach `cont` with cell 6 = `digHalf`'s verdict in
-  `cmpSegFuel p` steps from the stated register precondition), because a segment
-  proof against a wrong decision predicate would be a new `K+3`-versus-`K+7`
-  mistake wearing a loop.
-* **What is still open.** (i) is now *arithmetic DONE, segment proof OPEN*. (ii)
-  the bin sums remain the only remaining **mathematical** input (`wideExit_eq_binSum`
-  consumes them and nothing else). (iv) the cost re-measurement is untouched:
-  `cmpSegFuel`'s linearity is stated, but `D7.agrees`'s step horizon and
-  `KapilaAlgo.cost` are not re-derived at stride `k`.
+* **The segment** (§D5 shape, §C proof): `cmpSeg cont` — 29 instructions,
+  `cmpSeg_length` by `rfl`; the **decided cases are constant** (7 for the A-side
+  decided hit, 8 the decided miss, 9 the V-side decided hit, 10 either `p = 0` tie)
+  — the `O(p)` is paid only on an exact tie. **The proof is in `KapilaCmpSeg`**, and
+  finding it exposed two defects in the stated shape: (1) the two tie instructions
+  jumped to the walk unconditionally, so a tie at `p = 0` entered it with no digit
+  below `p`, decremented the pointer cells to `addrV−1`/`addrA−1` and read *outside*
+  the digit block — the `p = 0` tie is a hit (there is no low part), and the program
+  could answer *miss*; the fix is free (`blt 7 2 19` / `blt 7 2 16`, descend only
+  when `0 < p`), and it makes position `7` live code. (2) The fuel was one short: the
+  walk's terminal digit costs `10`, not `9`, so the worst case is `9p + 14` —
+  `cmpSegFuel` is now `14 + 9p`, and `cmpSegCost_tight` proves it is **attained**
+  (A-side tie, all low digits equal). A third hazard stayed a hypothesis: `add 5 4 9`
+  sums a digit with `2^r` in one word, free at `r + 2 ≤ w` (`two_pow_add_fits`),
+  carried explicitly at `r = w − 1`.
+* **The segment theorem.** `cmpSeg_reaches` (exact `cmpSegCost`) and
+  `cmpSeg_reaches_bound` (within `cmpSegFuel p`) give §D5's obligation: from the
+  register precondition plus the `CmpCell` frame, the run reaches `cont` with cell 6
+  = `digHalf`'s verdict, touching no cell outside `CmpCell`. `cmpSeg_cell6_iff_wordTest`
+  lands that cell on `2^(F−1) ≤ wordDiff`, i.e. the predicate `hitWord_binSumTest`
+  already owns — no new test, no §6 re-argument. Seven `decide` spot checks run the
+  real program through a 3-instruction verdict tail at one step above **and one
+  below** each branch's cost, so the costs are pinned on the program too.
+* **The composition, and what it costs.** The segment's targets are absolute, so it
+  sits only at offset `0`: `cmpSegmentProgram tail = cmpSeg 29 ++ tail`, and
+  `cmpSegment_getD` transfers its `getD` facts there (that part is free). What is
+  *not* free: a loop invoking it once per estimate must reload cells `0`/`1`/`2`
+  (three `add`s — the segment walks them down) and jump back to `0` (one `blt`), so
+  the per-comparison charge is `cmpSegCost + 4` plus the accumulation. That `+4` is
+  **material for (iv)**, not a segment obligation.
+* **What is still open.** (i) **closed**. (ii) closed as a construction plus one
+  named premise (`PayloadCarries`, the accumulation stage the checksum program does
+  not contain). (iii) the program-entry reach premise — the only structural
+  obligation left. (iv) the cost re-measurement: untouched, and now *larger* by the
+  `+4` above.
 
 **Receipt (final): `receipts/kapila-20261110T235126Z`** — gate
 `swapouts_delta60=0 free_pct=63`; build exit 0 in **50.9 s**, a *compile* not a

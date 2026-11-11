@@ -1,0 +1,210 @@
+⚠ [8927/8938] Replayed SubsetSumL25.Row.KapilaRow
+warning: SubsetSumL25/Row/KapilaRow.lean:611:60: exponent 10000 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+⚠ [8928/8938] Replayed SubsetSumL25.Row.KapilaGuard
+warning: SubsetSumL25/Row/KapilaGuard.lean:79:26: `if_pos` has been deprecated: Use `ite_eq_left` instead
+⚠ [8929/8938] Replayed SubsetSumL25.Row.KapilaPrelim
+warning: SubsetSumL25/Row/KapilaPrelim.lean:181:5: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:189:5: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:414:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:422:6: `dif_neg` has been deprecated: Use `dite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:428:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:463:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:466:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:475:10: `dif_neg` has been deprecated: Use `dite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:477:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:493:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:493:18: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:494:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaPrelim.lean:494:18: `if_neg` has been deprecated: Use `ite_eq_right` instead
+⚠ [8930/8938] Replayed SubsetSumL25.Row.KapilaAlias
+warning: SubsetSumL25/Row/KapilaAlias.lean:199:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:205:6: `dif_neg` has been deprecated: Use `dite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:210:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:234:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:234:38: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:235:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:235:38: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:261:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:266:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:268:10: `dif_neg` has been deprecated: Use `dite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaAlias.lean:270:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+⚠ [8931/8938] Replayed SubsetSumL25.Row.KapilaChecksum
+warning: SubsetSumL25/Row/KapilaChecksum.lean:228:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:234:6: `dif_neg` has been deprecated: Use `dite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:240:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:266:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:266:38: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:267:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:267:38: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:309:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:314:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:316:10: `dif_neg` has been deprecated: Use `dite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaChecksum.lean:318:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+⚠ [8933/8938] Replayed SubsetSumL25.Row.KapilaLoop
+warning: SubsetSumL25/Row/KapilaLoop.lean:137:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:298:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:302:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:566:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:577:18: Variable name `hN` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hN
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaLoop.lean:660:36: Variable name `hpv` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hpv
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaLoop.lean:698:5: Variable name `hpa` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hpa
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaLoop.lean:739:52: Variable name `hh1` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hh1
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaLoop.lean:815:49: Variable name `hhlt` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hhlt
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaLoop.lean:1045:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:1046:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:1064:17: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:1064:45: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:1068:17: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:1068:38: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:1070:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaLoop.lean:1071:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+⚠ [8934/8938] Replayed SubsetSumL25.Row.KapilaEstimate
+warning: SubsetSumL25/Row/KapilaEstimate.lean:219:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaEstimate.lean:219:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaEstimate.lean:223:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+⚠ [8936/8938] Replayed SubsetSumL25.Row.KapilaDigitwise
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:226:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:229:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:376:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:378:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:380:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:382:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:384:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:386:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:388:14: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaDigitwise.lean:390:14: `if_neg` has been deprecated: Use `ite_eq_right` instead
+⚠ [8937/8938] Replayed SubsetSumL25.Row.KapilaCmpSeg
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:135:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:190:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:192:22: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:193:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:194:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:196:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:197:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:210:23: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:212:20: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:213:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:513:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:513:63: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:523:27: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:529:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:530:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:540:29: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:546:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:549:29: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:553:14: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:567:14: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:692:17: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:750:17: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:751:6: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:751:67: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:751:79: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:810:17: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:811:6: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:820:5: Variable name `hfitH` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hfitH
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:820:32: Variable name `hV` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hV
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:820:50: Variable name `hA` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hA
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:864:5: Variable name `hfitH` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hfitH
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:864:32: Variable name `hV` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hV
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:864:50: Variable name `hA` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hA
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1000:17: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1001:6: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1001:67: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1068:17: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1069:6: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1069:67: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1069:79: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1102:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1104:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1105:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1107:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1108:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1110:14: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1111:14: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1114:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1116:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1117:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1119:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1120:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1146:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1149:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1157:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1160:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1169:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1172:14: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1183:14: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1200:25: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1201:14: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1201:75: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1202:14: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1211:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1214:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1222:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1225:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1236:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1252:23: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1253:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1253:73: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1296:18: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1296:31: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1296:44: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1296:57: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1334:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/KapilaCmpSeg.lean:1335:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+✔ [8938/8938] Built SubsetSumL25.Row.KapilaBinSum (34s)
+Build completed successfully (8938 jobs).

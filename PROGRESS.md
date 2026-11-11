@@ -2124,3 +2124,156 @@ verdict.  The arithmetic is settled (`digHalf_eq_threshold_pow`,
 `cmpSegFuel_linear`); what is owed is the straight-line walk over 29 instructions —
 and `hitWord_binSumTest` now says that walk's verdict is the bin-sum verdict, so
 the segment is not a separate §6 obligation but residual (i) alone.
+
+## Round (15) — residual (i) closed: the compare segment walked, and two defects in its statement
+
+**`KapilaCmpSeg.lean` (new, leaf of the import DAG; 1406 lines, 56 declarations).**
+§D5 of `KapilaDigitwise` *stated* the segment and deferred the walk, with the
+obligation written out.  It is discharged here, and the proving found that the
+statement itself was wrong in two places — both caught by simulating the exact
+`Instr` list in Python before any proof was attempted, which is the cheapest possible
+place to catch them.
+
+### The two defects, and what the fix cost
+
+1. **The `p = 0` tie descended into nothing.**  As written, both tie instructions
+   were unconditional jumps to the walk (`blt 7 8 19`, `blt 7 8 16`).  A tie at
+   `p = 0` then entered the walk with *no digit below `p`*: `pc 19`/`20` decremented
+   the two pointer cells to `addrV − 1` / `addrA − 1` and `pc 21`/`22` read **there**
+   — addresses outside the digit block (with `addrV = 11` the read lands on cell
+   `10`, the segment's own uninitialised swap scratch) — and returned whatever the
+   comparison of two garbage words said.  The tie at `p = 0` has no low part at all
+   and `cmpDigitsFrom … 0 = true`, so the correct verdict is **hit**; the program
+   could answer **miss**.  Measured: `v = 4`, `a = 0`, `r = 2` is a `p = 0` tie and
+   a hit, and the first draft answered `0` on it.
+   **The fix is free**: the tie jumps now test the digit counter
+   (`blt 7 2 19`, `blt 7 2 16`) and only descend when `0 < p`, so a `p = 0` tie
+   falls through into the hit exit at `12`.  It also makes position `7` live code —
+   it was unreachable as first written.
+2. **The fuel was one step short.**  The walk's *terminal* digit costs `10`
+   instructions to reach the hit entry (`19 … 28`), not `9`, so the worst case is
+   `11 + (9p + 3) = 9p + 14`, not `13 + 9p`.  `cmpSegFuel` is now `14 + 9p`, and
+   `cmpSegCost_tight` proves it is **attained** (A-side tie, every low digit equal),
+   so it is a bound and not slack.
+
+A third hazard became a **hypothesis** rather than a fix: `add 5 4 9` sums a digit
+with `2^r` in one word, so `d + 2^r` must fit.  In the scale-fit regime a digit at
+`p` is below `2^(r+1)`, which makes it free at `r + 2 ≤ w` (`two_pow_add_fits`);
+at `r = w − 1` (the half bit in the digit's top position) it is a real constraint on
+the digit, carried explicitly as `hadA`/`hadV`.
+
+### What is proved
+
+| theorem | content |
+|---|---|
+| `cmpSeg_walk` | the low-digit walk, `pc 19 → cont`, **exact** `walkCost` fuel, by induction on the digit counter with base `n = 1` (the walk is never entered with a zero counter — defect 1's fix is what buys this) |
+| `cmpSeg_walk_lt` / `_gt` / `_eq_step` / `_eq_term` | the four leaves: `3` steps downward miss, `5` upward hit, `5` back to the walk head on an equal pair, `8` the all-equal exit at `n = 1` |
+| `cmpSeg_walk_head` | `pc 19 → pc 23`, the two pointer steps and the digit pair read |
+| `cmpSeg_head` | `pc 0 → pc 3`, the two digits at `p` and `a + 2^r` (`CmpHead` bundles the state) |
+| `cmpSeg_above` / `_miss` / `_below` / `_tieV` / `_tieA` / `_tieV_zero` / `_tieA_zero` | the five prologue ways out at their exact costs `7 / 8 / 9 / 4+walk / 8+walk / 7 / 7` |
+| **`cmpSeg_reaches`** | **§D5's obligation**: from the register precondition and the frame, the run reaches `cont` in exactly `cmpSegCost` steps with cell 6 = `digHalf`'s verdict, touching no cell outside `CmpCell` |
+| `cmpSeg_reaches_bound` | the same *within* `cmpSegFuel p` — the form §D5 asked for |
+| `cmpSegCost_le` / `_tight` | `cmpSegCost ≤ cmpSegFuel`, and `=` on the all-equal A-side tie |
+| `cmpSeg_cell6_iff_wordTest` | cell 6 `= 1` ⟺ `2^(F−1) ≤ wordDiff numV numA` — the predicate `hitWord_binSumTest` already owns, so the loop needs no new test |
+| `cmpSegment_getD` + `cmpSegmentProgram` | the `getD` facts transfer to `cmpSeg 29 ++ tail` (see the composition note) |
+| `cmpSeg_spot_*` (7) | `decide` runs of the **real program** through a 3-instruction verdict tail, each at one step above **and one below** its branch's cost, so the costs are pinned on the program too |
+
+`exec_rem_step` + `bv_rem` are the calculus's **third ported peeler** (`rem`, after
+`sub`/`div`): the zero verdict is written as `rem 6 7 7`, i.e. `[7] % [7]` with
+`[7] = 0`, which needs `[j] % 0 = [j]` — true on both sides (`Nat.mod_zero`).
+
+### The composition state — what is free and what is not
+
+The segment's jump targets are **absolute** (`8, 12, 14, 16, 19, 27`), so it can sit
+only at offset `0` of the program that contains it: `cmpSegmentProgram tail =
+cmpSeg 29 ++ tail`.  `cmpSegment_getD` proves every `getD` fact the walk used
+transfers there — that part is free.  What is **not** free, and is now named instead
+of hidden:
+
+* a loop invoking the segment once per estimate must **reload cells `0`/`1`/`2`**
+  (three `add`s from constants) before each invocation, because the segment walks
+  those pointers **down**; and
+* it must **jump back to `0`** for each comparison (one `blt` with the always-true
+  `0 < 1`), because the segment is at offset 0.
+
+So the per-comparison charge is `cmpSegCost + 4` (three reloads + the entry jump)
+plus the accumulation, and that four-instruction overhead is **material for residual
+(iv)**: `D7.agrees`'s horizon cannot be re-measured without it.  The segment's own
+step count is a function of the digits (`cmpSegCost`), so a caller that knows its
+branch gets the exact price and a caller that does not gets `14 + 9p`.
+
+### Residual after this round, exactly three, none of them floating
+
+* (i) **closed** — the segment is proved, at the exact cost, and its verdict is tied
+  to the integer/`ℚ`/bin-sum test by `hitWord_binSumTest`.
+* (ii) closed in round (14) as a construction plus one named premise
+  (`PayloadCarries`, the accumulation stage the checksum program does not contain).
+* (iii) the program-entry **reach premise** — untouched.
+* (iv) `KapilaAlgo.cost` and `D7.agrees`'s horizon — untouched, and this round
+  *adds* a charge to it rather than removing one: `+4` per comparison from the
+  composition above.
+
+### Receipts
+
+**`receipts/kapila-20261111T011020Z`** (final) — gate
+`swapouts_delta60=0 free_pct=48`; lock **acquired after 105.1 s** of the bounded
+240 s wait (`KAPILA_LOCK_WAIT=240` — another lane held the shared build lock; the
+bounded policy did its job and no deviation was recorded); build exit 0 in
+**43.3 s**; `✔ Built SubsetSumL25.Row.KapilaCmpSeg` **this run**, with the rest of
+the closure *replayed* (their oleans are from this session's earlier compiles — so
+this receipt is a **compile** for the new module and a **replay** for its
+dependencies, which is the honest label); `KapilaCmpSeg.olean` **3145104 bytes**,
+mtime 17:08:03, sha256 `d7f4c93d…29b`.
+
+**Determinism, by double compile.**  The olean, its `.ilean` and its `.trace` were
+deleted and the module rebuilt from scratch: **the same sha256 `d7f4c93d…29b`**, so
+the byte count is not the only evidence — the compile is reproducible.
+
+Axiom banner exit 0, **196 banners**, `axiom_banner_house_triple_only: true`; the new
+declarations are on the house triple or a subset of it — `cmpSeg_reaches`,
+`cmpSeg_walk`, `cmpSeg_cell6_iff_wordTest` on
+`[propext, Classical.choice, Quot.sound]`; `cmpSegCost_le`, `cmpSegCost_tight`,
+`cmpSegment_getD` and the seven spot checks on `[propext, Quot.sound]`; no
+`sorryAx`, no `native_decide` anywhere in the banner or the build log.
+`sources.sha256` matches the committed tree byte for byte; `Statement.lean` still
+`3dc6567e…34aa`.  `head` = `3229cc3`.  Both runners name
+`SubsetSumL25.Row.KapilaCmpSeg` (`NAMED_OLEANS` + `TARGETS` + the unbounded runner's
+inline `lake build` argument); `KapilaRowAxioms.lean` prints its nine new banners.
+
+### Eight measurements for the next author
+
+1. **A cost that composes with a suffix must be a *function*, not a `∃ k`.**  The
+   segment's tail cost depends on the branch and on where the digit walk stops, so an
+   existential has to be resolved *before* the peeler chain that produces the state —
+   the wrong order, and the composition becomes circular.  `walkCost`/`cmpSegCost`
+   (closed terms) let every lemma state its exact cost with the horizon `S` free, and
+   the assembly is `omega` on literals.  This was the single biggest time-saver in
+   the round.
+2. **`Nat.pow_le_pow_right` needs its base pinned.**  `Nat.pow_le_pow_right
+   (by norm_num) hr` against a goal of the form `2^r * 2 ≤ 2^w` leaves the base a
+   metavariable and fails with `⊢ 0 < ?m` — write the sum as `2^(r+2)` in a `calc`
+   instead.
+3. **`omega` cannot instantiate `∀ z, f z < 2^w`.**  Every `upFit`/comparison proof
+   needs the *concrete* instance hoisted (`have hb0 : st 0 < 2^w := hfit 0`) first;
+   without it the failure is a counterexample that looks like a real obstruction.
+4. **The fit of a written `0` is `Nat.two_pow_pos w`, not `by omega`** — `0 < 2^w`
+   has no linear structure for `omega` to see.
+5. **`rw [if_pos rfl]` can close a literal-branch goal by `rfl`**, so a trailing
+   `; omega` then errors `No goals to be solved`.  Same for `rw` on
+   `st 7 % st 7 = 0` and on `1 - 1 = 0`.
+6. **`n + 0 = n` is not definitional for `Nat`.**  A `rw [e0, e7']` that lands on
+   `addrV + p + 0 = addrV + p` needs `Nat.add_zero` in the list; the "unsolved goals"
+   message points at the `show`, not at the missing lemma.
+7. **`obtain` patterns must match the ∧ *grouping* exactly.**  A flat
+   `A ∧ B ∧ C ∧ D` destructured as `⟨x, ⟨a, b⟩, c⟩` reports
+   `Dependent elimination failed: Failed to solve equation …`, which reads like a
+   universe problem and is not.
+8. **Simulate the instruction list before proving anything about it.**  Two of the
+   three findings this round (the `p = 0` descent and the short fuel) came from a
+   30-line Python `exec` simulator in minutes; each would have cost a day of Lean
+   archaeology, and the fuel one would have surfaced as an inexplicable "my constant
+   is one too small" much later.
+
+Next single action: **(iii) — the program-entry reach premise**, now the only
+structural obligation left; (iv) has gained a concrete charge to absorb (the `+4` per
+comparison from the composition above) rather than losing one.
