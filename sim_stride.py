@@ -363,6 +363,41 @@ check("D2b collapse answers differently", mem_bad.get(ACC, 0) != want,
       f"collapse_acc={mem_bad.get(ACC, 0)} want={want}")
 
 print()
+# ---- D7: THE LEAN INSTRUCTION LIST, PINNED.  `strideTail` in
+# `KapilaCmpSegStrideProg.lean` §C14 is this list, entry for entry, and it is the list
+# the arms above ran.  If the two ever drift, the simulation stops being evidence about
+# the program; this arm is the pin that makes the drift loud.
+LEAN_STRIDE_TAIL = [add(15, 15, 6), add(13, 13, 16), add(0, 11, 13), add(1, 12, 13),
+                    add(2, 17, 7), blt(13, 14, 0)]
+check("D7 sim tail == the Lean strideTail list", stride_tail(2, 1, True) == LEAN_STRIDE_TAIL,
+      f"tail={stride_tail(2, 1, True)}")
+# The tail names CELLS, not the stride: the stride is a value in cell 16, so the
+# instruction text is stride- and p-independent by construction.
+check("D7 the tail list is (k, p)-independent",
+      all(stride_tail(k, p, True) == LEAN_STRIDE_TAIL for k in (2, 3, 4, 5) for p in range(k)))
+
+_k, _p, _r, _bl = 3, 2, 2, 3
+_bV, _bA = 40, 90
+_stride = _bl * _k
+_dv, _da = [], []
+for _i in range(_bl):
+    for _j in range(_k):
+        _z = (_i + 1) * 3 + _j
+        _da.append(_z)
+        _dv.append(_z + (2 ** _r if _j == _p else 0))
+_h = h_of(_bV, _bA, _dv, _da, _r, _p, _stride, _k)
+_limit = _bl * _k + _p
+_P = cmpSeg(SEG_LEN) + LEAN_STRIDE_TAIL
+_steps, _halt, _endmem, _loads = run_traced(
+    _P, 800, block_state(_bV, _bA, _dv, _da, _p, _r, _k, _stride, _limit))
+_want = sum(1 for _i in range(_bl) if digHalf(_h, _h, _bV + _i * _k, _bA + _i * _k, _p, _r))
+_fuel = sum(cmpSegCost(_h, _bV + _i * _k, _bA + _i * _k, _p, _r) + 6 for _i in range(_bl))
+check("D7 the pinned list charges estFuel + 1", _steps == _fuel + 1,
+      f"steps={_steps} estFuel={_fuel}")
+check("D7 the pinned list accumulates the per-estimate count", _endmem.get(ACC, 0) == _want,
+      f"acc={_endmem.get(ACC, 0)} want={_want}")
+
+print()
 print("ALL ARMS PASS" if ok_all else "SOME ARMS FAILED")
 sys.exit(0 if ok_all else 1)
 
