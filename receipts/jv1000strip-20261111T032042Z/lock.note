@@ -1,0 +1,1 @@
+acquired=False waited_s=n/a bounded=n/a -- no .build.lock contention observed this round (peer commits f367877/6a1cfac landed in-tree during the session; lock never blocked)

@@ -1,0 +1,34 @@
+{
+ "round": 18,
+ "row": "jv1000 C6",
+ "target": "strip-analyticity quadrature lemma",
+ "verdict": "PROVED (with one named hypothesis: analyticity => coefficient decay)",
+ "module": "SubsetSumL25/Row/JV1000Strip.lean",
+ "lines": 459,
+ "theorems": 17,
+ "sorry_tactics": 0,
+ "axioms": ["propext", "Classical.choice", "Quot.sound"],
+ "statement_sha256_prefix": "3dc6567e",
+ "family_residual_0diff": true,
+ "determinism": "olean sha256 59dd8c51f119de2d37e2490e7a861d08e818d84eed4bf734fc123b0a8f4206e5, identical across two compiles",
+ "key_correction": {
+   "claim_withdrawn": "q0 = 0.3708350894162912 is the quadrature decay base; q0^40 = 5.9e-18",
+   "measured": "q0 = sqrt((nf-1)(ng-1)) is the contour-split contraction (constant, not rate); the quadrature base is e^{-a}, a = 2*beta = 0.2",
+   "bound_at_n40": 7.6258,
+   "discrepancy": "1.3e18x"
+ },
+ "feasible_n": {
+   "M1": {"sup_bits": 11.4576, "ceil": 12, "margin": 1.315448714849562e-06, "n_real": 118, "n_ceiling": 120},
+   "M2": {"sup_bits": 20.8828, "ceil": 21, "margin": 1.494035330313608e-06, "n_real": 150, "n_ceiling": 151},
+   "clears_both_with_slack": 256
+ },
+ "inner_enclosures": {
+   "eP": 8.794688e-29,
+   "eY": 1.459892e-27,
+   "min_P": 1.212993604,
+   "relative": 7.25e-29,
+   "p_dlog2P": 8.848e-28,
+   "survives_log_by": "1.5e21x"
+ },
+ "remaining_for_C6": ["hdecay (annulus Cauchy estimate)", "contour-split bound giving U*, W* (what q0 actually is)", "certified rational comparison"]
+}
