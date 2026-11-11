@@ -3273,3 +3273,124 @@ Next single action: **the contour-split `U*`/`W*` bounds as theorems, then the r
 comparison at `3·10⁻⁷`** — `Re u ≥ −U*` and `Re v ≤ W*` on the strip are the last analytic
 facts (`U*`, `W*` currently enter as the rational replacements `1.326` / `19.178`), and
 everything downstream of them is `jv_m1_cert_of_comparison` plus a 256-term enclosure.
+
+## Row lane 2026-11-11 (21) — jv1000: the `U*`/`W*` bounds **reduced**, and §7 found
+**unsatisfiable** — then cured
+
+Round 20 named three residues: the strip bounds `Re u ≥ −U*` / `Re v ≤ W*`, and the 256-term
+comparison. This round tried to prove the strip bounds, discovered that the *proofs that were
+supposed to feed them* are 400× too loose, and — while checking what §7 actually consumes —
+found that round 19's quadrature lemma **cannot be instantiated at all**. That defect is now
+cured, and it turns out to be worth more than the residue it blocks.
+
+### 1. `Re u` and `Re v` are a log-of-modulus plus one ratio — and nothing else
+
+`Complex.log_re` says `(log z).re = log ‖z‖`. Since `L2C` is `↑(log 2)`, the whole of `Re u`
+collapses to
+
+    Re u = log₂‖P_c‖ + (κ−1)·Re(Y_c/P_c) − κ·LZ − H_
+    Re v = (2−κ)·Re(Y_c/P_c) − 2·log₂‖P_c‖ + κ·LZ + H_
+
+(`jvUcx_re_eq`, `jvVcx_re_eq`). So **both** strip bounds are implied by four numeric facts
+about two functions and two numbers:
+
+| premise | threshold used | measured | margin |
+|---|---|---|---|
+| `9/10 ≤ Re P_c z` on the strip | 0.9 | `0.938511377` | 4 % |
+| `‖Y_c z‖ ≤ 5/2` | 2.5 | `2.161568` | 16 % |
+| `LZ ≤ 3/5` | 0.6 | `0.5586861327` | 7 % |
+| `H_ ≤ 1/50` | 0.02 | `0.0174021677` | 15 % |
+
+and they yield `Re u ≥ −0.903735` (against `−1.326`, **0.422 of slack**) and
+`Re v ≤ 3.655633` (against `19.178`, **15.5 of slack**) — proved, `norm_num` on rationals,
+`log₂(9/10) ≥ −1/6` being the only transcendental step (`Real.log_le_sub_one_of_pos` +
+`Real.log_two_gt_d9`). The `P`-floor also hands over two premises for free: `hslit` (a
+strictly positive real part *is* `slitPlane`'s left disjunct) and `hFint` (continuity of the
+composite on the closed interval). **`hU`, `hV`, `hslit`, `hFint` are no longer hypotheses**
+— `jvMoments_of_residue` takes the four numeric facts and returns `JV1000Moments`.
+
+### 2. How much of a reduction that is — measured, because the obvious answer is "none"
+
+The lane already proves strip majorants for `P` and `Y` (`Pmaj`, `Ymaj`). They cannot close
+this, and the size of the failure is the point:
+
+| quantity | proved majorant | true sup | looseness |
+|---|---|---|---|
+| `‖P_c‖` on the strip | `Pmaj = 1367.6` | `1.6606` | 824× |
+| `‖Y_c‖` on the strip | `Ymaj = 14247.0` | `2.1616` | 6591× |
+
+Run the reduction with those and it reads `Re u ≥ −526.8` — the Y-term alone,
+`(κ−1)·Ymaj/λ = 526.1`, is 400× the entire `1.326` budget. So this is a genuine reduction
+*only* if the residue is **tight enclosures**, and the measured tight values (`‖Y/P‖ ≤
+1.3017`!) are what the four premises above carry. The crude majorants are not a
+proof-strength route to `U*`; round 20's phrase "`U*`/`W*` may be used verbatim" was about
+the *constants*, not about the majorants that were supposed to bound the functions.
+
+### 3. §7 was unsatisfiable. `K ≤ 32` with `ε ≤ 10⁻²⁰` cannot both hold
+
+`quadrature_at_256_of_strip` requires `K ≤ 32` **and** `ε ≤ 10⁻²⁰`, where `ε` bounds the
+partial-sum tail `‖F − Σ_{|k|≤K} ĉ_k e^{ikx}‖`. `F` is not a trigonometric polynomial and its
+coefficients decay at ratio `≈ 0.65` — the *effective* strip is `≈ 0.43`, wider than the
+proved `1/5` — so the tail is
+
+| `K` | 32 | 48 | 64 | 96 |
+|---|---|---|---|---|
+| true tail (measured) | `6.38·10⁻⁵` | `4.17·10⁻⁸` | `1.43·10⁻¹¹` | `6.3·10⁻¹⁵` |
+
+At the `K` the lemma fixes, `ε ≤ 10⁻²⁰` is **false by fifteen orders**, so `happrox` had no
+witness and the whole §7 feed was vacuous. Even an honest `ε = 6.4·10⁻⁵` would break the
+conclusion: the tail enters as `2ε`, and `1.3·10⁻⁴ ≫ 10⁻⁶`.
+
+Round 19's docstring defends `ε ≤ 10⁻²⁰` as "4 orders looser than the numerically measured
+tail (`~10⁻¹⁶`)". That measurement is real and it is of the **wrong `K`** — `~6·10⁻¹⁵` is
+what the tail is at `K ≈ 96`, nine orders below what it is at `K = 32`.
+
+**The cure is the `K` cap, which was pointing the wrong way.** The tail shrinks with `K`;
+the aliasing term `M q^n (2K+1)` grows only linearly. So `K ≤ 32` was the one constraint
+preventing the only sound instantiation, and `K` was never a parameter of the certifier's
+construction — it is the order of a proof-side partial sum. `quadrature_at_256_of_strip_relaxed`
+proves `K ≤ 200`, `ε ≤ 10⁻⁷`, `M ≤ 8472775` gives `≤ 2.0003·10⁻⁷ < 10⁻⁶`, and the two moments
+are re-fed through it (`quadrature_jvMomF1_relaxed`, `…F2_relaxed`). **The chain is now
+satisfiable** — `K = 48` with `ε = 4.17·10⁻⁸` is a witness — where before it was not.
+
+### 4. The enclosure verdict for `hcmp`: the target is real, the object is not a finite sum
+
+`hcmp` needs `‖trapMean 256 F‖ + 10⁻⁶ < 2^{ρ_c}`. Measured room: `2^{ρ_c} − M₁ =
+1.304·10⁻⁶`, so after §7's `10⁻⁶` the enclosure must be good to `3.04·10⁻⁷` — the round-20
+figure, confirmed. What that costs, measured rather than estimated:
+
+* `dM₁/du = −8.386`, so the 256 pointwise `u` values need `1.19·10⁻⁸` **absolute**;
+* `|∂M/∂log₂‖P‖| = 8.386`, so `‖P_c‖` needs **`3.58·10⁻⁸` relative** at each node;
+* the quadrature's own share is *not* the bottleneck: `M q²⁵⁶ (2K+1) = 3.4·10⁻⁸` at `K ≤ 200`.
+
+So `3·10⁻⁷` is achievable **in principle** and blocked **in fact**, for one reason: every term
+is `2^{trig16}`, an integral, and `u` is a `log₂` of one — so the enclosure is a *continuum*
+enclosure at `3.6·10⁻⁸` relative, not "256 elementary terms, `norm_num`-scale" as round 19
+and round 20 both wrote. No rigorous enclosure of `∫2^{trig16}` exists in this lane, and the
+`u`-values also need the strip extrema of a 32-term trigonometric polynomial. **Named gap**,
+with both operands sized.
+
+### Receipts
+
+`jv1000_bounds_receipts.py` (same discipline as rounds 19/20): live-pressure gate
+(`swapouts_delta60 = 0`, `free_pct = 66`), bounded lock wait — **`waited_s = 365.3`**, the
+shared `/Volumes/Substrate-1/bigo/.build.lock` held by `weil-verify-lane`'s
+`closure_supervisor.py`; recorded as a deviation, `bounded_s = 900` (`KAPILA_LOCK_WAIT`),
+acquired before expiry so the build is live-pressure-gated and lock-serialised. Detached
+`lake build`, olean sha256 `b2bfad56…2009d`, **double-compile determinism
+identical (`942904` bytes both runs)**, banner `JV1000BoundsAxioms.lean` — 21 `#print axioms`,
+exit 0, **all 21 in the house triple**. `Statement.lean` sha256 `3dc6567e…34aa` — **0-diff**;
+the family files (`KapilaRow`, `KapilaCmpSeg`, `KapilaEstimate`, `KapilaGuard`, `SubsetSumL25.lean`)
+0-diff (the stride-program lane committed `46cba79`/`9972181` during this round and touched
+only `Kapila*`/`sim_stride.py` — verified by `git diff --name-only 166a5f5..HEAD`).
+
+`sim/sim_bounds_enclosure.py` is the measurement artifact: strip extrema of `Re w`/`Im w`, the
+crude-vs-true majorant comparison, `min Re P_c`, `max ‖Y_c‖`, `LZ`, `H_`, the enclosure
+sensitivity, and the Fourier tail at five truncation orders.
+
+Next single action: **prove the four numeric premises' cheapest member first — `LZ ≤ 3/5` and
+`H_ ≤ 1/50`** (each is a `log₂` of a mean of `2^{trig16}` on the real line; the two are
+`0.5587` and `0.0174` against caps `0.6`/`0.02`, so a *crude* two-sided pointwise bound on
+`trig16` — `‖r‖_∞ ≤ Σ|coeffs| = 5.15` gives `LZ ∈ [−10.4, 10.4]` and fails — is not enough;
+what is needed is a min/max of a 32-term trig polynomial, i.e. the same numeric layer the
+`hcmp` enclosure needs, entered from its cheapest end).
