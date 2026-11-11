@@ -272,3 +272,20 @@ open SubsetSumL25.Row
 #print axioms cmpSeg_cell6_iff_wordTest
 #print axioms cmpSeg_spot_tieA
 #print axioms cmpSeg_spot_tieV_zero
+
+-- residual (iii): the program-entry reach — the reload, the re-entry, and the loop step
+#print axioms cmpSegReload
+#print axioms cmpSegReentry
+#print axioms cmpSegLoopTail
+#print axioms cmpSegment_getD_tail
+#print axioms cmpSeg_reentry
+#print axioms cmpSeg_loopStep
+#print axioms cmpSeg_loopCharge_le
+#print axioms cmpSegReentrySpot
+#print axioms cmpSegLoopSpot
+#print axioms cmpSegReentrySpotTail
+#print axioms cmpSeg_spot_reentry
+#print axioms cmpSeg_spot_reentry_short
+#print axioms cmpSeg_spot_loop
+#print axioms cmpSeg_spot_loop_short
+#print axioms cmpSeg_spot_loop_first

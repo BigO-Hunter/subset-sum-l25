@@ -2283,3 +2283,152 @@ inline `lake build` argument); `KapilaRowAxioms.lean` prints its nine new banner
 Next single action: **(iii) — the program-entry reach premise**, now the only
 structural obligation left; (iv) has gained a concrete charge to absorb (the `+4` per
 comparison from the composition above) rather than losing one.
+
+## Row lane 2026-11-10 (16) — residual (iii) closed: the program-entry reach, and a cost shape it corrected
+
+Residual (iii) was one sentence repeated for three rounds: *§7 step 7's loop is
+actually entered*.  What was missing was not a loop proof but a **seam**: the segment
+walks cells `0`/`1`/`2` **down**, so a caller that invokes it once per estimate cannot
+re-enter it on the state it left — the register precondition `cmpSeg_reaches` consumes
+(`0`/`1`/`2` = `addrV + p`, `addrA + p`, `p`; `7`/`8`/`9` = `0`/`1`/`2^r`; nothing
+else touched) has to be re-established first.  §C5 *named* that reload and charged
+`+4` for it.  This round makes it a theorem and finds that the charge, as a
+per-comparison price, was one instruction short.
+
+### The instructions, on the real program
+
+`cmpSegmentProgram tail = cmpSeg 29 ++ tail`, so the loop's own code sits at `29`:
+
+```
+29  add 0 11 13      [0] := addrV + p        (11 = addrV, 12 = addrA, 13 = p: the
+30  add 1 12 13      [1] := addrA + p         loop's own scratch, none in CmpCell,
+31  add 2 13 7       [2] := p + 0             so the frame carries them)
+32  blt 7 8 0        back to 0                (always taken: 0 < 1)
+```
+
+and the tail a **terminating** loop needs:
+
+```
+29  add 13 13 8      p := p + 1              (the index FIRST)
+30  add 0 11 13      [0] := addrV + (p+1)
+31  add 1 12 13      [1] := addrA + (p+1)
+32  add 2 13 7       [2] := p + 1
+33  blt 13 14 0      p+1 < limit ? → 0        (the guard IS the back-edge)
+```
+
+### The defect the simulation caught, and the charge it corrects
+
+**The advance must precede the reload.**  The natural-looking order — reload the three
+cells, then bump the index, then jump — reads the *un-advanced* index, so every
+iteration recomputes the same digit pair and the loop never terminates.  Simulated
+before any proof (the round-15 discipline, and it paid again): the two-pass program
+with the reload first measured **32** steps where **30** was predicted, its second
+comparison re-ran `p = 0`, and its final verdict was the *first* pass's.  That is a
+defect in a stated shape — the shape was "three adds and a jump back to 0", which
+says nothing about where the counter work goes — found by measurement, not by
+argument.
+
+**The charge is `+5`, not `+4`, for a terminating loop.**  `+4` is real and now
+proved (`cmpSeg_reentry`), but it is the re-entry charge *given* `p` already in cell
+`13`.  A loop that varies `p` pays one more instruction (the advance; the guard is
+already the back-edge, so it is not a sixth).  So:
+
+| charge | value |
+|---|---|
+| one comparison (segment) | `cmpSegCost` (exact), `≤ cmpSegFuel p = 14 + 9p` |
+| re-entry, `p` fixed in cell 13 | `+4` — `cmpSeg_reentry` |
+| one comparison of a **terminating** loop | `+5` — `cmpSeg_loopStep`, `≤ 19 + 9p` (`cmpSeg_loopCharge_le`) |
+
+Residual (iv) inherits `19 + 9p` per comparison (was `14 + 9p + 4` = the same
+arithmetic with the advance uncharged — the difference is real, one instruction per
+comparison, and it is stated rather than absorbed).
+
+### What is proved
+
+| declaration | content |
+|---|---|
+| `cmpSegment_getD_tail` | positions `29 + i` of `cmpSegmentProgram tail` are `tail`'s — the counterpart of `cmpSegment_getD` |
+| **`cmpSeg_reentry`** | **THE ENTRY REACH**: from the post-segment state, the 4 instructions reach `0` in exactly `4` steps with `0`/`1`/`2` = the precondition, the `CmpCell` frame, the word fit, **and cell 6 (the verdict) intact** — exactly what `cmpSeg_reaches` consumes |
+| **`cmpSeg_loopStep`** | the terminating loop's 5 instructions reach `0` in exactly `5` with the counter at `p + 1`, cell `13` advanced, the frame updated (`up h 13 (p+1)`), verdict intact |
+| `cmpSeg_loopCharge_le` | `cmpSegCost + 5 ≤ 19 + 9p` — the number (iv) inherits |
+| `cmpSegReload` / `cmpSegReentry` / `cmpSegLoopTail` | the three instruction lists, so the shapes are names and not prose |
+| `cmpSeg_spot_reentry`, `_short` | the A-side tie (**the segment's worst case**, `23`) + reload + verdict: halts `true` at `29 = 23 + 4 + 2`, does not halt at `28`.  The back-edge is redirected one slot past the adds (to a verdict tail) so `exec` can report the post-reload state; that one differing instruction is disclosed in the docstring |
+| `cmpSeg_spot_loop`, `_short` | **two comparisons through the real tail**: `p = 0` hit (`10`), `p = 1` miss (`8`), `10 + 5 + 8 + 5 + 2 = 30`, verdict `false`, no halt at `29` |
+| `cmpSeg_spot_loop_first` | `p = 0` **alone** is a hit — so a loop that failed to advance would end `true` where the two-pass program ends `false`.  This is what makes the loop check bite rather than merely halt |
+
+The four properties the loop needs are one shape and it is now inhabited from both
+sides: the segment's conclusion (cell 6 = verdict, frame, fit, constants) is the
+re-entry's hypothesis, and the re-entry's conclusion (precondition, frame, fit,
+verdict preserved) is the segment's hypothesis.  **What is not claimed:** a single
+`exec` equality composing the two runs.  The segment's lemmas are stated on
+`cmpSeg cont` and the composed program differs from it at position `29` — exactly
+where the segment's last step jumps.  Closing that means transferring §C4–§C6's
+`getD` facts to `cmpSeg 29 ++ tail` (a `getD`-agreement induction over every lemma
+there), and the loop proper (an induction on `p` with the guard and the accumulator)
+stands on top of it.  Both are named, neither is pretended.
+
+### Receipt
+
+**Receipt `receipts/kapila-20261111T013658Z`** — gate `swapouts_delta60=0 free_pct=53`;
+build exit 0 in **8.3 s**, and that is a **replay, not a compile**: every target was
+already up to date because this session's own `lake build
+SubsetSumL25.Row.KapilaCmpSeg` had produced the olean.  The receipt alone is therefore
+*not* evidence that the final bytes compile, so the olean, its `.ilean` and its
+`.trace` were deleted and the module rebuilt **from scratch**: **the same sha256
+`a5488267…b2da`**, 3 540 968 bytes.  That rebuild is the compile of record, and it
+reproduces the receipt's hash byte for byte.
+
+Axiom banner exit 0, **205 banner lines**, `axiom_banner_house_triple_only: true`.  The
+new declarations are on `[propext, Quot.sound]` — a subset of the house triple —
+or on no axioms at all: `cmpSegReload`, `cmpSegReentry`, `cmpSegLoopTail`, the two spot
+states and the redirected tail are *definitions* and print "does not depend on any
+axioms".  No `sorryAx`, no `native_decide` anywhere in the banner or the build log.
+`Statement.lean` still `3dc6567e…34aa`, and `KapilaCmpSeg.lean` still
+`6f00b833…6dc3` — this round's own sources match `sources.sha256` byte for byte.  (One
+file in that manifest has moved since the receipt: `JV1000Quadrature.lean`, which a
+**peer** jv1000 mind is editing in this shared worktree.  It is not this round's, not
+in this round's commit, and its drift is that mind's business — named here so the
+manifest's one-line mismatch is not mistaken for a vanished edit.)  `head` =
+`c32ff2e` — a **peer's** commit (the jv1000 row) landed on the shared branch between
+this round's edits and its receipt; it touches `JV1000Instance.lean` only, so no source
+of this round moved.  Lock: the bounded 240 s wait expired and the build proceeded
+UNLOCKED, deviation recorded in `lock.acquired`/`summary.json` — the policy working,
+not a stall.
+
+### Measurements for the next author
+
+1. **`rw` does not see through a definitionally-equal-but-not-syntactic index.**
+   `(cmpSeg 29).length` and `29` are `rfl`-equal, yet `List.getElem?_append_right`
+   refuses to match until `cmpSeg_length` is rewritten *and in the right order*.
+2. **`rw [List.getElem?_append]` introduces an `ite` under a `.getD`**, so the four
+   rewrites only work in one order: `getD_eq_getElem?_getD` (both sides), then
+   `getElem?_append`, then `cmpSeg_length`, then the `if`/subtraction.  Any other
+   order fails with "did not find an occurrence" naming a pattern that *is* in the
+   goal — the message points at the wrong thing.
+3. **`exec_add_step` takes no fit hypothesis** (`load`/`rem`/`shr` do).  Passing one
+   anyway yields `Function expected at exec_add_step … hfit`, which reads like an
+   argument-order problem and is an extra argument.
+4. **A local `by_cases h : z = 13` shadows the frame `h : Nat → Nat`**, and the
+   resulting `up_eq h 13 …` type error blames universes.  Name the case hypothesis
+   (`hz13`), not `h`.
+5. **`decide` spot checks catch a wrong jump target but report it as a false
+   statement** — `accepted answer: … = some true` → "Tactic `decide` proved that the
+   proposition … is **false**" tells you the verdict is wrong, not that `blt 7 6 36`
+   pointed one slot past `accept`.  In a 3-instruction verdict tail the target is
+   `cont + 2`, and an off-by-one lands on `reject` and reports `false` for *every*
+   input — which looks like a bad state, not a bad index.
+6. **The reload/advance order is not a detail you can fix later**: a wrong order
+   still halts and still produces a verdict on many inputs, so only a check whose
+   *second* comparison differs from its first can see it.  Design the spot state
+   first (`p = 0` hit, `p = 1` miss) and the check writes itself.
+7. **Two instruction lists that differ only in a jump target are two different
+   programs** — and the loop's real back-edge (`→ 0`) makes its post-state
+   unobservable through `exec`.  State the redirect in the docstring and prove the
+   cost separately; pretending the redirect is the real program would be the lie.
+
+Next single action: **the `getD`-agreement transfer of §C4–§C6 to `cmpSeg 29 ++ tail`**
+— i.e. `cmpSeg_reaches` stated for an abstract `P` agreeing with `cmpSeg 29` on
+`0…28` — which is what turns this round's state-level pipeline into one `exec`
+equality; then the loop induction on `p` with the guard and the accumulator.  (iv)
+then re-measures `D7.agrees`'s horizon at `19 + 9p` per comparison and
+`PayloadCarries` stays the named accumulation premise.

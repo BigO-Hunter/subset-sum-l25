@@ -549,16 +549,44 @@ This round does the re-specification as far as arithmetic goes.
   below** each branch's cost, so the costs are pinned on the program too.
 * **The composition, and what it costs.** The segment's targets are absolute, so it
   sits only at offset `0`: `cmpSegmentProgram tail = cmpSeg 29 ++ tail`, and
-  `cmpSegment_getD` transfers its `getD` facts there (that part is free). What is
-  *not* free: a loop invoking it once per estimate must reload cells `0`/`1`/`2`
-  (three `add`s — the segment walks them down) and jump back to `0` (one `blt`), so
-  the per-comparison charge is `cmpSegCost + 4` plus the accumulation. That `+4` is
-  **material for (iv)**, not a segment obligation.
+  `cmpSegment_getD`/`cmpSegment_getD_tail` transfer its `getD` facts there (that part
+  is free). What is *not* free: a loop invoking it once per estimate must reload cells
+  `0`/`1`/`2` (three `add`s — the segment walks them down) from its own scratch
+  (`11`/`12`/`13` = `addrV`/`addrA`/`p`) and get back to `0`. **`cmpSeg_reentry`
+  proves the entry reach**: those four instructions reach `0` in exactly `4` steps
+  with the register precondition, the `CmpCell` frame, the word fit and cell `6` (the
+  verdict) intact — exactly the premises `cmpSeg_reaches` consumes, so the segment and
+  the loop meet at one state.  And **the price is `+5`, not `+4`, for a *terminating*
+  loop**: the index has to advance between comparisons, and it must advance **before**
+  the reload reads cell `13` (advance-*after*-reload repeats `p` forever — measured:
+  `32` steps where `30` was predicted, and the final verdict would have been the first
+  pass's).  `cmpSegLoopTail`/`cmpSeg_loopStep` are that five-instruction shape at its
+  exact cost, and `cmpSeg_loopCharge_le` bounds it at `19 + 9p` per comparison.  Both
+  numbers are **material for (iv)**, and the `+4` is the honest one only *given* `p`
+  already in cell `13`.
 * **What is still open.** (i) **closed**. (ii) closed as a construction plus one
   named premise (`PayloadCarries`, the accumulation stage the checksum program does
-  not contain). (iii) the program-entry reach premise — the only structural
-  obligation left. (iv) the cost re-measurement: untouched, and now *larger* by the
-  `+4` above.
+  not contain). (iii) **closed at the entry reach**: the reload, the re-entry and the
+  loop step are proved from both sides of the seam.  What remains of "the loop is
+  entered" is named precisely — the segment's lemmas are stated on `cmpSeg cont`, so
+  composing its run with the tail in one `exec` equality needs a `getD`-agreement
+  transfer of §C4–§C6 to `cmpSeg 29 ++ tail`, and the loop proper is an induction on
+  `p` with the guard and the accumulator. (iv) the cost re-measurement: untouched,
+  and now *larger* by the `+5` per comparison.
+
+**Receipt (round 16): `receipts/kapila-20261111T013658Z`** — gate
+`swapouts_delta60=0 free_pct=53`; build exit 0 in 8.3 s, a **replay** (everything was
+already built by this session), so the compile of record is a **from-scratch rebuild**
+of `KapilaCmpSeg` after deleting its olean/`.ilean`/`.trace`: same sha256
+`a5488267…b2da`. Axiom banner exit 0, **205 banner lines**, house-triple only (the new
+proofs on `[propext, Quot.sound]`, the new instruction lists on no axioms);
+`Statement.lean` still `3dc6567e…34aa` and `KapilaCmpSeg.lean` still `6f00b833…6dc3`
+(the round's own sources match its manifest; the manifest's one later mover,
+`JV1000Quadrature.lean`, is a peer jv1000 mind's file in the shared worktree, not this
+round's). `head` = `c32ff2e`, a **peer's** jv1000 commit that landed between the edits
+and the receipt and touches `JV1000Instance.lean` only.
+Lock: bounded 240 s wait expired, build proceeded UNLOCKED with the deviation
+recorded — the policy working.
 
 **Receipt (final): `receipts/kapila-20261110T235126Z`** — gate
 `swapouts_delta60=0 free_pct=63`; build exit 0 in **50.9 s**, a *compile* not a
@@ -656,3 +684,25 @@ receipt can silently be a replay — delete the module's `.olean`/`.trace` artef
 to force one. (iv) `lake env lean` (the banner step) survives a `SIGKILL` of `lake`:
 the `lean` child is in its own session, so an orphaned compile still writes its
 olean after its parent dies.
+
+**Seven measurements from the entry-reach round (`KapilaCmpSeg` §C9).** (i) `rw` does
+not see through a definitionally-equal-but-not-syntactic index: `(cmpSeg 29).length`
+and `29` are `rfl`-equal, yet `List.getElem?_append_right` will not match until
+`cmpSeg_length` is rewritten first. (ii) `rw [List.getElem?_append]` introduces an
+`ite` under a `.getD`, so four rewrites only work in one order —
+`getD_eq_getElem?_getD` (both sides), `getElem?_append`, `cmpSeg_length`, then the
+`if`/subtraction; any other order fails naming a pattern that *is* in the goal. (iii)
+`exec_add_step` takes **no** fit hypothesis (`load`/`rem`/`shr` do); passing one gives
+`Function expected at …`, which reads like an argument-order bug. (iv) a local
+`by_cases h : z = 13` shadows the frame `h : Nat → Nat` and the resulting `up_eq h 13`
+type error blames universes — name it `hz13`. (v) a wrong jump target in a `decide`
+spot check surfaces as "`decide` proved that the proposition … is **false**", i.e. as a
+bad statement rather than a bad index; in a 3-instruction verdict tail the target is
+`cont + 2` and an off-by-one lands on `reject` and reports `false` for every input.
+(vi) a reload/advance order bug still halts and still answers on many inputs — only a
+check whose *second* comparison differs from its first (here `p = 0` hit, `p = 1`
+miss) can see it, so design that spot state before anything else. (vii) two lists that
+differ only in a jump target are two programs, and the real back-edge (`→ 0`) makes the
+post-state unobservable through `exec`; disclose the redirect in the docstring and
+prove the cost separately, rather than pretending the redirect is the program.
+

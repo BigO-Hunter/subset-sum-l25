@@ -59,8 +59,28 @@ cell `6` afterwards as the verdict.  `cmpSeg_verdict_is_wordTest` writes that
 verdict in the row's own vocabulary, so the loop's consumer is
 `halfTest_iff_wordDiff` and not a new predicate.
 
+## §C9 — the program-entry reach
+
+`cmpSeg_reaches` consumes a register precondition; a loop calling the segment once per
+estimate must *re-establish* it, because the segment walks cells `0`/`1`/`2` down.
+`cmpSegReload` is that re-establishment — three `add`s out of the loop's own scratch
+(`11 = addrV`, `12 = addrA`, `13 = p`) — `cmpSegReentry` appends the always-taken
+back-edge, and `cmpSeg_reentry` proves the four instructions reach `0` in exactly `4`
+steps with the pointer cells, the frame and cell `6` intact: precisely the premises
+`cmpSeg_reaches` consumes.
+
+A *terminating* loop must advance its index between comparisons, and the order is not
+free.  `cmpSegLoopTail` advances **before** the reload reads cell `13`, and
+`cmpSeg_loopStep` proves the five instructions reach `0` at `p + 1` in `5` steps.
+Advance-*after*-reload repeats `p` forever — measured, not argued: the simulated
+two-pass program re-ran `p = 0` and cost `32` where `30` was predicted, and its final
+verdict would have been the first pass's.  So the per-comparison charge of a
+terminating loop is `cmpSegCost + 5`, while `+ 4` is the re-entry charge *given* `p`
+already in cell `13`; that is the number residual (iv) inherits.
+
 Nothing here touches `Statement.lean` (hash unchanged), `KapilaAlgo.cost`,
-`D7.agrees`'s horizon (residual (iv)) or `PayloadCarries` (named, residual (iii)).
+`D7.agrees`'s horizon (residual (iv)) or `PayloadCarries` (residual (ii)'s named
+premise, still named).
 -/
 import Mathlib
 import SubsetSumL25.Row.Statement
@@ -1402,5 +1422,318 @@ theorem cmpSeg_spot_tieV_zero :
 theorem cmpSeg_spot_tieV_zero_short :
     exec (cmpSeg 29 ++ cmpSegSpotTail) (fun _ => 0) 11 0 0
       (memOf 6 (cmpSegSpotZero 4 0)) = none := by decide
+
+/-! ### §C9 — the program-entry reach
+
+The segment walks cells `0`/`1`/`2` **down** (`pc 19–27`), so a loop that calls it
+once per estimate cannot re-enter it on the state it left: the precondition
+`cmpSeg_reaches` consumes (`0`/`1`/`2` = `addrV + p`, `addrA + p`, `p`) has to be
+re-established first.  That is what these four instructions do, out of the loop's own
+scratch — cell `11` = `addrV`, `12` = `addrA`, `13` = `p`, none of them in `CmpCell`,
+so the frame carries them:
+
+```
+29  add 0 11 13      [0] := addrV + p
+30  add 1 12 13      [1] := addrA + p
+31  add 2 13 7       [2] := p + 0        (cell 7 is the constant 0)
+32  blt 7 8 0        back to 0           (always taken: 0 < 1)
+```
+
+`cmpSeg_reentry` proves this reaches `0` in exactly `4` steps with the precondition,
+the frame, the word fit **and** cell `6` (the verdict just written) intact, so the
+loop's next act is the comparison and the verdict survives the bounce.
+
+Two things §C5 named but could not measure are measured here:
+
+* **The re-entry is `4` and it is what a caller pays *given* `p` in cell `13`.**
+* **A terminating loop pays `5`, and the advance must come first.**  The index has to
+  move between comparisons or the loop recomputes the same digit pair forever; putting
+  the advance *after* the reload is the natural-looking order and it is wrong — the
+  reload would read the un-advanced index.  `cmpSegLoopTail` is the corrected shape
+  (advance, then reload, then a guard that doubles as the back-edge), `cmpSeg_loopStep`
+  is its exact `5`-step statement, and `cmpSeg_spot_loop` runs **two** comparisons
+  through the real tail on the real program: `p = 0` is a hit, `p = 1` a miss, and the
+  final verdict is the *second* one, which a missing advance could not produce
+  (`cmpSeg_spot_loop_first` pins that `p = 0` alone ends `true`).
+
+What is **not** claimed: a single `exec` equality composing `cmpSeg_reaches`' run with
+this tail.  The segment's lemmas are stated on `cmpSeg cont`, and the composed program
+differs from it only at position `29` — which is exactly where the segment's *last*
+step jumps to.  Closing that seam means transferring §C4–§C6's `getD` facts to
+`cmpSeg 29 ++ tail` (a `getD`-agreement induction over every lemma there), not
+re-deriving the segment.  Named, not hidden; the loop proper (an induction on `p` with
+the guard and the accumulator) stands on top of it. -/
+
+/-- The three `add`s that re-establish the segment's pointer cells from the loop's own
+scratch: `11 = addrV`, `12 = addrA`, `13 = p`. -/
+def cmpSegReload : List Instr := [ .add 0 11 13, .add 1 12 13, .add 2 13 7 ]
+
+/-- The re-entry tail: the reload, then the always-taken back-edge to `0` (`0 < 1`).
+Four instructions, which is the `+4` §C5 charged per comparison. -/
+def cmpSegReentry : List Instr := cmpSegReload ++ [ .blt 7 8 0 ]
+
+/-- A **terminating** loop's tail: the index advances first, the reload then reads the
+advanced index, and the guard (`[13] < [14]`, i.e. `p + 1 < limit`) doubles as the
+back-edge.  Five instructions — the advance is the fifth, and it cannot be dropped or
+moved after the reload (see §C9's note). -/
+def cmpSegLoopTail : List Instr := [ .add 13 13 8 ] ++ cmpSegReload ++ [ .blt 13 14 0 ]
+
+/-- **The tail's `getD` facts on the composed program.**  Positions `29` and above of
+`cmpSegmentProgram tail` are `tail`'s own, so the loop's instructions are readable
+there exactly as they are in `tail` — the counterpart of `cmpSegment_getD` for the
+part of the program that follows the segment. -/
+theorem cmpSegment_getD_tail (tail : List Instr) (i : Nat) :
+    (cmpSegmentProgram tail).getD (29 + i) Instr.reject = tail.getD i Instr.reject := by
+  unfold cmpSegmentProgram
+  rw [List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD]
+  rw [List.getElem?_append]
+  rw [cmpSeg_length]
+  rw [if_neg (by omega : ¬ (29 + i < 29))]
+  rw [show 29 + i - 29 = i from by omega]
+
+/-- **THE ENTRY REACH.**  From the state the segment leaves (any state, as long as the
+loop's scratch `11`/`12`/`13` hold `addrV`/`addrA`/`p` through the frame, cells `7`/`8`
+are the constants `0`/`1`, and the words fit), `cmpSegReentry` reaches `0` in exactly
+`4` steps with the precondition `cmpSeg_reaches` consumes: cells `0`/`1`/`2` =
+`addrV + p`, `addrA + p`, `p`, the frame `CmpCell`-outside `h`, the word fit — and
+cell `6`, the verdict, untouched.  So the segment and the loop meet at this state, and
+the verdict written by one comparison is readable after the bounce. -/
+theorem cmpSeg_reentry {ρ : Nat → BitVec w} {h : Nat → Nat}
+    {addrV addrA p : Nat} {st : Nat → Nat}
+    (h7 : h 7 = 0) (h8 : h 8 = 1) (h11 : h 11 = addrV) (h12 : h 12 = addrA)
+    (hag : ∀ z, ¬ CmpCell z → st z = h z) (hfit : ∀ z, st z < 2 ^ w)
+    (h13 : st 13 = p) (hdV : addrV + p < 2 ^ w) (hdA : addrA + p < 2 ^ w)
+    (S : Nat) :
+    ∃ st', (st' 0 = addrV + p) ∧ (st' 1 = addrA + p) ∧ (st' 2 = p) ∧ (st' 6 = st 6) ∧
+        (∀ z, ¬ CmpCell z → st' z = h z) ∧ (∀ z, st' z < 2 ^ w) ∧
+      exec (cmpSegmentProgram cmpSegReentry) ρ (S + 4) 29 0 (memOf w st)
+        = exec (cmpSegmentProgram cmpSegReentry) ρ S 0 0 (memOf w st') := by
+  have s7 : st 7 = 0 := by rw [hag 7 not_cmpCell_seven]; exact h7
+  have s8 : st 8 = 1 := by rw [hag 8 not_cmpCell_eight]; exact h8
+  have s11 : st 11 = addrV := by rw [hag 11 (not_cmpCell_high (by omega))]; exact h11
+  have s12 : st 12 = addrA := by rw [hag 12 (not_cmpCell_high (by omega))]; exact h12
+  have hpw : p < 2 ^ w := by rw [← h13]; exact hfit 13
+  have d29 : (cmpSegmentProgram cmpSegReentry).getD 29 Instr.reject = Instr.add 0 11 13 := by
+    rw [show (29 : Nat) = 29 + 0 from rfl, cmpSegment_getD_tail]
+    rfl
+  rw [exec_add_step (S := S + 4) (hS := by omega) d29]
+  rw [show S + 4 - 1 = S + 3 from rfl]
+  have v29 : st 11 + st 13 = addrV + p := by rw [s11, h13]
+  rw [v29]
+  set s1 : Nat → Nat := up st 0 (addrV + p) with hs1
+  have hf1 : ∀ z, s1 z < 2 ^ w := upFit hfit hdV
+  have e13 : s1 13 = p := by rw [hs1, up_ne (by decide : (13 : Nat) ≠ 0)]; exact h13
+  have e7 : s1 7 = 0 := by rw [hs1, up_ne (by decide : (7 : Nat) ≠ 0)]; exact s7
+  have d30 : (cmpSegmentProgram cmpSegReentry).getD 30 Instr.reject = Instr.add 1 12 13 := by
+    rw [show (30 : Nat) = 29 + 1 from rfl, cmpSegment_getD_tail]
+    rfl
+  rw [exec_add_step (S := S + 3) (hS := by omega) d30]
+  rw [show S + 3 - 1 = S + 2 from rfl]
+  have e12 : s1 12 = addrA := by rw [hs1, up_ne (by decide : (12 : Nat) ≠ 0)]; exact s12
+  have v30 : s1 12 + s1 13 = addrA + p := by rw [e12, e13]
+  rw [v30]
+  set s2 : Nat → Nat := up s1 1 (addrA + p) with hs2
+  have hf2 : ∀ z, s2 z < 2 ^ w := upFit hf1 hdA
+  have e13' : s2 13 = p := by rw [hs2, up_ne (by decide : (13 : Nat) ≠ 1)]; exact e13
+  have e7' : s2 7 = 0 := by rw [hs2, up_ne (by decide : (7 : Nat) ≠ 1)]; exact e7
+  have d31 : (cmpSegmentProgram cmpSegReentry).getD 31 Instr.reject = Instr.add 2 13 7 := by
+    rw [show (31 : Nat) = 29 + 2 from rfl, cmpSegment_getD_tail]
+    rfl
+  rw [exec_add_step (S := S + 2) (hS := by omega) d31]
+  rw [show S + 2 - 1 = S + 1 from rfl]
+  have v31 : s2 13 + s2 7 = p := by rw [e13', e7', Nat.add_zero]
+  rw [v31]
+  set s3 : Nat → Nat := up s2 2 p with hs3
+  have hf3 : ∀ z, s3 z < 2 ^ w := upFit hf2 hpw
+  have ha3 : ∀ z, ¬ CmpCell z → s3 z = h z :=
+    cmpAgree_up cmpCell_two (cmpAgree_up cmpCell_one (cmpAgree_up cmpCell_zero hag))
+  have e7'' : s3 7 = 0 := by rw [hs3, up_ne (by decide : (7 : Nat) ≠ 2)]; exact e7'
+  have e8'' : s3 8 = 1 := by
+    rw [hs3, up_ne (by decide : (8 : Nat) ≠ 2), hs2, up_ne (by decide : (8 : Nat) ≠ 1),
+      hs1, up_ne (by decide : (8 : Nat) ≠ 0)]
+    exact s8
+  have d32 : (cmpSegmentProgram cmpSegReentry).getD 32 Instr.reject = Instr.blt 7 8 0 := by
+    rw [show (32 : Nat) = 29 + 3 from rfl, cmpSegment_getD_tail]
+    rfl
+  rw [exec_blt_lt_step (S := S + 1) (hS := by omega) d32 hf3 (by rw [e7'', e8'']; omega)]
+  rw [show S + 1 - 1 = S + 0 from rfl]
+  refine ⟨s3, ?_, ?_, up_eq s2 2 p, ?_, ha3, hf3, ?_⟩
+  · rw [hs3, up_ne (by decide : (0 : Nat) ≠ 2), hs2, up_ne (by decide : (0 : Nat) ≠ 1)]
+    exact up_eq st 0 _
+  · rw [hs3, up_ne (by decide : (1 : Nat) ≠ 2)]
+    exact up_eq s1 1 _
+  · rw [hs3, up_ne (by decide : (6 : Nat) ≠ 2), hs2, up_ne (by decide : (6 : Nat) ≠ 1),
+      hs1, up_ne (by decide : (6 : Nat) ≠ 0)]
+  · simp
+
+/-- **ONE LOOP STEP'S RE-ENTRY.**  The same, for a terminating loop: five instructions
+reach `0` in exactly `5` steps with the counter at `p + 1` and the *advanced* index in
+the frame (`up h 13 (p+1)`, since cell `13` is the loop's, not `CmpCell`'s).  The guard
+`p + 1 < limit` is the back-edge's condition, so the loop's own control cost is inside
+the five and not a sixth instruction. -/
+theorem cmpSeg_loopStep {ρ : Nat → BitVec w} {h : Nat → Nat}
+    {addrV addrA p limit : Nat} {st : Nat → Nat}
+    (h7 : h 7 = 0) (h8 : h 8 = 1) (h11 : h 11 = addrV) (h12 : h 12 = addrA)
+    (h14 : h 14 = limit)
+    (hag : ∀ z, ¬ CmpCell z → st z = h z) (hfit : ∀ z, st z < 2 ^ w)
+    (h13 : st 13 = p) (hl : p + 1 < limit)
+    (hdV : addrV + (p + 1) < 2 ^ w) (hdA : addrA + (p + 1) < 2 ^ w)
+    (hpw : p + 1 < 2 ^ w) (S : Nat) :
+    ∃ st', (st' 0 = addrV + (p + 1)) ∧ (st' 1 = addrA + (p + 1)) ∧ (st' 2 = p + 1) ∧
+        (st' 13 = p + 1) ∧ (st' 6 = st 6) ∧
+        (∀ z, ¬ CmpCell z → st' z = up h 13 (p + 1) z) ∧ (∀ z, st' z < 2 ^ w) ∧
+      exec (cmpSegmentProgram cmpSegLoopTail) ρ (S + 5) 29 0 (memOf w st)
+        = exec (cmpSegmentProgram cmpSegLoopTail) ρ S 0 0 (memOf w st') := by
+  have s7 : st 7 = 0 := by rw [hag 7 not_cmpCell_seven]; exact h7
+  have s8 : st 8 = 1 := by rw [hag 8 not_cmpCell_eight]; exact h8
+  have s11 : st 11 = addrV := by rw [hag 11 (not_cmpCell_high (by omega))]; exact h11
+  have s12 : st 12 = addrA := by rw [hag 12 (not_cmpCell_high (by omega))]; exact h12
+  have s14 : st 14 = limit := by rw [hag 14 (not_cmpCell_high (by omega))]; exact h14
+  have d29 : (cmpSegmentProgram cmpSegLoopTail).getD 29 Instr.reject = Instr.add 13 13 8 := by
+    rw [show (29 : Nat) = 29 + 0 from rfl, cmpSegment_getD_tail]
+    rfl
+  rw [exec_add_step (S := S + 5) (hS := by omega) d29]
+  rw [show S + 5 - 1 = S + 4 from rfl]
+  have v29 : st 13 + st 8 = p + 1 := by rw [h13, s8]
+  rw [v29]
+  set s1 : Nat → Nat := up st 13 (p + 1) with hs1
+  have hf1 : ∀ z, s1 z < 2 ^ w := upFit hfit hpw
+  have ha1 : ∀ z, ¬ CmpCell z → s1 z = up h 13 (p + 1) z := by
+    intro z hz
+    rw [hs1]
+    by_cases hz13 : z = 13
+    · subst hz13; rw [up_eq, up_eq]
+    · rw [up_ne hz13, hag z hz, up_ne hz13]
+  have e13 : s1 13 = p + 1 := up_eq st 13 (p + 1)
+  have e7 : s1 7 = 0 := by rw [hs1, up_ne (by decide : (7 : Nat) ≠ 13)]; exact s7
+  have e11 : s1 11 = addrV := by rw [hs1, up_ne (by decide : (11 : Nat) ≠ 13)]; exact s11
+  have d30 : (cmpSegmentProgram cmpSegLoopTail).getD 30 Instr.reject = Instr.add 0 11 13 := by
+    rw [show (30 : Nat) = 29 + 1 from rfl, cmpSegment_getD_tail]
+    rfl
+  rw [exec_add_step (S := S + 4) (hS := by omega) d30]
+  rw [show S + 4 - 1 = S + 3 from rfl]
+  have v30 : s1 11 + s1 13 = addrV + (p + 1) := by rw [e11, e13]
+  rw [v30]
+  set s2 : Nat → Nat := up s1 0 (addrV + (p + 1)) with hs2
+  have hf2 : ∀ z, s2 z < 2 ^ w := upFit hf1 hdV
+  have ha2 : ∀ z, ¬ CmpCell z → s2 z = up h 13 (p + 1) z := cmpAgree_up cmpCell_zero ha1
+  have e13' : s2 13 = p + 1 := by rw [hs2, up_ne (by decide : (13 : Nat) ≠ 0)]; exact e13
+  have e12 : s2 12 = addrA := by
+    rw [hs2, up_ne (by decide : (12 : Nat) ≠ 0), hs1, up_ne (by decide : (12 : Nat) ≠ 13)]
+    exact s12
+  have d31 : (cmpSegmentProgram cmpSegLoopTail).getD 31 Instr.reject = Instr.add 1 12 13 := by
+    rw [show (31 : Nat) = 29 + 2 from rfl, cmpSegment_getD_tail]
+    rfl
+  rw [exec_add_step (S := S + 3) (hS := by omega) d31]
+  rw [show S + 3 - 1 = S + 2 from rfl]
+  have v31 : s2 12 + s2 13 = addrA + (p + 1) := by rw [e12, e13']
+  rw [v31]
+  set s3 : Nat → Nat := up s2 1 (addrA + (p + 1)) with hs3
+  have hf3 : ∀ z, s3 z < 2 ^ w := upFit hf2 hdA
+  have ha3 : ∀ z, ¬ CmpCell z → s3 z = up h 13 (p + 1) z := cmpAgree_up cmpCell_one ha2
+  have e13'' : s3 13 = p + 1 := by rw [hs3, up_ne (by decide : (13 : Nat) ≠ 1)]; exact e13'
+  have e7' : s3 7 = 0 := by
+    rw [hs3, up_ne (by decide : (7 : Nat) ≠ 1), hs2, up_ne (by decide : (7 : Nat) ≠ 0)]
+    exact e7
+  have d32 : (cmpSegmentProgram cmpSegLoopTail).getD 32 Instr.reject = Instr.add 2 13 7 := by
+    rw [show (32 : Nat) = 29 + 3 from rfl, cmpSegment_getD_tail]
+    rfl
+  rw [exec_add_step (S := S + 2) (hS := by omega) d32]
+  rw [show S + 2 - 1 = S + 1 from rfl]
+  have v32 : s3 13 + s3 7 = p + 1 := by rw [e13'', e7', Nat.add_zero]
+  rw [v32]
+  set s4 : Nat → Nat := up s3 2 (p + 1) with hs4
+  have hf4 : ∀ z, s4 z < 2 ^ w := upFit hf3 hpw
+  have ha4 : ∀ z, ¬ CmpCell z → s4 z = up h 13 (p + 1) z := cmpAgree_up cmpCell_two ha3
+  have e13''' : s4 13 = p + 1 := by rw [hs4, up_ne (by decide : (13 : Nat) ≠ 2)]; exact e13''
+  have e14 : s4 14 = limit := by
+    rw [hs4, up_ne (by decide : (14 : Nat) ≠ 2), hs3, up_ne (by decide : (14 : Nat) ≠ 1),
+      hs2, up_ne (by decide : (14 : Nat) ≠ 0), hs1, up_ne (by decide : (14 : Nat) ≠ 13)]
+    exact s14
+  have d33 : (cmpSegmentProgram cmpSegLoopTail).getD 33 Instr.reject = Instr.blt 13 14 0 := by
+    rw [show (33 : Nat) = 29 + 4 from rfl, cmpSegment_getD_tail]
+    rfl
+  rw [exec_blt_lt_step (S := S + 1) (hS := by omega) d33 hf4 (by rw [e13''', e14]; exact hl)]
+  rw [show S + 1 - 1 = S + 0 from rfl]
+  refine ⟨s4, ?_, ?_, up_eq s3 2 (p + 1), e13''', ?_, ha4, hf4, ?_⟩
+  · rw [hs4, up_ne (by decide : (0 : Nat) ≠ 2), hs3, up_ne (by decide : (0 : Nat) ≠ 1)]
+    exact up_eq s1 0 _
+  · rw [hs4, up_ne (by decide : (1 : Nat) ≠ 2)]
+    exact up_eq s2 1 _
+  · rw [hs4, up_ne (by decide : (6 : Nat) ≠ 2), hs3, up_ne (by decide : (6 : Nat) ≠ 1),
+      hs2, up_ne (by decide : (6 : Nat) ≠ 0), hs1, up_ne (by decide : (6 : Nat) ≠ 13)]
+  · simp
+
+/-- **The per-comparison charge of a terminating loop, bounded**: the segment's exact
+cost plus the five instructions of `cmpSegLoopTail`, against the segment's own fuel
+plus that overhead.  This is the number residual (iv) inherits (`14 + 9p` becomes
+`19 + 9p` per comparison). -/
+theorem cmpSeg_loopCharge_le (h : Nat → Nat) (addrV addrA p r : Nat) :
+    cmpSegCost h addrV addrA p r + 5 ≤ 19 + 9 * p := by
+  have := cmpSegCost_le h addrV addrA p r
+  unfold cmpSegFuel at this
+  omega
+
+/-! #### The entry reach and the loop step, run on the program -/
+
+/-- The entry-reach spot state: `p = 1`, `r = 1` (`2^r = 2`), V's block at `30` holding
+`3, 3`, A's at `40` holding `3, 5` — the A-side tie with every low digit equal, the
+segment's worst case — and the loop's scratch `11 = 30`, `12 = 40`, `13 = 1`. -/
+def cmpSegReentrySpot : Nat → Nat :=
+  fun z => if z = 0 then 31 else if z = 1 then 41 else if z = 2 then 1
+    else if z = 7 then 0 else if z = 8 then 1 else if z = 9 then 2
+    else if z = 11 then 30 else if z = 12 then 40 else if z = 13 then 1
+    else if z = 30 then 3 else if z = 31 then 3
+    else if z = 40 then 3 else if z = 41 then 5 else 0
+
+/-- The loop spot state: `r = 2` (`2^r = 4`), V's block at `30` = `4, 3`, A's at `40` =
+`0, 3`, scratch `11 = 30`, `12 = 40`, `13 = p`, and the limit `14 = 2`.  At `p = 0` the
+pair is `(4, 0)` — the `p = 0` V-side tie, a hit; at `p = 1` it is `(3, 3)` — the
+decided miss.  The two comparisons therefore differ. -/
+def cmpSegLoopSpot (p : Nat) : Nat → Nat :=
+  fun z => if z = 0 then 30 + p else if z = 1 then 40 + p else if z = 2 then p
+    else if z = 7 then 0 else if z = 8 then 1 else if z = 9 then 4
+    else if z = 11 then 30 else if z = 12 then 40 else if z = 13 then p
+    else if z = 14 then 2
+    else if z = 30 then 4 else if z = 31 then 3
+    else if z = 40 then 0 else if z = 41 then 3 else 0
+
+/-- The reload with the back-edge redirected one slot past the adds (to `33`, a verdict
+tail) instead of to `0`.  The real back-edge sends the program round forever, so `exec`
+cannot report the post-reload state; this variant can, at the price of one instruction
+differing — and it pins both the three adds' arithmetic (the verdict in cell `6` must
+survive them) and the `4`-step cost. -/
+def cmpSegReentrySpotTail : List Instr :=
+  cmpSegReload ++ [ .blt 7 8 33, .blt 7 6 35, .reject, .accept ]
+
+/-- **One comparison and the re-entry, on the program**: the segment's worst case costs
+`23`, the four instructions `4`, the verdict tail `2` — `29`. -/
+theorem cmpSeg_spot_reentry :
+    exec (cmpSeg 29 ++ cmpSegReentrySpotTail) (fun _ => 0) 29 0 0
+      (memOf 6 cmpSegReentrySpot) = some true := by decide
+
+/-- One step short of it does not halt: the re-entry really costs `4`. -/
+theorem cmpSeg_spot_reentry_short :
+    exec (cmpSeg 29 ++ cmpSegReentrySpotTail) (fun _ => 0) 28 0 0
+      (memOf 6 cmpSegReentrySpot) = none := by decide
+
+/-- **Two comparisons through the real loop tail.**  `p = 0` is a hit (`10` steps),
+`p = 1` a miss (`8`), each followed by the loop's five instructions; the verdict is the
+*second* comparison's (`false`).  `10 + 5 + 8 + 5 + 2 = 30`. -/
+theorem cmpSeg_spot_loop :
+    exec (cmpSeg 29 ++ cmpSegLoopTail ++ [ .blt 7 6 36, .reject, .accept ]) (fun _ => 0) 30 0 0
+      (memOf 6 (cmpSegLoopSpot 0)) = some false := by decide
+
+/-- One step short of the two-comparison loop does not halt, so its cost is exact. -/
+theorem cmpSeg_spot_loop_short :
+    exec (cmpSeg 29 ++ cmpSegLoopTail ++ [ .blt 7 6 36, .reject, .accept ]) (fun _ => 0) 29 0 0
+      (memOf 6 (cmpSegLoopSpot 0)) = none := by decide
+
+/-- **The contrast that makes the loop check bite**: `p = 0` *alone* is a hit, so a loop
+that failed to advance the index would end `true` where the two-pass program ends
+`false`. -/
+theorem cmpSeg_spot_loop_first :
+    exec (cmpSeg 29 ++ [ .blt 7 6 31, .reject, .accept ]) (fun _ => 0) 12 0 0
+      (memOf 6 (cmpSegLoopSpot 0)) = some true := by decide
 
 end SubsetSumL25.Row
