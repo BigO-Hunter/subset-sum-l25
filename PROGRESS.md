@@ -2432,3 +2432,215 @@ Next single action: **the `getD`-agreement transfer of §C4–§C6 to `cmpSeg 29
 equality; then the loop induction on `p` with the guard and the accumulator.  (iv)
 then re-measures `D7.agrees`'s horizon at `19 + 9p` per comparison and
 `PayloadCarries` stays the named accumulation premise.
+
+## Row lane 2026-11-11 (17) — jv1000 C6: the two moment goals are **FALSE as stated** (proved), the certified ones stated, and the Lip-16 route measured closed
+
+Round (16) left the nine-goal residue of `Row/JV1000Instance.lean` §7 untouched.  This
+round attacks C6 (`M₁`, `M₂`) and returns a **statement defect, proved**, plus the
+module the family lane will need to write the real proof.  Two new files, no change to
+`Statement.lean` (`3dc6567e…`), nothing touched in the (iii)/(iv)/`PayloadCarries`
+residuals.
+
+### The measurement that reordered the round
+
+Simulated first (the lane's rule, and it has now caught three statement defects):
+
+| quantity | `log₂` | vs `ρ_c = 0.5162696413` |
+|---|---|---|
+| `jvMomentRho0` as stated (raw `r`) | **9.1347303876** | **−8.618 bits** |
+| `jvMomentBand` as stated (raw `s`) | **8.5399821747** | **−8.024 bits** |
+| certifier's `M₁` (strip-corrected `u`) | 0.516268325851285 | +1.3154·10⁻⁶ |
+| certifier's `M₂` (strip-corrected `v`) | 0.516268147264670 | +1.4940·10⁻⁶ |
+
+The residue's `m1`/`m2` fields were therefore **not open goals but false ones** — the
+raw-density `2^{p(Δ−r)}` reaches `2^{10.3}` near `x = 0` because `r(0) = −1.19258309`,
+where the certified `u` lives in `[−0.588, 0.178]`.  The file's own «Shape only — the
+certified quantity carries the strip corrections» caveat was honest; what had not been
+measured is that the gap is 8.6 **bits**, i.e. unreachable by any quadrature refinement.
+Cost of the omission, had it not been caught: a whole session spent trying to enclose a
+false target to 1.3·10⁻⁶.
+
+### What is proved (both refutations, no quadrature needed)
+
+`Row/JV1000Moments.lean` §1–§2, all on the house triple:
+
+* the row's Lipschitz data as exact rationals — `jv_lip16_value_r` (`12.16437058`),
+  `jv_lip16_value_s` (`12.3257555`), `jvLogDensityR_zero` (`−1.19258309`),
+  `jvLogDensityS_zero` (`0.61925852`), and the two `v1_lipschitz` specialisations;
+* `jv_momentRho0_gt_two` / `jv_momentBand_gt_two`: a single window from `0`
+  (`δ = 1/100` resp. `1/50`) carries the moment past `2` — exponent floor `9` resp. `8`
+  (integers, so `2^k` is `norm_num`-able and **no rational-power numeric bound is
+  needed anywhere**), weight floor `3.98`/`3.96`, hence `M₁ ≥ 2.547`, `M₂ ≥ 2.534`
+  (both after the crude but proved `2π ≤ 8`);
+* `jv_m1_stated_false`, `jv_m2_stated_false`: `¬ (log₂ M < ρ_c)`, via
+  `jv_rhopow_lt_two` (`2^{ρ_c} < 2`, since `ρ_c < 1`).
+
+Shape of the argument, worth keeping: **a refutation needs a lower bound on one window;
+a proof would need a 1.3·10⁻⁶ enclosure of the whole circle.** The cheap direction is
+the one that was available, and it is the one that mattered.
+
+### The quadrature module, and the route it closes
+
+`Row/JV1000Quadrature.lean`: `integral_self`, `chord_dev_le` (pointwise chord
+deviation), `integral_lerp`, **`trap_error_le`** (`|∫_a^b f − (b−a)(f a+f b)/2| ≤
+L(b−a)²/2` for `f` Lipschitz `L`, no derivative, no analyticity), and
+**`trap_error_panels`** (`n` equal panels, `L(b−a)²/(2n)`).  Constant discipline is in
+the docstring: sharp is `1/4`, the exact-majorant argument gives `1/3`, this gives `1/2`
+because `1/2` needs **no polynomial quadrature at all** — and the factor is irrelevant
+against the number below.
+
+Measured cost of that route at this point: the ρ₀ integrand's Lipschitz constant is
+`K = 2^{p(Δ+3.21)}·(2 + 4·log 2·p·lip16) = 5.07·10¹⁰`, so `1.3·10⁻⁶` needs
+`n ≥ 7.7·10¹⁷` panels — while the **true** trapezoid error at `n = 256` is of order `10⁻¹²`
+(the bound is ~20 orders pessimistic, because the integrand is entire).  The certifier's
+own route — periodic trapezoid + strip analyticity, `q₀ = 0.3708350894162912` — reaches
+`5.9·10⁻¹⁸` at `n = 40`.  **That is the architecture C6 must be proved with**; the
+Lipschitz module is the honest cheap half and the tool that produced the measurement.
+
+### §3 — the obligations, correctly stated (open, true to 15 digits)
+
+`jvZf/jvZg/jvZfk/jvZgk/jvLZ/jvStripH/jvP/jvY/jvU/jvV` and
+`jvMomentRho0Cert`/`jvMomentBandCert` are the **continuum limits** of `certify_c5`'s
+strip-corrected construction (the grid sums are trapezoid rules for exactly these
+integrals), and `structure JV1000Moments` holds the two real obligations
+`M < 2^{ρ_c}`.  Measured agreement with the discrete certifier: `2.2·10⁻¹⁶`.  The three
+missing pieces and their sizes are named in the structure's docstring — strip
+quadrature lemma; the same for the inner `P`/`Y`/`Z` integrals (a relative enclosure
+that must survive `log`); the certified rational comparison.
+
+`JV1000Instance.lean`'s `JV1000Residue` keeps **seven** fields (the entropy group);
+the two moment fields are removed, not weakened, with a pointer to the refutations.
+
+### Receipts
+
+`receipts/jv1000mom-…` — gate `PROCEED`, bounded lock wait with the deviation recorded,
+double-compile determinism on `JV1000Moments.olean`, axiom banner
+`JV1000MomentsAxioms.lean` (17 `#print axioms` + 5 `#check`) fail-closed on
+`sorryAx`/`native_decide`/non-house axiom set — exit 0, 55 `depends on axioms` lines,
+all house triple.  The build **compiled** this round's modules rather than replaying
+them (`✔ Built SubsetSumL25.Row.JV1000Instance (23s)`, `✔ Built
+SubsetSumL25.Row.JV1000Moments (17s)`), so the residue edit is compile-verified.  The
+lock deviation is recorded, not hidden: `acquired=False waited_s=240.2 bounded=240` —
+a peer held `/Volumes/Substrate-1/bigo/.build.lock` for the whole bounded wait and the
+build proceeded anyway (same deviation class as the `…T011642Z` receipt, and the same
+honesty about it).  `Row/JV1000Instance.lean`'s own banner (`JV1000Axioms.lean`) was
+re-run separately after the residue edit — exit 0, 55 lines, house triple, stored as
+`axioms_instance_relaunch.{txt,exit}` in the same receipt; the first attempt was
+SIGTERM'd at 31 s by something outside this session, and the relaunch is the one of
+record.
+
+### Next single action
+
+**The strip-analyticity quadrature lemma** — `|trapezoid_n(H) − ∫ H| ≤ C·q^n` for
+`H = (2+2cos)·2^{f}`, `f` a finite trigonometric polynomial, with `q` from the
+analyticity half-width and `C` from a Cauchy estimate; then the inner integrals of §3.
+Everything after that is `norm_num`.
+
+## Row lane 2026-11-10 (17) — residual (iii)'s two named successors: the transfer and the loop induction, and a charge it corrects (LANDED)
+
+Round 16 closed the program-entry reach and named exactly what was left: *"closing that
+means transferring §C4–§C6's `getD` facts to `cmpSeg 29 ++ tail` … and the loop proper
+(an induction on `p` with the guard and the accumulator) stands on top of it."* This
+round does both, and the second one **corrects the charge again**: a counting loop pays
+`cmpSegCost + 6`, not `+ 5`.
+
+### The seam is a replay, not a congruence — and that is why it looked hard
+
+The composed program differs from `cmpSeg 29` at position `29`, which is *exactly* where
+the segment's last step jumps. So `exec` on the two programs cannot be compared by
+agreement at all: at `29` the plain program reads `Instr.reject` (the `getD` fallback)
+and the composed one reads the loop tail. The only honest route is to replay the chain
+against an abstract `P` agreeing on `0…28` — which is what `cmpSeg_reaches_gen` is.
+
+**Simulated first (arm A of `sim_loop.py`).** Before any Lean: run both programs on six
+digit blocks and compare the traces step for step. They are identical in pc **and in
+memory** for the whole `0…28` walk, and they arrive at `29` in the same state; only the
+instruction *at* `29` differs. That is the transfer's content, measured — if the traces
+diverged anywhere below `29` no amount of Lean would fix it.
+
+The 16 `_gen` declarations are mechanically derived from §C4–§C6 by `gen_transfer.py`,
+which lists its six rewrites in its own docstring and prints what it copied and what it
+skipped. Nothing is re-argued: the only things that change are the `getD` facts
+(`rfl` becomes `hgd`) and the word `cont`, which becomes `29`. The free-`cont`
+originals are untouched, so the copies cannot break them.
+
+### The charge: `+6`, not `+5` — and it is the count that costs
+
+`cmpSeg_loopCharge_le` charges `cmpSegCost + 5 ≤ 19 + 9p` for a terminating loop.
+Inherited as written, that number is right for a loop that **does not count**. The row's
+verdict is `0 < hitCount` (`hitCount_pos_iff`), and `KapilaLoop`'s `scan_loop` carries
+`acc + hitCount …` across its iterations — so the loop the row needs must accumulate,
+and the accumulate is one instruction:
+
+| charge | value | who |
+|---|---|---|
+| one comparison (segment) | `cmpSegCost` (exact), `≤ 14 + 9p` | §C6 |
+| re-entry, `p` already in cell 13 | `+4` | `cmpSeg_reentry` |
+| terminating loop, **no** accumulation | `+5`, `≤ 19 + 9p` | `cmpSeg_loopStep` |
+| terminating loop, **counting** | `+6`, `≤ 20 + 9p` | this round |
+
+Measured, not asserted: `sim_loop.py` arm B runs the 6-instruction tail and finds that
+at `cmpSegCost + 5` the program is **still inside the tail at pc 34** — the sixth step is
+real. Arm D then checks `cmpSegCost + 6 ≤ 20 + 9p` over a grid of digit blocks (worst
+slack 6). Cell `15` is the accumulator, outside `CmpCell` (so the frame covers it) and
+outside the digit blocks because `16 ≤ addrV, addrA` — a layout hypothesis this module
+*states* rather than assumes.
+
+### The loop induction: `scan_loop`'s shape, at the segment's granularity
+
+The frame is parametrized rather than nested: `CmpLoopFrame h p acc = up (up h 13 p) 15 acc`,
+so each iteration's `up (up …) 13 (p+1)` lands back on the same shape (`up_up_absorb`) and
+the induction needs one rewrite per iteration instead of a growing nest of `up`s. Two
+congruences keep the *price* a function of the digits and not of the frame
+(`walkCost_congr`, `cmpSegCost_congr`) — without them the segment's chain, run against
+the loop's frame, would be priced in the loop's frame while the loop's fuel is priced in
+the caller's, and the arithmetic could not chain.
+
+The accumulated run shape, exactly:
+
+```
+cmpLoopHits h addrV addrA p m r = Σ_{i<m} (if digHalf h h addrV addrA (p+i) r then 1 else 0)
+cmpLoopFuel h addrV addrA p m r = Σ_{i<m} (cmpSegCost h addrV addrA (p+i) r + 6)
+cmpSeg_loop      : m comparisons from p0, all guards taken (p0+m < limit),
+                   reach `0` with the counter at p0+m, the accumulator at
+                   acc + cmpLoopHits, and the frame CmpLoopFrame h (p0+m) (acc + hits)
+cmpLoopFuel_le   : cmpLoopFuel ≤ m * (20 + 9 * (p + m))
+```
+
+Simulated too (arm C): six digit blocks, `cmpLoopFuel` equals the measured halting fuel
+to the step, the accumulator's increments sum to `cmpLoopHits`, and each iteration's
+cell `6` equals `digHalf` at that `p`. Arm C′ is the control: the round-16 defect (reload
+before advance) ends on a different verdict, so the check bites.
+
+### What is proved
+
+| declaration | content |
+|---|---|
+| `cmpSeg_reaches_gen` (+15 `_gen`) | §C4–§C6 replayed for `{P} (hgd : ∀ i ≤ 28, P.getD i = (cmpSeg 29).getD i)` — mechanically generated |
+| **`cmpSeg_reaches_program`** | **THE TRANSFER, ON THE REAL PROGRAM**: `cmpSegCost` steps from `0` to `29` on `cmpSegmentProgram tail`, verdict in cell `6`, frame intact |
+| `cmpSeg_hitBody` | `pc 29 → 34` in 5: accumulate, advance, reload — verdict preserved |
+| `cmpSeg_guard_taken` / `cmpSeg_guard_exit` | the guard, one instruction, both successors |
+| **`cmpSeg_hitIter`** | **ONE COUNTING ITERATION**: `0 → 0` in `cmpSegCost + 6`, counter at `p+1`, accumulator at `acc + verdict`, frame re-parametrized |
+| **`cmpSeg_loop`** | **THE LOOP**: `m` comparisons, `cmpLoopFuel` steps, `cmpLoopHits` accumulated |
+| `cmpSeg_hitCharge_le`, `cmpLoopFuel_le` | `+6 ≤ 20 + 9p`; `cmpLoopFuel ≤ m * (20 + 9(p+m))` |
+| `CmpLoopFrame` + 8 cell lemmas, `up_up_absorb` | the frame algebra the induction runs on |
+| `cmpDigitsFrom_congr`, `digHalf_congr`, `walkCost_congr`, `cmpSegCost_congr` | the verdict and the price are functions of the digits, not of the frame |
+
+**What is not claimed.** (a) The early-exit variant of the loop (a hitscan that jumps to
+`accept` on the first hit) is *also* `+6` — one instruction either way, the accumulate or
+the exit guard — but it is not proved here; the row's stated verdict is the count, so the
+count is what got proved. (b) `cmpLoopFuel_le`'s bound is deliberately loose at the top
+end (`p + m`, not `p + m − 1`); the exact per-comparison figure is `cmpSegCost + 6` and
+(iv) can use either.
+
+### Peer coordination
+
+`JV1000Quadrature.lean` is the **jv1000 mind's** file and this round did not touch it.
+No manifest moves: `sources.sha256` is regenerated by the receipt over
+`SubsetSumL25/Row/*.lean`, so the peer's in-flight drift will show there and is that
+mind's business. New files this round, all in the lane: `SubsetSumL25/Row/KapilaCmpSegLoop.lean`
+(the module), `parts/c10_transfer_gen.lean` (generated), `parts/c11_loop.lean` (hand),
+`gen_transfer.py`, `assemble_loop_module.py`, `sim_loop.py`. `Statement.lean` unchanged
+(`3dc6567e…34aa`), `KapilaCmpSeg.lean` unchanged (`6f00b833…6dc3`) — the whole round is
+additive, which is also why the landed module's olean hash is untouched.
+

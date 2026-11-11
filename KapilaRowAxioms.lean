@@ -10,6 +10,7 @@ import SubsetSumL25.Row.KapilaWide
 import SubsetSumL25.Row.KapilaDigitwise
 import SubsetSumL25.Row.KapilaBinSum
 import SubsetSumL25.Row.KapilaCmpSeg
+import SubsetSumL25.Row.KapilaCmpSegLoop
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -289,3 +290,30 @@ open SubsetSumL25.Row
 #print axioms cmpSeg_spot_loop
 #print axioms cmpSeg_spot_loop_short
 #print axioms cmpSeg_spot_loop_first
+
+-- residual (iii)'s two named successors: the `getD`-agreement transfer (§C10) and the
+-- loop induction on the comparison counter (§C11)
+#print axioms cmpSeg_reaches_program
+#print axioms cmpSeg_reaches_gen
+#print axioms cmpSeg_walk_gen
+#print axioms cmpSeg_head_gen
+#print axioms cmpSeg_tieA_gen
+#print axioms cmpSeg_tieV_gen
+#print axioms cmpHitTail
+#print axioms CmpLoopFrame
+#print axioms cmpLoopFrame_13
+#print axioms cmpLoopFrame_fit
+#print axioms up_up_absorb
+#print axioms cmpDigitsFrom_congr
+#print axioms digHalf_congr
+#print axioms walkCost_congr
+#print axioms cmpSegCost_congr
+#print axioms cmpLoopHits
+#print axioms cmpLoopFuel
+#print axioms cmpSeg_hitCharge_le
+#print axioms cmpSeg_hitBody
+#print axioms cmpSeg_guard_taken
+#print axioms cmpSeg_guard_exit
+#print axioms cmpSeg_hitIter
+#print axioms cmpSeg_loop
+#print axioms cmpLoopFuel_le
