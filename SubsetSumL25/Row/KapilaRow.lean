@@ -167,6 +167,23 @@ stage the checksum program does not contain — remains named, and
 `Routines.WithinEnvelope` + `envE_absorb` still own the envelope's absorption: none
 of it is re-proved here.
 
+**The data premise is not this seam, and is now placed elsewhere.**  `D7` is the
+*program/translation* seam: `program` plus the two run equations.  `PayloadCarries`
+is a premise about the **data** the test segment reads — the payload blocks hold the
+phases' numerators — and this round decided its kind from evidence rather than leaving
+it as prose: the row's three landed phase texts (`prelimProg`, `aliasProg`,
+`checksumProg`) are straight-line witness legs whose only memory writes are their
+saves (`writePositions` `[6]`, `[6, 8]`, `[6, 8, 10]`; `noBackEdge` true — both
+machine-checked), and each agreement field is verdict-only, so **no landed text
+accumulates** and the test path reads pre-accumulated blocks supplied by
+`PayloadConvention.mem` («the segment's exit memory»).  It is therefore a *data
+contract*, not a refinement obligation: it is now an explicit named field of
+`PayloadSeam` in `SubsetSumL25.Row.KapilaBinSum` §S6 (cited, **not** imported — that
+module is downstream of this one), beside this seam and `CorrectAt` in the row's
+named-input list.  Classing it as a program obligation would have been subsumed by
+the phase fields' own texts and would have asserted an address layout §6.2 does not
+fix.
+
 The translation must therefore absorb the **multi-word charge**: §6.2 carries the
 estimates at `n²` fractional bits while `w = 4(n+b) + ⌈log₂((n+2)⁴)⌉ = O(n+b)`,
 so at `b = 1` the curves cross at `n = 7` and `n²` stays ahead — a dyadic

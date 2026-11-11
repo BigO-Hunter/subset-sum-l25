@@ -324,3 +324,18 @@ open SubsetSumL25.Row
 #print axioms cmpLoopFuel_le_mul
 #print axioms cmpLoopFuel_le_tight
 #print axioms cmpLoopFuel_fits
+
+-- §S6: the seam record at the test path — the data premise, classified and placed
+#print axioms isWrite
+#print axioms writePositions
+#print axioms noBackEdge
+#print axioms prelimProg_writes
+#print axioms aliasProg_writes
+#print axioms checksumProg_writes
+#print axioms prelimProg_straightLine
+#print axioms aliasProg_straightLine
+#print axioms checksumProg_straightLine
+#print axioms phaseTexts_no_accumulation
+#print axioms payloadCarries_iff_numBlock
+#print axioms PayloadSeam
+#print axioms PayloadSeam.agrees

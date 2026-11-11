@@ -706,3 +706,45 @@ differ only in a jump target are two programs, and the real back-edge (`→ 0`) 
 post-state unobservable through `exec`; disclose the redirect in the docstring and
 prove the cost separately, rather than pretending the redirect is the program.
 
+
+## 2026-11-11 (10) — `PayloadCarries` **classified**: (b) a data contract, and placed in the seam record
+
+The last named premise of the test/checksum path was open as to *kind*, not as to arithmetic.
+Criterion: does `Routines`' program family **contain** an accumulation stage per §6.2, or read
+pre-accumulated payloads?  **Answered (b), on evidence:**
+
+* §6.2 puts the accumulation *inside the phase computation* (`PROOF_0.4877.tex` B.4: «each phase is
+  computed to error `2^{-2n²}` with dyadic parts … the sums are exact») — and in the row that
+  computation is `Routines.aliasA`/`checksumB`, abstract fields returning `Option (List ℚ)`.
+* The landed phase texts are **witness legs**: `prelimProg` (17), `aliasProg` (20), `checksumProg`
+  (24) save their inputs, walk `a` against `t`, accept/reject, and their agreements are
+  **verdict-only** (`= some (phase …).isSome`).  Machine-checked: writes are `1`/`2`/`3` saves
+  (`writePositions` `[6]`, `[6,8]`, `[6,8,10]`) and every branch target is forward
+  (`noBackEdge` true) — straight-line texts, no loop body for an accumulation.
+* The test path already treats the memory as an **input** (`PayloadConvention.mem`, «the segment's
+  exit memory»), and `payloadCarries_iff_numBlock` proves the premise *is* the row's own block
+  equation (`numBlock … = (range len).map numV ∧ …`).
+
+**(a) was rejected for two structural reasons**: it is *subsumed* by the phase fields' own
+(already-named) full texts — a second charge for one debt; and it would assert an *address layout*
+§6.2 does not fix (the blocks are `PayloadConvention`'s — this tree's convention, `baseV`/`baseA`/
+`stride`/`blockLen` caller-chosen).  The honest form is the interface, and its inhabitation is
+already a theorem (`placeValueAt_payloadStride`).  Cost stays **zero**: `PayloadCarries` is not a
+summand of `Routines.cost`, it is a precondition on memory.
+
+**Landed** (`KapilaBinSum` §S6, 13 declarations): `isWrite`/`writePositions`/`noBackEdge`, the
+three `*_writes` and three `*_straightLine` evidentials, `phaseTexts_no_accumulation`,
+`payloadCarries_iff_numBlock`, `structure PayloadSeam` (`fit`, `numV`, `numA`, `carries`) and
+`PayloadSeam.agrees` (the wide contract from the record alone — the premise is *used*).  `D7`'s
+docstring gained the placement paragraph (cited, not imported).  The three names the round was
+asked to sit beside — `hret`/`hTt`/`hident` — **do not exist in this lane** (grep: only `M5.lean`'s
+unrelated `hident1/2` locals), and §S6 says so rather than inventing them.
+
+**Receipt:** determinism double-compile, `KapilaBinSum.olean` twice from scratch to sha256
+`05ef66ef…360a4a` (362 168 B), `KapilaRow.olean` `87b51b98…c60c76`; banner exit 0, 244 banner
+lines, house-triple only (the `decide` evidentials on `[propext]`); `Statement.lean` still
+`3dc6567e…34aa`.
+
+**Next single action:** the stride-`k` payload read in the test segment — a `stride`-fold of loads
+with `2^{w·j}` weights, proved equal to `numAt`, charged `stride` words per estimate into §C12's
+per-comparison figure.

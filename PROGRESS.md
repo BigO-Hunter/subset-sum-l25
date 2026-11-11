@@ -2808,3 +2808,108 @@ Next single action: **`PayloadCarries`** (`Row/KapilaBinSum.lean`) — the accum
 checksum program does not contain, and now the *last* named premise of the test/checksum path that
 has a concrete obligation attached (the early-exit variant and the M-series goals are the other
 residuals, both recorded as unproved/false-as-stated respectively).
+
+## Row lane 2026-11-11 (19) — `PayloadCarries` classified: **(b) a data contract**, placed in the seam record (LANDED)
+
+Round 18 closed with: *"`PayloadCarries` (`Row/KapilaBinSum.lean`) — the accumulation stage the
+checksum program does not contain, and now the last named premise of the test/checksum path that
+has a concrete obligation attached."*  This round executes it as a **classification**, because the
+open thing was the premise's *kind*, not its arithmetic.  Two readings were live: **(a)** a
+refinement obligation with a program (§C10–§C12 style — a segment, its block-writing invariant,
+its cost shape), or **(b)** a data contract (the caller supplies the accumulated blocks; a
+D7-style named input).
+
+### The criterion, and the verdict: (b)
+
+Criterion: does the row's `Routines` program family *contain* an accumulation stage per §6.2, or
+does it read pre-accumulated payloads?  Three measurements settle it:
+
+1. **§6.2 puts the accumulation inside the phase computation** — «Each phase is computed to error
+   `2^{-2n²}` with dyadic parts, each weighted term is rounded to `n²` fractional bits, and the
+   sums are exact» (`PROOF_0.4877.tex` B.4; §6.2's own «the finite-precision arithmetic do not
+   change»).  In this row that computation *is* `Routines.aliasA`/`checksumB` — abstract fields
+   returning `Option (List ℚ)`.
+2. **The family's landed instruction texts are witness legs, not phase texts.**  `prelimProg`
+   (17), `aliasProg` (20), `checksumProg` (24): each saves its inputs, walks `a` against `t`,
+   accepts/rejects — and each **agreement field is verdict-only**
+   (`run prog … = some (phase …).isSome`), so none reproduces an estimate list, let alone writes a
+   payload block.  Machine-checked this round: memory writes are `1`/`2`/`3` saves
+   (`writePositions` = `[6]`, `[6, 8]`, `[6, 8, 10]`, all ahead of each text's first `load`) and
+   **every branch target is forward** (`noBackEdge` = `true`) — the texts are straight-line, so
+   there is no loop body in which an accumulation could run.
+3. **The test path already writes the memory as an input.**  `PayloadConvention.mem` is «the
+   segment's exit memory»; `Ahat`/`Vhat` are *read* from it, and the wide exit takes `hA`/`hV`
+   through `numBlock`.  `payloadCarries_iff_numBlock` proves `PayloadCarries` **is** the
+   digit-level block equation `numBlock … = (range len).map numV ∧ …`.
+
+So relative to every text and every consumer the row has, the blocks are **pre-accumulated**: the
+premise is a precondition on the memory, not a program obligation.  **(b).**
+
+### Why (a) would have been wrong to take on — two structural reasons
+
+* **Subsumed.**  The accumulation lives inside the phase computation, which the row already owes
+  as the full `aliasProg`/`checksumProg` phase texts (the landed legs are verdict-only).  An
+  (a)-class `PayloadCarries` would be a sub-obligation of an obligation already named — a second
+  charge for one debt.
+* **It would assert a layout the paper does not fix.**  §6.2 fixes the *precision* (`n²`
+  fractional bits) and exactness; it fixes no address layout.  The blocks at `base + i·stride` are
+  `PayloadConvention`'s — this tree's *convention* (`baseV`, `baseA`, `stride`, `blockLen` are
+  caller-chosen).  A block-writing invariant would be a theorem about an interface we invented;
+  the honest form is the interface, and the layout's *inhabitation* is already proved
+  (`placeValueAt_payloadStride`).
+
+### What landed (13 declarations, `Row/KapilaBinSum.lean` §S6)
+
+| declaration | content |
+|---|---|
+| `isWrite`, `writePositions`, `noBackEdge` | the computable evidentials: which instructions write memory; whether every branch target is forward |
+| `prelimProg_writes` / `aliasProg_writes` / `checksumProg_writes` | `[6]` / `[6, 8]` / `[6, 8, 10]` — 1/2/3 saves and nothing else |
+| `*_straightLine` (×3) | `noBackEdge … 0 = true` — no loop body exists in any landed phase text |
+| `phaseTexts_no_accumulation` | the six facts as one conjunction: the criterion, machine-checked |
+| **`payloadCarries_iff_numBlock`** | the premise *is* the row's own block equation, in `numBlock` |
+| **`structure PayloadSeam`** | the seam record at the test path: `fit`, `numV`, `numA`, `carries` |
+| **`PayloadSeam.agrees`** | `WideBinSumAgrees` from the record alone — the premise is *used*, not declared |
+
+The file's header §S6 carries the full argument **and the row's named-input table in one place**;
+`Row/KapilaRow`'s `D7` docstring gained «The data premise is not this seam, and is now placed
+elsewhere» (cited, **not** imported — `KapilaBinSum` is downstream of `KapilaRow`).
+
+**The three names this round was asked to sit beside — `hret`, `hTt`, `hident` — do not exist in
+this lane.**  A grep over every `Row/*.lean` and every `.md` finds only `M5.lean`'s unrelated
+`hident1`/`hident2` locals.  They are another row's seam vocabulary; §S6 says so rather than
+inventing them, and places `carries` in this row's own record instead.
+
+### Receipt
+
+**Determinism double-compile** (the compile of record): `KapilaBinSum`'s
+`.olean`/`.ilean`/`.trace` deleted and rebuilt **twice from scratch**, both to sha256
+`05ef66ef9e7a38d817850ebeffc75ae323a886f84d890719a047db00af360a4a` (362 168 bytes);
+`KapilaRow.olean` rebuilt from scratch to `87b51b98…c60c76` (1 382 064 bytes) after its docstring
+edit.  Axiom banner exit 0, **244** `depends on axioms` lines, house-triple only: the `decide`
+evidentials on `[propext]`, `payloadCarries_iff_numBlock` on `[propext, Quot.sound]`,
+`PayloadSeam`/`PayloadSeam.agrees` on the full house triple.  No `sorryAx`, no `native_decide`;
+`Statement.lean` still `3dc6567e…34aa`.  Receipt `receipts/kapila-20261111T031907Z` from the
+bounded runner (gate, lock, oleans, sources, head).
+
+### Measurements for the next author
+
+1. **`List.map_inj_left` is the converse `List.map_congr_left` lacks** —
+   `map f l = map g l ↔ ∀ a ∈ l, f a = g a`.  With `List.mem_range`, a list-equality hypothesis
+   becomes the pointwise form in one `mp`, no induction.  (Both lemmas exist in this Mathlib pin;
+   `#check` before assuming a name.)
+2. **`decide` closes a closed `List Nat` equality and a `Bool`-matcher fold** — no `DecidableEq`
+   on `Instr` is needed when the predicate returns `Bool` (`List.filter` takes `α → Bool`, not a
+   `DecidablePred`).
+3. **A probe file at the lane root is safe** (`lakefile.toml`'s globs are `SubsetSumL25*` only),
+   and `#eval` is the cheap way to learn a computable fact *before* asserting it in a `decide`
+   theorem — `[6]`/`[6,8]`/`[6,8,10]` and `true`/`true`/`true` came back exactly as predicted, so
+   the `decide` proofs were written once and closed on the first compile.
+4. **Two modules, two from-scratch compiles, 1 m 38 s total** at the fleet's load; the second
+   compile of `KapilaBinSum` alone took 43.6 s.  Delete-and-rebuild is still the only compile
+   evidence.
+
+Next single action: **the stride-`k` payload read in the test segment.**  `cmpSeg` reads one word
+per index (`addrV + p`), while the estimates `PayloadSeam.carries` speaks about sit in `stride`-word
+blocks; write the k-word read (a fold of `stride` loads with `2^{w·j}` place weights), prove the
+fold *is* `numAt` at each estimate's address, and charge `stride` words per estimate into §C12's
+per-comparison figure — the last gap between the data contract and the segment's cost.

@@ -86,7 +86,9 @@ witness's, not Theorem B's `1 − o(1)`.
   `binSum` is fixed (§S1) and `WideBinSumAgrees` is proved for it
   (`wideBinSumAgrees_binSum`), unconditionally in the memory.  The independent
   form is `wideBinSumAgrees_carried`, whose only input is `PayloadCarries` — the
-  accumulation stage, named above.
+  accumulation stage, named above.  **§S6 decides what *kind* of premise that is**
+  (a data contract, not a program obligation) and places it as a named field of
+  the seam record; the criterion is machine-checked there.
 * **(i) `cmpSeg`'s segment proof** — unchanged by this file.  What this file adds
   to it is the tie `hitWord_binSumTest`: the segment's verdict is the bin-sum
   test, so the segment need not be re-argued in §6's vocabulary.
@@ -98,6 +100,66 @@ witness's, not Theorem B's `1 − o(1)`.
 
 `Statement.lean` is untouched (`3dc6567e…34aa`); every name below is new and this
 module is a leaf of the import DAG.
+
+## §S6 — the seam record at the test path, and *which kind* of premise §S3 named
+
+§S3 named `PayloadCarries` as «the accumulation stage the checksum program does not
+contain».  Naming a premise settles that it is not floating; it does not settle **what
+kind of premise it is**, and the two kinds cost a reader different things:
+
+* **(a) a refinement obligation with a program** — the accumulation stage is instruction
+  text the row owes, discharged §C10–§C12-style: a segment, its block-writing invariant,
+  its cost shape.
+* **(b) a data contract** — the caller supplies the accumulated blocks, and the premise is
+  a precondition on the memory the test path reads, named beside the row's other inputs.
+
+**The criterion.**  Does the row's `Routines` program family *contain* an accumulation
+stage per §6.2, or does it read pre-accumulated payloads?  **Answered (b), from evidence:**
+
+1. **§6.2 puts the accumulation inside the phase computation**: «Each phase is computed to
+   error `2^{-2n²}` with dyadic parts, each weighted term is rounded to `n²` fractional
+   bits, and the sums are exact» (`PROOF_0.4877.tex` B.4; §6.2's own «the finite-precision
+   arithmetic do not change»).  In this row the phase computation *is*
+   `Routines.aliasA`/`Routines.checksumB` — abstract fields returning `Option (List ℚ)`.
+2. **The family's landed instruction texts are witness legs, not phase texts.**
+   `prelimProg` (17 instructions), `aliasProg` (20) and `checksumProg` (24) each save their
+   inputs, walk `a`'s array against `t`, and accept or reject; their **agreement fields are
+   verdict-only** (`run prog … = some (phase …).isSome`; `prelim_agrees` through `failToNo`)
+   — none of them reproduces an estimate list, let alone writes a payload block.
+   Machine-checked in §S6 below: their memory writes are exactly `1`/`2`/`3` saves at
+   `writePositions` `[6]`, `[6, 8]`, `[6, 8, 10]` — all ahead of each text's first `load` —
+   and **every branch target is forward** (`noBackEdge` = `true`).  The landed texts are
+   straight-line: there is no loop body in which an accumulation could run.
+3. **The test path's convention already writes the memory as an *input*.**
+   `PayloadConvention.mem` is documented «the segment's exit memory»; `Ahat`/`Vhat` are read
+   from it, and the wide exit (`wideExit_eq_binSumDigits`) takes `hA`/`hV`, both stated
+   through `numBlock`.  `payloadCarries_iff_numBlock` proves `PayloadCarries` **is** the
+   digit-level form of the block equation — `numBlock w f baseV len stride =
+   (List.range len).map numV ∧ …` — the row's own vocabulary, one level below the list
+   equations.
+
+So relative to every text the row has and every consumer it has, the payload blocks are
+**pre-accumulated**: supplied from outside the family.  That is (b) — and the classification
+is not a labelling taste, because an (a)-reading fails twice over:
+
+* **(a) would be subsumed.**  The accumulation lives inside the phase computation, which the
+  row already owes as the full `aliasProg`/`checksumProg` phase texts (the landed legs are
+  verdict-only: `KapilaPrelim`/`KapilaAlias`/`KapilaChecksum`'s own named obligations).  An
+  (a)-class `PayloadCarries` would be a sub-obligation of an obligation already named — a
+  second charge for one debt.
+* **(a) would assert a layout the paper does not fix.**  §6.2 fixes the *precision* (`n²`
+  fractional bits) and exactness; it fixes no address layout.  The blocks at
+  `base + i·stride` are `PayloadConvention`'s — this tree's *convention* (hence the name;
+  `baseV`, `baseA`, `stride`, `blockLen` are caller-chosen fields).  A block-writing
+  invariant would be a theorem about an interface we invented.  The honest form is the
+  interface itself: *if* the blocks hold those numerators *then* the test path is correct —
+  and the layout's inhabitation is already proved (`placeValueAt_payloadStride`: a
+  `payloadStride` block carries an `F`-bit numerator exactly).
+
+**Cost: zero.**  §S3 already recorded that `binSum` defines the compared quantity rather than
+a computation the program performs; `PayloadCarries` likewise is not a summand of
+`Routines.cost` — it is a precondition on the memory the segment reads.  Residual (iv)'s
+horizon (§C12) is untouched by this section.
 -/
 import Mathlib
 import SubsetSumL25.Row.Statement
@@ -314,5 +376,109 @@ theorem hitWord_binSumTest {w : Nat} (f : Nat → Nat) (baseV baseA stride fracB
   rw [hitWord_eq_ratTest hF]
   unfold binSum
   rw [binDigits_eq_numAt_sub, ← sub_div]
+
+/-! ### §S6 — the seam record at the test path
+
+The header's §S6 says *which kind* of premise `PayloadCarries` is and why.  This section is
+its two machine-checked halves: the **evidence** (the row's landed phase texts write no
+accumulator — they are straight-line witness legs whose only memory writes are their saves),
+and the **placement** (the premise as an explicit field of a seam record, used by a consumer
+theorem rather than merely declared). -/
+
+/-- `true` exactly on the one instruction that writes memory. -/
+def isWrite : Instr → Bool
+  | .store _ _ => true
+  | _ => false
+
+/-- Positions (in the text) of the instructions that write memory. -/
+def writePositions : List Instr → List Nat
+  | [] => []
+  | i :: rest => (if isWrite i then [0] else []) ++ (writePositions rest).map (· + 1)
+
+/-- `true` if every branch target is forward of its own position — i.e. the text is
+straight-line, with no loop body for an accumulation stage to live in. -/
+def noBackEdge : List Instr → Nat → Bool
+  | [], _ => true
+  | i :: rest, k =>
+    (match i with
+      | .blt _ _ l => decide (k < l)
+      | _ => true) && noBackEdge rest (k + 1)
+
+/-- **§4's text writes memory once, in its save.** -/
+theorem prelimProg_writes : writePositions prelimProg = [6] := by decide
+
+/-- **§5.2's alias text writes memory twice, in its saves.** -/
+theorem aliasProg_writes : writePositions aliasProg = [6, 8] := by decide
+
+/-- **§6's checksum text writes memory three times, in its saves.** -/
+theorem checksumProg_writes : writePositions checksumProg = [6, 8, 10] := by decide
+
+/-- **§4's text is straight-line** (no backward branch). -/
+theorem prelimProg_straightLine : noBackEdge prelimProg 0 = true := by decide
+
+/-- **§5.2's alias text is straight-line.** -/
+theorem aliasProg_straightLine : noBackEdge aliasProg 0 = true := by decide
+
+/-- **§6's checksum text is straight-line.** -/
+theorem checksumProg_straightLine : noBackEdge checksumProg 0 = true := by decide
+
+/-- **The three landed phase texts are straight-line** — every branch target is forward, so
+none of them has a loop body, and there is no iteration in which an accumulation could run. -/
+theorem phaseTexts_no_accumulation :
+    noBackEdge prelimProg 0 = true ∧ noBackEdge aliasProg 0 = true
+      ∧ noBackEdge checksumProg 0 = true
+      ∧ writePositions prelimProg = [6] ∧ writePositions aliasProg = [6, 8]
+      ∧ writePositions checksumProg = [6, 8, 10] :=
+  ⟨prelimProg_straightLine, aliasProg_straightLine, checksumProg_straightLine,
+    prelimProg_writes, aliasProg_writes, checksumProg_writes⟩
+
+/-- **`PayloadCarries` is the row's own block equation**, at the digit level: the memory's two
+blocks read back as the independent numerators.  `numBlock` is the stride-`k` reader the wide
+exit's `hA`/`hV` already name, so the premise is stated in the vocabulary the test path uses —
+not in a new one, and not as a claim about any program. -/
+theorem payloadCarries_iff_numBlock {w : Nat} (f : Nat → Nat) (numV numA : Nat → Nat)
+    (baseV baseA stride len : Nat) :
+    PayloadCarries w f numV numA baseV baseA stride len
+      ↔ (numBlock w f baseV len stride = (List.range len).map numV
+          ∧ numBlock w f baseA len stride = (List.range len).map numA) := by
+  unfold PayloadCarries numBlock
+  constructor
+  · intro h
+    exact ⟨List.map_congr_left (fun s hs => (h s (List.mem_range.mp hs)).1),
+      List.map_congr_left (fun s hs => (h s (List.mem_range.mp hs)).2)⟩
+  · rintro ⟨hV, hA⟩ i hi
+    exact ⟨(List.map_inj_left.mp hV) i (List.mem_range.mpr hi),
+      (List.map_inj_left.mp hA) i (List.mem_range.mpr hi)⟩
+
+/-- **The seam record at the test path.**  The row's program seam (`D7`) is about a program's
+run; this one is about the *data* the test segment reads, and it is the only place the
+accumulation appears as a premise.  `carries` is the named contract (`PayloadCarries`); the
+other fields are the digit fit and the two independent numerator families it speaks about. -/
+structure PayloadSeam {n : Nat} {x : Instance n} (C : PayloadConvention n x) (w : Nat)
+    (f : Nat → Nat) (stride : Nat) where
+  /-- Every memory word is a `w`-bit value — the digit fit the `ℚ` bridge consumes. -/
+  fit : ∀ z, f z < 2 ^ w
+  /-- The alias phase's independent numerators `Â_s`. -/
+  numV : Nat → Nat
+  /-- The checksum phase's independent numerators `V̂_ρ`. -/
+  numA : Nat → Nat
+  /-- **The data contract**: the payload blocks hold those numerators. -/
+  carries : PayloadCarries w f numV numA C.baseV C.baseA stride C.blockLen
+
+namespace PayloadSeam
+
+variable {n : Nat} {x : Instance n} {C : PayloadConvention n x} {w : Nat} {f : Nat → Nat}
+  {stride : Nat}
+
+/-- **The wide bin-sum contract, from the seam record alone.**  The premise is *used*, not
+declared: the record's fields are exactly `wideBinSumAgrees_carried`'s hypotheses, so §S3's
+independent form is unchanged by the classification — what changed is that its input now has a
+name and a place. -/
+theorem agrees (S : PayloadSeam C w f stride) :
+    WideBinSumAgrees C (memOf w f) stride
+      (fun i => ((S.numV i : ℚ) - (S.numA i : ℚ)) / (2 : ℚ) ^ C.fracBits) :=
+  wideBinSumAgrees_carried C f S.fit stride S.numV S.numA S.carries
+
+end PayloadSeam
 
 end SubsetSumL25.Row
