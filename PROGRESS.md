@@ -3191,3 +3191,85 @@ Next single action: **the instantiation of §6/§7 at the moment integrands** �
 `|Im z| < 1/5` with sup `≤ W_out·2^{ceil sup}` (the measured `16548.4` / `8.4728·10⁶`), and feed
 `quadrature_at_256_of_strip`.  After that the residue is exactly the contour-split `U*`/`W*`
 bound plus the rational comparison.
+
+## Row lane 2026-11-11 (20) — jv1000: **the composition passage** — `u`, `v` holomorphic on the strip, the composite bounded, §7 fed
+
+Round 19 (`a40f541`) proved `hdecay` and discharged §6/§7 at `n = 256`, and named the
+instantiation as «the next round's residue»: `u`, `v` are `log₂` of positive strip-analytic
+integrals, so the composite `(2+2cos θ)·2^{p(Δ−u(θ))}` is holomorphic on `|Im z| < 1/5` with
+sup `W_out·2^{⌈sup⌉}`.  **That is now proved, and the round's one correction is that the
+composition needed *more* analysis than round 19's note expected — and that the branch-cut
+worry was in the wrong place.**
+
+### What landed — `SubsetSumL25/Row/JV1000Compose.lean`, 35 declarations, house triple
+
+| piece | content |
+|---|---|
+| §1 | `trig16c`/`jvRcx`/`jvScx`: the ℂ-lift of `trig16`, **entire**, with real-axis agreement (`hF`), `2π`-periodicity (`hper`), and the certifier's own majorant `stripMod a b t = Σ_j(|a_j|+|b_j|)cosh(jt)` (`certify_c5.py` l.28) |
+| §1.1 | `norm_cos_le_cosh`, `norm_sin_le_cosh` — the **sharp** bounds; `norm_two_add_two_cos` — `\|2+2cos z\| ≤ 2+2cosh(Im z)` |
+| §2 | `P_c`, `Y_c` as interval integrals; `hasDerivAt_trig16c`, `norm_trig16cD_le`; **`hasDerivAt_jvPcx`** — differentiation under the interval integral with the strip majorant as dominating function; `differentiableAt_jvYcx` (product rule, factor `1 + log2·w`) |
+| §3 | `jvUcx`, `jvVcx` — `jvU`/`jvV` with `Complex.log · / log 2`; **holomorphic on the strip** from `P_c ∈ slitPlane` (`Complex.differentiableAt_log`) |
+| §4 | `jvMomFc1`, `jvMomFc2`: **the composite is holomorphic**, sup `≤ 8472775`, periodic; ceilings `jvWout·2¹²`, `jvWout·2²¹` |
+| §5 | `quadrature_jvMomF1/F2` — **§7 fed**: `‖circleMean F − trapMean 256 F‖ ≤ 10⁻⁶` |
+| §6 | `jvPcx_ofReal` … `jvUcx_ofReal`: the **real-axis bridge**; `circleMean jvMomF1 = ↑jvMomentRho0Cert`; `jv_m1_cert_of_comparison`, `jv_m2_cert_of_comparison` |
+
+### Three corrections, each measured before it was written
+
+1. **The composite has no branch problem — the cut lives in `u`, not in `2^{…}`.**
+   `2^{w}` on ℂ must be read as `exp(w log 2)` (a `rpow` reading has no complex branch at all),
+   and `exp` of a holomorphic function is *entire*.  So the composition is free once `u` is
+   holomorphic, and the whole branch question is one fact about one image: does `P_c` map the
+   strip into `Complex.slitPlane`?  `sim/sim_compose.py` §1: **`min Re P_c = 0.9385 > 0`** on
+   `|Im t| ≤ 0.2`, `max |P_c| = 1.6606`, and `Im P_c` never changes sign where `Re P_c < 0` —
+   the strip image misses the cut by `0.94`, so the premise is not delicate.
+   **Corollary, not premise:** `jvP x ≥ 0` is *derived* from `hslit` (a strictly negative real
+   has `re < 0, im = 0`, which is not in `slitPlane`), so the sign of `P` on the real axis is
+   not another measured fact.
+
+2. **`W_out` carries no slack, so the cos bound must be sharp.**  `8472775 = ⌈W_out·2²¹⌉` with
+   `W_out·2²¹ = 8472774.07` — **0.93 of room**.  The lossy route (`‖re‖ + ‖im‖` from
+   `Complex.cos_eq`) gives `2 + 2(cosh + sinh) = 4.4428` at the strip edge against the ceiling's
+   `4.0401`, a 10 % overshoot — `9.32·10⁶` against `8472775`, which fails.  So `norm_cos_le_cosh` is proved *squared*, from
+   `Complex.cos_eq`'s re/im split (`‖cos z‖² = cos²(re)cosh²(im) + sin²(re)sinh²(im) ≤ cosh²(im)`
+   — the identity is `sin²(re)·(cosh²−sinh²) = sin²(re)`), and `cosh(1/5) ≤ 1.0200668` from
+   `Real.exp_bound` at `x = ±1/5`, `n = 8` — the margin over the true `1.0200667556` is `4.4·10⁻⁸`.
+
+3. **The sup of the product is not the product of the sups.**  Measured: the composite sup on
+   the strip is **2.78** (`M₁`) / **2.65** (`M₂`) — not `16548` / `8.47·10⁶` — because `Re u` is
+   *smallest* near `θ = π`, exactly where `2+2cos θ` vanishes; the ceiling is ≥10⁶× loose.  So
+   §4 bounds the product and states the two witnesses separately (`Re u ≥ −U` for the
+   exponential, `‖2+2cos z‖ ≤ 2+2cosh` for the weight), which is what makes `hMle` a *numeric*
+   discharge rather than an analytic one.
+
+### The residue, now exactly three items plus two side conditions
+
+`jvMomentRho0Cert < 2^{ρ_c}` is `jv_m1_cert_of_comparison`, whose hypotheses are:
+
+* `hslit` — `Re P_c > 0` on the strip (measured `min 0.9385`);
+* `hU` — `Re u ≥ −1.326` (measured `Re u ∈ [−0.6939, +0.1813]`; the certifier's `U* = 1.3258`
+  is 1.9× conservative) and `hV` — `Re v ≤ 19.178` (measured `∈ [0.3774, 0.6117]`; `W* = 19.177`
+  is 31× conservative);
+* `hcmp` — `‖trapMean 256 F‖ + 10⁻⁶ < 2^{ρ_c}`: **the rational comparison**, 256 elementary terms;
+* `hFint`, `happrox` — the enclosure's own two side conditions (`happrox` is §7's named tail
+  `ε ≤ 10⁻²⁰`; measured `~10⁻¹⁶`).
+
+**The tightest link, recorded because it constrains round 21.**  The log₂ margin is
+`1.3154·10⁻⁶`, i.e. `1.3041·10⁻⁶` in linear terms on a quantity of size `1.4302509`, and the
+quadrature bound consumed is `10⁻⁶` — so the comparison has only `0.30·10⁻⁶` of room, and the
+`trapMean 256` enclosure must be good to `3·10⁻⁷` absolute.  That is the number the rational
+comparison round must hit, not `10⁻⁶`.
+
+### Receipts
+
+`jv1000_compose_receipts.py` (same discipline as the decay runner): live-pressure gate, bounded
+lock wait (expiry recorded as a deviation), detached `lake build`, named-olean sha256,
+**determinism double-compile**, banner `JV1000ComposeAxioms.lean` (35 `#print axioms`)
+fail-closed on `sorryAx` / `native_decide` / non-house axioms.  Banner exit 0, **all 35 in the
+house triple** `[propext, Classical.choice, Quot.sound]`.  `Statement.lean` sha256
+`3dc6567e…34aa` — **0-diff**.  `sim/sim_compose.py` is the measurement artifact: real-axis
+sanity reproduces round 17's `0.516268325851285` to 15 digits, then the four strip measurements.
+
+Next single action: **the contour-split `U*`/`W*` bounds as theorems, then the rational
+comparison at `3·10⁻⁷`** — `Re u ≥ −U*` and `Re v ≤ W*` on the strip are the last analytic
+facts (`U*`, `W*` currently enter as the rational replacements `1.326` / `19.178`), and
+everything downstream of them is `jv_m1_cert_of_comparison` plus a 256-term enclosure.

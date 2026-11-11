@@ -797,3 +797,49 @@ re-attributed in `PROGRESS.md`).
 
 **Next single action:** the stride tail program — the `cmpSeg` variant (cell 2 reloaded from a `p`
 constant, stride-advanced counter, `blockLen·k+p` limit) and its reach against `estFuel`.
+
+### Round 21 — jv1000, the composition passage: `u`, `v` holomorphic on the strip, the composite bounded, §7 fed
+
+`Row/JV1000Compose.lean`.  Round 19's `hdecay` discharged §6/§7; the *instantiation* it named is
+now a module.  `SubsetSumL25/Row/JV1000Compose.lean`, 35 declarations, house triple.
+
+**The composition verdict.**  `u`, `v` are written as `log₂` of the strip-analytic integrals
+(`jvUcx`, `jvVcx`, `Complex.log · / log 2` in `jvU`/`jvV`'s exact shapes), and **`P_c` and `Y_c`
+are proved holomorphic on `|Im z| < 1/5` by differentiation under the interval integral** —
+round 19 called this "instantiation, not analysis"; it is analysis, and the dominating function
+is the certifier's own majorant `S(co, t) = Σ_j(|a_j|+|b_j|)cosh(jt)`.  Then `u`, `v` are
+holomorphic given `P_c ∈ Complex.slitPlane`, and **the composite
+`(2+2cos z)·2^{p(Δ−u(z))}` is holomorphic with sup `≤ W_out·2²¹ = 8472775`** — the number §7
+takes as `hMle`.  `quadrature_jvMomF1`/`F2` feed §7 at `n = 256` and get `≤ 10⁻⁶`.
+
+**Three corrections, each measured first (`sim/sim_compose.py`).**
+
+1. *The branch cut is in `u`, not in `2^{…}`.*  `2^{w}` on ℂ must be `exp(w log 2)`, which is
+   entire; the composite inherits holomorphy for free.  The one branch fact is `P_c`'s image of
+   the strip: measured `min Re P_c = 0.9385 > 0`, missing the cut by `0.94`.  And `jvP x ≥ 0` is
+   a **corollary** of that condition (a negative real is not in `slitPlane`), not a new premise.
+2. *`W_out` has no slack.*  `8472775 = ⌈4.0401336·2²¹⌉` with `4.0401336·2²¹ = 8472774.07` — 0.93 of
+   room.  The lossy `‖re‖+‖im‖` trig bound gives `4.4428` vs the ceiling's `4.0401` (10 %
+   overshoot), so `‖cos z‖ ≤ cosh(Im z)` is proved **squared** from `Complex.cos_eq`, and
+   `cosh(1/5) ≤ 1.0200668` from `Real.exp_bound` at `±1/5` (margin `4.4·10⁻⁸`).
+3. *The sup of the product is not the product of the sups.*  Measured composite sup `2.78` /
+   `2.65` — the ceiling is ≥10⁶× loose, because `Re u` is *smallest* at `θ = π` where the weight
+   vanishes.  §4 bounds the product and names the two witnesses separately.
+
+**The residue is now exactly three items** — `hslit` (`Re P_c > 0`, measured `0.9385`), `hU`/`hV`
+(`Re u ≥ −1.326`, `Re v ≤ 19.178`; measured `[−0.694,+0.181]` / `[0.377,0.612]`, so the
+certifier's `U*`/`W*` are 1.9× / 31× conservative), and **`hcmp`**: the rational comparison
+`‖trapMean 256 F‖ + 10⁻⁶ < 2^{ρ_c}` — plus the enclosure's two side conditions.  Given them,
+`jvMomentRho0Cert < 2^{ρ_c}` is `jv_m1_cert_of_comparison`; there is no analysis left.
+
+**The tightest link, recorded:** the log₂ margin `1.3154·10⁻⁶` is `1.3041·10⁻⁶` linear on
+`1.4302509`, and §7 consumes `10⁻⁶` — so the comparison has `0.30·10⁻⁶` of room and the
+`trapMean 256` enclosure must be good to `3·10⁻⁷` absolute, not `10⁻⁶`.
+
+**Receipts:** determinism double-compile of `JV1000Compose.olean`; banner exit 0 with **35**
+`#print axioms` lines, all in the house triple; `Statement.lean` still `3dc6567e…34aa`;
+family files 0-diff.  `sim/sim_compose.py` reproduces round 17's `0.516268325851285` to 15 digits
+before measuring the strip.
+
+**Next single action:** the contour-split `U*`/`W*` bounds as theorems (`Re u ≥ −U*`,
+`Re v ≤ W*` on the strip), then the 256-term enclosure at `3·10⁻⁷`.

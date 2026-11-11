@@ -1,0 +1,89 @@
+⚠ [8928/8935] Replayed SubsetSumL25.Proofs.O4
+warning: SubsetSumL25/Proofs/O4.lean:40:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+warning: SubsetSumL25/Proofs/O4.lean:74:56: Unused tactic linter: `push_cast` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Proofs/O4.lean:219:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+⚠ [8931/8935] Replayed SubsetSumL25.Row.JV1000Quadrature
+warning: SubsetSumL25/Row/JV1000Quadrature.lean:55:2: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+warning: SubsetSumL25/Row/JV1000Quadrature.lean:241:27: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+⚠ [8933/8935] Replayed SubsetSumL25.Row.JV1000Strip
+warning: SubsetSumL25/Row/JV1000Strip.lean:111:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:123:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:102:4: Unused tactic linter: `push_cast` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Row/JV1000Strip.lean:108:17: Unused tactic linter: `push_cast` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Row/JV1000Strip.lean:150:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:155:6: Unused tactic linter: `push_cast` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: SubsetSumL25/Row/JV1000Strip.lean:185:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:185:18: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:187:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:187:18: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:195:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:195:18: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:197:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:197:18: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:207:8: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:209:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:209:20: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:210:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:210:20: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:291:13: This simp argument is unused:
+  Pi.add_apply
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only [Finset.sum_add_distrib]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: SubsetSumL25/Row/JV1000Strip.lean:355:15: `continuous_finset_sum` has been deprecated: Use `continuous_finsetSum` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:388:12: `continuous_finset_sum` has been deprecated: Use `continuous_finsetSum` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:420:17: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: SubsetSumL25/Row/JV1000Strip.lean:424:17: `if_neg` has been deprecated: Use `ite_eq_right` instead
+ℹ [8934/8935] Replayed SubsetSumL25.Row.JV1000Decay
+info: SubsetSumL25/Row/JV1000Decay.lean:288:4: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+info: SubsetSumL25/Row/JV1000Decay.lean:300:4: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+⚠ [8935/8935] Built SubsetSumL25.Row.JV1000Compose (34s)
+warning: SubsetSumL25/Row/JV1000Compose.lean:1186:12: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: SubsetSumL25/Row/JV1000Compose.lean:1203:12: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: SubsetSumL25/Row/JV1000Compose.lean:1215:12: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: SubsetSumL25/Row/JV1000Compose.lean:1226:12: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+Build completed successfully (8935 jobs).
