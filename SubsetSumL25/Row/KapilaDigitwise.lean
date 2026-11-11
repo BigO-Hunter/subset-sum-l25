@@ -493,12 +493,46 @@ reaches `cont` with cell `6 = digHalf`'s verdict as a word (`1` for `true`, `0` 
 `false`), touching no other cell of the caller's.  Three facts are proved below
 because they are pure shape — the program's length, the fuel's linearity, and the
 fuel's relation to the stride-`k` read charge; the reachability part is the
-deferred segment proof. -/
+deferred segment proof (`KapilaCmpSeg`).
+
+**Two defects the shape carried, both caught before the proof was attempted**
+(by simulating this exact `Instr` list rather than reasoning about it).  They are
+recorded here because the skeleton was *stated* before it was walked, and a stated
+skeleton is a claim like any other:
+
+1. **The `p = 0` tie descended into nothing.**  As first written, both tie
+   instructions were unconditional jumps to the walk (`blt 7 8 19` / `blt 7 8 16`).
+   A tie at `p = 0` then entered the walk with no digit below `p`: it decremented
+   the two pointer cells to `addrV − 1`, `addrA − 1` and read *there* — addresses
+   outside the digit block — and returned whatever those words happened to say.
+   The tie at `p = 0` has no low part at all, and `cmpDigitsFrom … 0 = true`, so
+   the correct verdict is `hit`; the program could answer `miss`.  The fix is
+   **free**: the two tie jumps now test the digit counter (`blt 7 2 19`,
+   `blt 7 2 16`) and only descend when `0 < p`, so the `p = 0` tie falls through
+   into the hit exit (`12`).  It also makes position `7` live code — it was
+   unreachable as first written.
+2. **The fuel was one step short.**  The walk's terminal digit costs `10`
+   instructions to reach the hit entry (`19 … 28`) and not `9`, so the worst case
+   is `11 + (9p + 3) = 9p + 14`, not `13 + 9p`.  Corrected below; `14 + 9p` is
+   *attained* (`p ≥ 1`, A-side tie, all low digits equal), so it is a bound and not
+   slack.
+
+A third hazard is a hypothesis rather than a defect: `add 5 4 9` sums a digit with
+`2^r` in one word, so the segment needs `d + 2^r < 2^w` for the two digits `d` it
+reads at `p`.  At `r ≤ w − 2` the scale-fit regime supplies it for free (a digit at
+`p` is below `2^(r+1)`), so only the top bit of digit `p` (`r = w − 1`) is an
+explicit premise; `KapilaCmpSeg` carries it as `hadA`/`hadV` and proves the free
+case (`two_pow_add_fits`). -/
 
 /-- **The compare segment's instruction skeleton.**  Prologue `0–11` reads the two
 digits at `p` and branches four ways on `2^r`; `12–15` are the two decided exits;
 `16–18` swaps the pointer cells for the A-side tie; `19–28` is the low-digit walk
-(`9` instructions per digit plus its terminal test).  Exits jump to `cont`. -/
+(`9` instructions per digit plus its terminal test).  Exits jump to `cont`.
+
+The two tie instructions test the digit counter before descending: at `p = 0` there
+is no digit below `p` to descend into, the tie is a hit outright, and `cmpDigitsFrom
+… 0 = true` agrees — see the section docstring's defect (1), and position `7` is
+live because of it. -/
 def cmpSeg (cont : Nat) : List Instr :=
   [ .load 3 0                    --  0  v := [[0]]           (V's digit at p)
   , .load 4 1                    --  1  a := [[1]]           (A's digit at p)
@@ -506,12 +540,12 @@ def cmpSeg (cont : Nat) : List Instr :=
   , .blt 3 5 8                   --  3  v < a+2^r ? → 8
   , .blt 5 3 12                  --  4  a+2^r < v ? → 12      HIT
   , .add 6 7 8                   --  5  [6] := 1             (tie, V side)
-  , .blt 7 8 19                  --  6  → 19                 (low walk, no swap)
-  , .blt 7 8 19                  --  7  → 19                 (unreachable)
+  , .blt 7 2 19                  --  6  0 < p ? → 19         (low walk, no swap)
+  , .blt 7 8 12                  --  7  → 12                 (p = 0: tie is a hit)
   , .add 5 3 9                   --  8  [5] := v + 2^r
   , .blt 4 5 14                  --  9  a < v+2^r ? → 14      MISS
   , .blt 5 4 12                  -- 10  v+2^r < a ? → 12      HIT
-  , .blt 7 8 16                  -- 11  → 16                 (tie, A side: swap)
+  , .blt 7 2 16                  -- 11  0 < p ? → 16         (tie, A side: swap)
   , .one 6                       -- 12  [6] := 1             HIT
   , .blt 7 8 cont                -- 13  → cont
   , .rem 6 7 7                   -- 14  [6] := 0             MISS
@@ -537,19 +571,20 @@ is one constant the row's `D7.program` can name. -/
 theorem cmpSeg_length (cont : Nat) : (cmpSeg cont).length = 29 := rfl
 
 /-- **The fuel shape.**  Worst case is the A-side tie: `11` instructions to the
-walk entry, the walk's `9` per digit, its terminal test, and the exit.  The
-decided cases are *constant* (`7` and `8`), which is the shape's point: the walk is
-`O(p)` only on an exact tie at digit `p`. -/
-def cmpSegFuel (p : Nat) : Nat := 13 + 9 * p
+walk entry, the walk's `9` per digit, its terminal digit's extra step, and the
+exit — `14 + 9p`.  The decided cases are *constant* (`7`, `8` and `9`), which is
+the shape's point: the walk is `O(p)` only on an exact tie at digit `p`.  (`p = 0`
+is cheaper still: `10`.) -/
+def cmpSegFuel (p : Nat) : Nat := 14 + 9 * p
 
 /-- **The fuel is linear in `p`, not in `stride` squared and not exponential** —
 the statement residual (iv) inherits. -/
-theorem cmpSegFuel_linear (p : Nat) : cmpSegFuel p ≤ 13 * (p + 1) := by
+theorem cmpSegFuel_linear (p : Nat) : cmpSegFuel p ≤ 14 * (p + 1) := by
   unfold cmpSegFuel
   omega
 
-/-- **The decided cases cost a constant.**  Stated as the fuel at `p = 0` — the
-tie can only descend when there is a digit below `p` to descend into. -/
-theorem cmpSegFuel_zero : cmpSegFuel 0 = 13 := rfl
+/-- **The decided cases cost a constant.**  Stated as the fuel at `p = 0`: with no
+digit below `p` the tie does not descend, so only the prologue and an exit run. -/
+theorem cmpSegFuel_zero : cmpSegFuel 0 = 14 := rfl
 
 end SubsetSumL25.Row

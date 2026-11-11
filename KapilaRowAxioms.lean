@@ -9,6 +9,7 @@ import SubsetSumL25.Row.KapilaEstimate
 import SubsetSumL25.Row.KapilaWide
 import SubsetSumL25.Row.KapilaDigitwise
 import SubsetSumL25.Row.KapilaBinSum
+import SubsetSumL25.Row.KapilaCmpSeg
 
 /-! Axiom banner for the row assembly.  Every declaration the row's claim
 rests on must report only the house triple `[propext, Classical.choice,
@@ -260,3 +261,14 @@ open SubsetSumL25.Row
 #print axioms halfTest_diff_iff_wordDiff
 #print axioms binSumTest_iff_wordDiff
 #print axioms hitWord_binSumTest
+
+-- residual (i): the compare segment, walked
+#print axioms cmpSeg_reaches
+#print axioms cmpSeg_reaches_bound
+#print axioms cmpSeg_walk
+#print axioms cmpSegCost_le
+#print axioms cmpSegCost_tight
+#print axioms cmpSegment_getD
+#print axioms cmpSeg_cell6_iff_wordTest
+#print axioms cmpSeg_spot_tieA
+#print axioms cmpSeg_spot_tieV_zero
