@@ -15,8 +15,12 @@ loop pays the advance) and this round's `+5 → +6` (a *counting* loop pays the
 accumulate, `scan_loop`'s shape — the row's verdict is `0 < hitCount`, so a count is
 what the loop is for).  Per comparison: `cmpSegCost + 6 ≤ 20 + 9p`.
 
-Nothing here touches `Statement.lean`, `KapilaAlgo.cost`, `D7.agrees`'s horizon
-(residual (iv)) or `PayloadCarries` (residual (ii)'s named premise, still named).
+Residual (iv) is *restated* at the end of this module (§C12): the per-comparison figure
+`20 + 9p`, the segment's exact charge as the Σ `Σ_{i<blockLen} (cmpSegCost p_i + 6)`, and
+the horizon-fit form `D7.agrees` consumes.  Restated, not discharged: `D7.agrees`'s
+horizon field itself (`R.cost n x`, in `SubsetSumL25.Row.KapilaRow`, not imported here)
+is untouched, and `Statement.lean`, `KapilaAlgo.cost` and `PayloadCarries` (residual
+(ii)'s named premise) are untouched as well.
 -/
 import Mathlib
 import SubsetSumL25.Row.Statement
@@ -1628,5 +1632,117 @@ theorem cmpSeg_loop {ρ : Nat → BitVec w} {h : Nat → Nat}
             = S + cmpLoopFuel h addrV addrA (p0 + 1) m r
               + (cmpSegCost h addrV addrA p0 r + 6) from by omega]
       exact hstep.trans hstep2
+
+/-! #### §C12 — residual (iv): the test segment's horizon, restated per comparison
+
+`D7.agrees` (in `SubsetSumL25.Row.KapilaRow`, **not** imported here — this section is its
+arithmetic, not its restatement as a Lean term) states the seam at the abstract horizon
+`R.cost n x`.  What residual (iv) owes is the figure that lets a *segment* be charged
+against that horizon.  This section states it once, in the vocabulary the row's
+accounting already uses (`Routines.cost`'s word operations — see `D7`'s docstring for the
+unit, and `Routines.WithinEnvelope` + `envE_absorb` for the envelope that absorbs them;
+**the absorption is not re-proved here**, it is landed).
+
+**The shape, end to end.**  §7 step 7's test segment runs `blockLen` comparisons from
+counter `p`; its exact charge is
+
+  `Σ_{i<blockLen} (cmpSegCost h addrV addrA (p+i) r + 6)  +  prologue + epilogue`
+
+where `cmpSegCost + 6` is one comparison (the segment plus the loop tail's sixth
+instruction) and prologue/epilogue are the parts of the row program outside the test
+segment (loading the two blocks; writing the verdict).  The Σ is not a summary of
+`cmpLoopFuel` — it *is* `cmpLoopFuel` (`cmpLoopFuel_eq_sum`), the §C11 recursion written
+out; and a horizon covering `prologue + blockLen * (20 + 9 * (p+blockLen)) + epilogue`
+covers the segment (`cmpLoopFuel_fits`), with the per-comparison reading
+`cmpSegCost + 6 ≤ 20 + 9p'` from `cmpSeg_hitCharge_le`.
+
+**Which variant — counting, and why.**  The count, not the early-exit hitscan.  Both pay
+`+6` per comparison (one instruction either way: the accumulate, or the exit guard), so
+the arithmetic cannot decide between them; the *row's* verdict does — §7 step 7 asks
+`0 < hitCount`, and that count is the accumulator this loop carries.  The early-exit
+variant stays unproved and is recorded as such rather than claimed.
+
+**Looseness, stated rather than hidden.**  `m * (20 + 9 * (p+m))` prices every
+comparison at the *last* counter value `p+m−1` raised by one; the tight uniform form is
+`m * (20 + 9 * (p+m−1))` (`cmpLoopFuel_le_tight`, for `m ≥ 1`), and the exact
+per-comparison figure is `cmpSegCost + 6` (`cmpLoopHits`/`cmpLoopFuel` keep it visible).
+A caller may read either; (iv)'s horizon statement uses the `p+m` form because it is the
+one `cmpLoopFuel_le` already carries.
+
+**What stays named.**  `PayloadCarries` (`KapilaBinSum`) — the accumulation stage the
+checksum program does not contain — is untouched and remains the named premise of the
+`binSum` refinement, exactly as residual (ii) left it.
+-/
+
+/-- `Σ_{i<m+1} g (p+i) = g p + Σ_{i<m} g (p+1+i)` — the index shift the segment's Σ
+needs, stated once (peeling the *head*, because the loop's recursion peels `p`). -/
+theorem sum_range_shift (g : Nat → Nat) (p : Nat) :
+    ∀ m : Nat, (∑ i ∈ Finset.range (m + 1), g (p + i))
+      = g p + ∑ i ∈ Finset.range m, g (p + 1 + i)
+  | 0 => by simp
+  | m + 1 => by
+    rw [Finset.sum_range_succ, sum_range_shift g p m, Finset.sum_range_succ]
+    rw [show g (p + (m + 1)) = g (p + 1 + m) from by
+      rw [show p + (m + 1) = p + 1 + m from by omega]]
+    omega
+
+/-- **THE SEGMENT'S CHARGE IS A Σ.**  `cmpLoopFuel` is `Σ_{i<m} (cmpSegCost (p+i) + 6)`:
+the end-to-end shape of the test segment's cost, with the counter drifting `p → p+m−1`.
+Stated so a caller reads the charge as the sum it is, not as a recursion it must unfold. -/
+theorem cmpLoopFuel_eq_sum (h : Nat → Nat) (addrV addrA p r : Nat) :
+    ∀ m : Nat, cmpLoopFuel h addrV addrA p m r
+      = ∑ i ∈ Finset.range m, (cmpSegCost h addrV addrA (p + i) r + 6) := by
+  intro m
+  induction m generalizing p with
+  | zero => simp [cmpLoopFuel]
+  | succ m ih =>
+    have hstep : cmpLoopFuel h addrV addrA p (m + 1) r
+        = cmpSegCost h addrV addrA p r + 6 + cmpLoopFuel h addrV addrA (p + 1) m r := rfl
+    rw [hstep, ih (p + 1),
+      sum_range_shift (fun i => cmpSegCost h addrV addrA i r + 6) p m]
+
+/-- **A UNIFORM PER-COMPARISON CHARGE GIVES THE HORIZON.**  If every comparison in the
+run is charged at most `B` — the hypothesis reads the run's own indices, `p+i` — the
+whole run costs at most `m·B`.  Both horizon forms below are instances. -/
+theorem cmpLoopFuel_le_mul {h : Nat → Nat} {addrV addrA p m r B : Nat}
+    (hB : ∀ i, i < m → cmpSegCost h addrV addrA (p + i) r + 6 ≤ B) :
+    cmpLoopFuel h addrV addrA p m r ≤ m * B := by
+  induction m generalizing p with
+  | zero => exact Nat.zero_le _
+  | succ m ih =>
+    have hstep : cmpLoopFuel h addrV addrA p (m + 1) r
+        = cmpSegCost h addrV addrA p r + 6 + cmpLoopFuel h addrV addrA (p + 1) m r := rfl
+    have h0 : cmpSegCost h addrV addrA p r + 6 ≤ B := by
+      have := hB 0 (Nat.zero_lt_succ m)
+      rwa [show p + 0 = p from by omega] at this
+    have hrest : cmpLoopFuel h addrV addrA (p + 1) m r ≤ m * B :=
+      ih (p := p + 1) (fun i hi => by
+        have := hB (i + 1) (by omega)
+        rwa [show p + (i + 1) = p + 1 + i from by omega] at this)
+    rw [hstep, Nat.succ_mul]
+    omega
+
+/-- **THE TIGHT UNIFORM HORIZON — `p + m − 1`, not `p + m`.**  The `p+m` form over-charges
+every comparison by pricing it at the counter's value after the last increment; the last
+comparison actually runs at `p+m−1`.  Stated so the looseness is a recorded number rather
+than an unremarked one. -/
+theorem cmpLoopFuel_le_tight {h : Nat → Nat} {addrV addrA p m r : Nat} (hm : 0 < m) :
+    cmpLoopFuel h addrV addrA p m r ≤ m * (20 + 9 * (p + m - 1)) := by
+  refine cmpLoopFuel_le_mul (B := 20 + 9 * (p + m - 1)) (fun i hi => ?_)
+  have hidx : p + i ≤ p + m - 1 := by omega
+  have hcharge := cmpSeg_hitCharge_le h addrV addrA (p + i) r
+  omega
+
+/-- **THE HORIZON-FIT FORM `D7.agrees` CONSUMES.**  A horizon `T` that covers
+`prologue + m·(20 + 9·(p+m)) + epilogue` covers the segment: the prologue and epilogue are
+the row program's parts outside the test segment, and the middle term is the segment's
+charge at the `p+m` reading of `cmpLoopFuel_le`.  This is the arithmetic half of residual
+(iv) — `D7.agrees`'s horizon field is what it is applied to, and the absorption of the
+word-op envelope is `envE_absorb`'s, not this lemma's. -/
+theorem cmpLoopFuel_fits {h : Nat → Nat} {addrV addrA p m r pro epi T : Nat}
+    (hT : pro + m * (20 + 9 * (p + m)) + epi ≤ T) :
+    pro + cmpLoopFuel h addrV addrA p m r + epi ≤ T := by
+  have h := cmpLoopFuel_le (h := h) (addrV := addrV) (addrA := addrA) (p := p) (m := m) (r := r)
+  omega
 
 end SubsetSumL25.Row

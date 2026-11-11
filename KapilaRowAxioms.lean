@@ -317,3 +317,10 @@ open SubsetSumL25.Row
 #print axioms cmpSeg_hitIter
 #print axioms cmpSeg_loop
 #print axioms cmpLoopFuel_le
+
+-- residual (iv): the horizon restated (§C12)
+#print axioms sum_range_shift
+#print axioms cmpLoopFuel_eq_sum
+#print axioms cmpLoopFuel_le_mul
+#print axioms cmpLoopFuel_le_tight
+#print axioms cmpLoopFuel_fits

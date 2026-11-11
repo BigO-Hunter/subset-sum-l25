@@ -2707,3 +2707,104 @@ Next single action: **residual (iv)** — restate `D7.agrees`'s horizon per comp
 `20 + 9p` (`cmpLoopFuel_le` is the sum), decide the count-vs-early-exit variant (both
 `+6`; the count is proved and is what `hitCount_pos_iff` reads), and keep
 `PayloadCarries` as the *named* accumulation premise rather than re-proving absorption.
+
+## Row lane 2026-11-10 (18) — residual (iv): the horizon restated at `20 + 9p` per comparison (LANDED)
+
+Round 17 closed with the instruction this round executes: *"restate `D7.agrees`'s horizon per
+comparison at `20 + 9p` (`cmpLoopFuel_le` is the sum), decide the count-vs-early-exit variant,
+and keep `PayloadCarries` as the named accumulation premise rather than re-proving absorption."*
+§C12 of `Row/KapilaCmpSegLoop.lean` is that, and nothing else — **restated, not discharged**:
+`D7.agrees`'s horizon *field* (`R.cost n x`, in `Row/KapilaRow`) is untouched, because it is what
+the arithmetic is *applied to*; the round adds the arithmetic, the end-to-end shape, and the record
+of where each number lives.
+
+### The shape, end to end — in the word-operation vocabulary
+
+§7 step 7's test segment runs `blockLen` comparisons from counter `p`, and its exact charge is
+
+  `Σ_{i<blockLen} (cmpSegCost h addrV addrA (p+i) r + 6)  +  prologue + epilogue`
+
+with prologue/epilogue the row program's parts outside the test segment (loading the two blocks;
+writing the verdict).  The Σ is not a bound on `cmpLoopFuel`, it *is* `cmpLoopFuel` —
+`cmpLoopFuel_eq_sum` proves the identity, so §C11's recursion is read as the sum it is.  The unit
+is `Routines.cost`'s word operations (`D7`'s docstring fixes it), and the envelope that absorbs the
+sum is `Routines.WithinEnvelope` + `envE_absorb` — **not re-proved here**, per instruction; the new
+lemma stops at the horizon.
+
+### The variant: counting, and the one-line reason
+
+The **counted** loop is the one proved, and it is the one the row needs: both it and the early-exit
+hitscan pay `+6` per comparison (one instruction either way — the accumulate, or the exit guard),
+so the arithmetic cannot choose between them; the row's verdict `0 < hitCount` does, because what
+the loop is *for* is the count.  The early-exit variant remains unproved and is recorded as such.
+
+### Looseness as a number, not a remark
+
+`cmpLoopFuel_le`'s `m * (20 + 9 * (p+m))` prices every comparison at the counter's value *after*
+the last increment.  The tight uniform form is `m * (20 + 9 * (p+m-1))` — the last comparison
+actually runs at `p+m-1` — and it is now proved (`cmpLoopFuel_le_tight`, for `m ≥ 1`) through a
+reusable step (`cmpLoopFuel_le_mul`: a uniform per-comparison charge `B` gives `m·B`).  Both
+readings are available; a caller that wants the loose one gets it from `cmpLoopFuel_le`.
+
+### What is proved (5 declarations, all house triple or a subset)
+
+| declaration | content |
+|---|---|
+| `sum_range_shift` | `Σ_{i<m+1} g(p+i) = g p + Σ_{i<m} g(p+1+i)` — the index shift the Σ needs (peels the head, because the loop's recursion peels `p`) |
+| **`cmpLoopFuel_eq_sum`** | **the end-to-end shape**: `cmpLoopFuel = Σ_{i<m} (cmpSegCost (p+i) + 6)` |
+| `cmpLoopFuel_le_mul` | a uniform per-comparison charge `B` over the run's own indices gives `m·B` |
+| `cmpLoopFuel_le_tight` | the tight uniform horizon `m·(20 + 9·(p+m−1))`, `m ≥ 1` |
+| **`cmpLoopFuel_fits`** | **the form `D7.agrees` consumes**: `pro + m·(20+9·(p+m)) + epi ≤ T ⟹ pro + cmpLoopFuel + epi ≤ T` |
+
+### Wiring the seam record
+
+`Row/KapilaRow`'s `D7` docstring gained the paragraph «The one segment whose horizon is a number»:
+the per-comparison `20 + 9p'`, the Σ, the horizon-fit form, the counted-variant decision, the
+`p+m`/`p+m−1` looseness, and the explicit statement that `PayloadCarries` stays named and the
+envelope's absorption stays `envE_absorb`'s.  **Cited, not imported** — the loop module is not in
+`KapilaRow`'s import closure and does not need to be: the figure is arithmetic, and the paragraph
+is the record of where it lives.  `KapilaRow` was then recompiled from scratch (olean deleted) to
+prove the docstring edit parses and the module still closes.  `Statement.lean` untouched
+(`3dc6567e…`); `KapilaAlgo.cost`, `PayloadCarries`, every `JV1000*` file (the peer's, in flight in
+this shared worktree) untouched.
+
+### Receipt
+
+**`receipts/kapila-20261111T025151Z`** — gate `swapouts_delta60=0 free_pct=57`; build exit 0 in
+**44.9 s**, which is a **replay** (the closure was already current from this round's own
+from-scratch rebuilds) and is therefore *not* the compile of record.  The compiles of record are
+the two from-scratch rebuilds: `KapilaCmpSegLoop`'s `.olean`/`.ilean`/`.trace` deleted and rebuilt
+twice to the identical sha256 `68f20b76…21eb0e` (4 463 752 bytes) — the determinism double-compile
+— and `KapilaRow`'s deleted and rebuilt to `b1ec5186…ab8dd9`.  Axiom banner exit 0, 247 lines, 231
+`depends on axioms` lines, `axiom_banner_house_triple_only: true`.  The five new declarations:
+`sum_range_shift` and `cmpLoopFuel_eq_sum` on `[propext, Classical.choice, Quot.sound]`;
+`cmpLoopFuel_le_mul`, `cmpLoopFuel_le_tight`, `cmpLoopFuel_fits` on `[propext, Quot.sound]` — the
+same pair as `cmpLoopFuel_le`, which is the marker of pure arithmetic.  No `sorryAx`, no
+`native_decide`.  Lock: **DEVIATION, recorded** — bounded 240 s wait expired, build proceeded
+UNLOCKED (`lock.acquired`, `summary.json`).  `head` at receipt time = `3c29c99`, the **peer's**
+`jv1000` commit, which landed in this shared worktree during the round; my commit stacks on it.
+
+### Measurements for the next author
+
+1. **`rw` can close a goal, and then the next tactic errors "No goals to be solved".**  The
+   successor step of `cmpLoopFuel_eq_sum` was closed by its three rewrites; the trailing `omega`
+   was the only error in the round.  When a `rw` chain ends a proof, delete the finisher — do not
+   add `try`.
+2. **A detached build can still be killed.**  `start_new_session=True` (new process group) did
+   not protect a `lake build` launched that way: the process vanished ~10 s in, leaving the
+   `.olean.hash`/`.trace` written and the `.olean` absent, with **no error line** in the log.  A
+   foreground shell call with a long timeout ran the same build to completion.  Trust the olean,
+   never the trace.
+3. **Lake replays cached *warnings*.**  A log full of `if_pos has been deprecated` lines from
+   `KapilaCmpSeg.lean` means the dependency was **replayed**, not recompiled — the `⚠ [n/m]
+   Replayed <Module>` lines are the tell, and the module you actually care about appears after
+   them.  Reading the warnings as "it is compiling the deps" wastes a cycle.
+4. **The last dependency step is the only one that costs.**  With the closure cached, the receipt
+   build is 44.9 s (replay) while one module compiles in ~46 s and the whole `Row` closure from
+   scratch is minutes under the fleet's load (140 at the time).  Delete-and-rebuild is the only
+   compile evidence; the receipt says so in its own words now.
+
+Next single action: **`PayloadCarries`** (`Row/KapilaBinSum.lean`) — the accumulation stage the
+checksum program does not contain, and now the *last* named premise of the test/checksum path that
+has a concrete obligation attached (the early-exit variant and the M-series goals are the other
+residuals, both recorded as unproved/false-as-stated respectively).

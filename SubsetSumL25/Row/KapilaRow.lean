@@ -146,6 +146,27 @@ into the statement's `Instr` steps at `w = wordLength n b`: it is what lets a
 word-operation budget become a `SolvedInTime` horizon.  The two units meet here
 and nowhere else.
 
+**The one segment whose horizon is a number.**  §7 step 7's test segment is the
+only part of the main branch that §7 fully specifies, so it is the only part whose
+charge is arithmetic rather than a field — and residual (iv) has now restated it, in
+`SubsetSumL25.Row.KapilaCmpSegLoop` §C12 (cited, **not** imported: the figure is
+arithmetic, and this paragraph is the record of where it lives).  Per comparison:
+`cmpSegCost + 6 ≤ 20 + 9p'` (`cmpSeg_hitCharge_le`) — the segment plus the counting
+tail's sixth instruction.  End to end: the segment's exact cost is
+`Σ_{i<blockLen} (cmpSegCost p_i + 6)` with the counter drifting from `p`
+(`cmpLoopFuel_eq_sum`: that Σ *is* `cmpLoopFuel`, not a bound on it), so a horizon
+covering `prologue + blockLen·(20 + 9·(p+blockLen)) + epilogue` covers the segment
+(`cmpLoopFuel_fits`), the prologue and epilogue being the row program's parts
+outside the test segment.  The **counted** variant is the one proved — it and the
+early-exit hitscan pay the same `+6`, and the row's verdict is `0 < hitCount`, so
+the count is what the loop is for; the early-exit variant is recorded as unproved.
+The `p + m` reading is deliberately loose (it prices every comparison at the last
+counter value plus one); the tight uniform form is `m·(20 + 9·(p+m−1))`
+(`cmpLoopFuel_le_tight`).  `PayloadCarries` (`KapilaBinSum`) — the accumulation
+stage the checksum program does not contain — remains named, and
+`Routines.WithinEnvelope` + `envE_absorb` still own the envelope's absorption: none
+of it is re-proved here.
+
 The translation must therefore absorb the **multi-word charge**: §6.2 carries the
 estimates at `n²` fractional bits while `w = 4(n+b) + ⌈log₂((n+2)⁴)⌉ = O(n+b)`,
 so at `b = 1` the curves cross at `n = 7` and `n²` stays ahead — a dyadic
