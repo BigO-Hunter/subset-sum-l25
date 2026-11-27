@@ -131,7 +131,7 @@ theorem region_unique (hΓ : 0 < Γ) (W : ℝ) :
       (region_disjoint hΓ W i y hi hy.1 hI hy.2).symm)
 
 
-/-- The referee-extracted per-row guard (BRIDGE row B4): `a_Γ ≤ 3/4` makes the
+/-- The referee-extracted per-row guard (rung B4): `a_Γ ≤ 3/4` makes the
 fourth row's error `(4a_Γ+3)ε` at most `6ε`, so **all six** rows of the
 certificate vector have error at most `6ε` (§6.3: «the rows have errors at most
 3ε, 4ε, 6ε, (4a_Γ+3)ε, 4ε and 4ε»). -/

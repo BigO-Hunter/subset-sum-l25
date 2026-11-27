@@ -6,8 +6,7 @@ Theorem A.  This is the rung that consumes (F4) = OpenAI Lemma 2.5
 Primary source: `a-kapila/maths-proofs` @ 44c34961,
 `subset-sum/PROOF_0.4877.tex` (sha256 b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298),
 §5.4 (the constant `g_M`), §5.5 (Lemma A4, good sets), §5.6 (Lemma A5, Corollary
-A6).  Verification against the primary text: `subset-sum-bridge/BRIDGE.md`
-appendix row B3 («matches»).  Credit: the lemma is Base's.
+A6).  Verification against the primary text: rung B3 («matches»).  Credit: the lemma is Base's.
 
 Verbatim statement (PROOF_0.4877.tex §5.6):
 

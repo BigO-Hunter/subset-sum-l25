@@ -7,7 +7,7 @@ Paper proof (setup.tex/aliases.tex via STMTS.md): «There are at most
 O(b+log n) bits» (hypothesis `hB`), so a union bound of L2.5 over the sparse
 sign vectors bounds the failure probability by S(n,m)·K·B·L·2^{−L}.
 
-Design note (option (b) of the campaign's scoping round, executed concretely):
+Design note (option (b), executed concretely):
 `Fin n → ℤ` is infinite, so there is no `Finset.univ` of sparse vectors; the
 candidate set is built explicitly as `sparseAll n m` from the finite encoding
 (support `I ⊆ Fin n` with `I.card ≤ m`, sign pattern `↥I → Bool` — the paper's

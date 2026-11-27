@@ -5,11 +5,11 @@ is `Proofs/JV1000.lean` (same pattern as Statements/O4.lean).
 
 Source of record: jv1000 rev8g §8 «Independent checks and admissibility»
 (paper_2026-11-06_rev8g.tex l.410) + the referee3 verdict, cross-checked
-against the BRIDGE appendix row V1.  Base anchors: PROOF_0.4877.tex @
+against rung V1.  Base anchors: PROOF_0.4877.tex @
 44c34961 (sha256 b397531cc…) filter definition l.620–627, cosine-only
 statements l.1038–1040, Appendix D.2's trig_nodes/abs_sum.
 
-Verbatim (BRIDGE appendix V1, the four extracted items):
+Verbatim (rung V1, the four extracted items):
 
   «Let the log-density polynomials be r(x) = Σ_{j=1}^{16}(a_j cos jx + b_j
   sin jx) and s(x) likewise — 16 cosine + 16 sine terms per density

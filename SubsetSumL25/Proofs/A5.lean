@@ -14,7 +14,7 @@ namespace SubsetSumL25
 
 variable {n : ℕ}
 
-/-- `2^{−g_M} = E_V 2^{−d(V)}` — BRIDGE row B3's use of the symbol, as a theorem.
+/-- `2^{−g_M} = E_V 2^{−d(V)}` — rung B3's use of the symbol, as a theorem.
 `v ≤ |M|` is the nonemptiness certificate (an empty `expect` is `0`, and
 `logb 2 0` would make `gM` junk). -/
 theorem two_pow_neg_gM (c : Fin n → ℤ) {M : Finset (Fin n)} {v : ℕ} (hv : v ≤ M.card) :

@@ -4,8 +4,7 @@ Lemma B2 (domination), and the a_Γ ≤ 3/4 per-row guard.
 
 Primary source: `a-kapila/maths-proofs` @ 44c34961, `subset-sum/PROOF_0.4877.tex`
 (sha256 b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298), §6.1
-(regions + certificate data), §6.3 (Lemma B2).  Verified against
-`subset-sum-bridge/BRIDGE.md` appendix row B4 («matches»).  Credit: regions,
+(regions + certificate data), §6.3 (Lemma B2).  Verified against the primary text (rung B4, «matches»).  Credit: regions,
 certificates and Lemma B2 are Base's; the region-predicate shape follows Bills'
 `Regions.lean` template (yannouli-ss verification/lean), credited in STMTS.md
 §B4.  The certificate numerics (Prop B's 430 integrals, Appendix C rows) are
@@ -35,7 +34,7 @@ Verbatim (§6.3, Lemma B2 and its proof's two cases):
     that is, G^π₀ = a_Γ W_{v,π} − U_{v,π} > 0.  Then −α_π U_{v,π} = −Δ +
     α_π G^π₀ ≤ −Δ + z₀ G^π₀.
 
-Scope (BRIDGE row B4): the region structure and the domination argument are
+Scope (rung B4): the region structure and the domination argument are
 formalized; Prop B's 430 integral bounds are separately certified and enter as
 data.  Theorem B itself is an *algorithm* statement (FAIL / estimates / error
 / word count) — like Lemma A5's `D_s`, it is outside this package; the §6.1 +
@@ -44,7 +43,7 @@ B4 has no `Finset.expect` anywhere (its hypotheses are pointwise), so there is
 no silent-`0` degeneracy class in this file.
 
 This file now holds the two shared DEFINITIONS (`bandUpper`, `inRegion`) plus
-pointers: every theorem of the B4 lane is PROVED, with its statement-of-record
+pointers: every theorem of rung B4 is PROVED, with its statement-of-record
 in `Proofs/ThmB.lean`:
 
     bandUpper_step, bandUpper_mono        (the band order, §6.1's table)

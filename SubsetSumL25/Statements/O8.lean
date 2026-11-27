@@ -3,7 +3,7 @@ M1 (O8): Base §5.2's word-RAM accounting — verbatim quotes and pointers.
 This file holds NO declarations: the statement-of-record for everything is
 `Proofs/O8.lean` (M2 proved all six).
 
-This is Base's OWN accounting (BRIDGE row O8, "paper-only"); the bit-cost →
+This is Base's OWN accounting (rung O8, "paper-only"); the bit-cost →
 Light-step translation is D7 (L5's) and is deliberately NOT imported — every
 statement counts word operations / elementary steps in Base's own counters.
 
@@ -11,8 +11,7 @@ Primary source: `a-kapila/maths-proofs` @ 44c34961,
 `subset-sum/PROOF_0.4877.tex` (sha256
 b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298), §5.1 (Thm A),
 §5.2 (the procedure, Step 3 and Step 6, closing accounting paragraph), §5.8
-(bullet 5, «A capped execution makes at most 2^{O(n)} draws»).  Cross-checked
-against `subset-sum-bridge/BRIDGE.md` rows O8 and B5.  Credit: the accounting
+(bullet 5, «A capped execution makes at most 2^{O(n)} draws»).  Cross-checked against the primary text (rungs O8 and B5).  Credit: the accounting
 is Base's; this package formalizes it.
 -/
 import Mathlib

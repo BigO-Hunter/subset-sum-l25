@@ -4,9 +4,7 @@ small-layer argument (PROOF_0.4877.tex §3).
 
 Primary source: `a-kapila/maths-proofs` @ 44c34961, `subset-sum/PROOF_0.4877.tex`
 (sha256 b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298);
-statement-by-statement verification against the primary text is recorded in
-`subset-sum-bridge/BRIDGE.md`, appendix «Base primary-source verification»
-(rows B1).  The lemmas are Base's; this file formalizes them with attribution.
+statement-by-statement verification against the primary text is recorded in the B1 ledger («Base primary-source verification»).  The lemmas are Base's; this file formalizes them with attribution.
 
 Verbatim statements (PROOF_0.4877.tex §3):
 

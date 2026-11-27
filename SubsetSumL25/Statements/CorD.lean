@@ -5,7 +5,7 @@ Lemma 3.1–3.3 machinery (`Statements/Layers.lean` / `Proofs/Layers.lean`).
 Primary source: `a-kapila/maths-proofs` @ 44c34961,
 `subset-sum/PROOF_0.4877.tex` (sha256 b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298),
 §3, immediately after Lemma 3.3.  Verification against the primary text is
-recorded in `subset-sum-bridge/BRIDGE.md`, appendix row B2 («matches», with one
+recorded in the rung B2 ledger («matches», with one
 cell corrected: `S` is a uniform σ-subset of `M`; σ = m/2 only in-application).
 The corollary is Base's; this file formalizes it with attribution.
 

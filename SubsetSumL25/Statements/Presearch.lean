@@ -4,8 +4,7 @@ accounting (Theorem A part 2's op bound; Lemma A7's envelope).
 
 Primary source: `a-kapila/maths-proofs` @ 44c34961, `subset-sum/PROOF_0.4877.tex`
 (sha256 b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298), §4
-(Proposition P and (LD)), §5.2 (Theorem A part 2), §5.7 (Lemma A7).  Verified
-against `subset-sum-bridge/BRIDGE.md` appendix row B5 («matches»).  Credit: the
+(Proposition P and (LD)), §5.2 (Theorem A part 2), §5.7 (Lemma A7).  Verified against the primary text (rung B5, «matches»).  Credit: the
 proposition, the (LD) dichotomy and Lemma A7 are Base's.
 
 Verbatim (PROOF_0.4877.tex §4):
@@ -44,8 +43,8 @@ Proved-vs-named ledger (the A5 pattern):
   part 2 absorption 2^{τ₀n} ≤ 2^{τ₀n+2n^{0.7}}; Lemma A7's seven-item
   envelope (7 items ≤ (b+2)2^K and b ≥ 5 give total ≤ (b+2)2^K).
 * NAMED HYPOTHESES (never `axiom`s): the variance input Var d(U) ≤ n is
-  OpenAI Lemma 2.3's first clause — the `hcount` cousin of the L2.5 lane
-  (`L2_3_halfVariance` lives in the L2.5 lane); the procedure's correctness
+  OpenAI Lemma 2.3's first clause — the `hcount` cousin of the L2.5 cluster
+  (`L2_3_halfVariance` lives in the L2.5 cluster); the procedure's correctness
   and the per-step word counts are the algorithm (Prop 2.4 / §5.2), outside
   this package like A5's `D_s`; Lemma A7's seven per-item analyses ((C2)–(C7),
   Lemma A3(2)-(4)) are the item-level content the envelope consumes as

@@ -3,7 +3,7 @@ defaultTargets = ["SubsetSumL25"]
 
 # Subset-sum sub-1/2 campaign: the cheap OpenAI-lemma cluster
 # {L2.1 Isolation, L2.2 Deficiency, L2.3 Random restrictions, L2.5 Random-prime
-# collisions, L5.2 Sparse distinctions}, per /Volumes/Substrate-1/bigo/subset-sum-bridge/BRIDGE.md.
+# collisions, L5.2 Sparse distinctions}.
 #
 # Pins match the subset-sum challenge (bigospeedrun/verifier
 # challenges/subset-sum/README.md): Lean v4.34.1, Mathlib d13f23b — the same pin

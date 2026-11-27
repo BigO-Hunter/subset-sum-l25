@@ -4,7 +4,7 @@ Copyright 2026. Campaign: subset-sum sub-1/2, Base (a-kapila) combinatorial core
 Shared definitions of Base §3 («An averaged small-layer lemma»).  Primary
 source: `a-kapila/maths-proofs` @ 44c34961, `subset-sum/PROOF_0.4877.tex`
 (sha256 b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298),
-verified against the primary text in `subset-sum-bridge/BRIDGE.md` appendix.
+verified against the primary text (see the B1 ledger).
 
 Verbatim (PROOF_0.4877.tex, §3):
 

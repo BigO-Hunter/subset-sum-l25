@@ -99,7 +99,7 @@ theorem hbij (c : Fin n → ℤ) (q : ℕ) : ∀ i : Fin n,
     rfl
 
 /-- (C): the pair-sum bijection. The `rw [Finset.sdiff_eq_filter]` fails inside
-the file context (works standalone — see /tmp/test_sdiff.lean); the workaround
+the file context (works standalone); the workaround
 is `Finset.sum_comm'` on the `univ \ V` inner (the dependent inner index is
 fine for sum_comm'). -/
 theorem sum_erase_bij (c : Fin n → ℤ) (q : ℕ) :

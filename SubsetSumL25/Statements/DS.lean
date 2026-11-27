@@ -5,11 +5,11 @@ for everything proved is `Proofs/DS.lean`.
 
 Primary source: `a-kapila/maths-proofs` @ 44c34961,
 `subset-sum/PROOF_0.4877.tex` (sha256 b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298),
-§5 (Theorem A).  BRIDGE mapping: the D_s closure consumes the BRIDGE rows
+§5 (Theorem A).  Rung mapping: the D_s closure consumes rungs
 O5 (the checksum estimator, the «SumCheck» side: §5.2 Step 3's T-assembly and
 the (C2)–(C7) constant ledger) and O7 (the alias extraction, the «AliasExt»
 side: §5.2 Steps (a)–(g) + §5.6 coverage) — the ~18–35k «mountain» of the
-BRIDGE ladder.
+ladder.
 
 Verbatim (PROOF_0.4877.tex §5.1, Theorem A part 1):
 

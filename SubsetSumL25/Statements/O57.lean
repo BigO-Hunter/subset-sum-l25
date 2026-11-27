@@ -4,7 +4,7 @@ M1 (O5+O7): OpenAI Thm 4.1 «Modular checksum estimator» (O5) and Thm 5.1
 declarations: the statement-of-record for everything is `Proofs/O57.lean`
 (M2 proved all five).
 
-Paper-only per BRIDGE rows O5/O7; the D7 boundary holds as on O4/O8: the
+Paper-only per rungs O5/O7; the D7 boundary holds as on O4/O8: the
 procedures stay named and no Light-step translation is imported.
 
 Primary sources: OpenAI preprint (openai/math @ `adc7f124`, 2026-10-04),

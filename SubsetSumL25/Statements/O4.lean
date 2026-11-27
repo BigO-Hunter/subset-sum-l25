@@ -4,7 +4,7 @@ pointers.  This file holds NO declarations: the statement-of-record for
 everything is `Proofs/O4.lean` (M2 proved all six, with two statement
 corrections recorded there and in STMTS.md §O4).
 
-Paper-only (BRIDGE row O4); the D7 boundary holds as on O8: the
+Paper-only (rung O4); the D7 boundary holds as on O8: the
 approximability procedure is an algorithm statement and stays named, and no
 Light-step translation is imported.
 
@@ -13,8 +13,7 @@ Primary sources: OpenAI preprint «Subset-Sum in Time O(2^{0.49n})»
 (Lemma 3.2 = `lemma:finite-filtering`, the Riemann estimate, the effective
 version); Base `a-kapila/maths-proofs` @ 44c34961, `subset-sum/PROOF_0.4877.tex`
 (sha256 b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298)
-§2.2 (F7), §6.1 (Lemma B1), Appendix B.2.  Cross-checked against BRIDGE rows
-O4, V1, and the B4 boundary notes.  Credit: L3.2 is OpenAI's; the (F7)
+§2.2 (F7), §6.1 (Lemma B1), Appendix B.2.  Cross-checked against the primary text (rungs O4, V1, and the B4 boundary notes).  Credit: L3.2 is OpenAI's; the (F7)
 generalization observation and Lemma B1's use are Base's; this package
 formalizes the mathematical core.
 -/

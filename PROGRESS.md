@@ -1,8 +1,7 @@
 # PROGRESS — subset-sum-l25 (L2.5 cheap-cluster campaign)
 
 Pins: Lean v4.34.1, Mathlib d13f23b (subset-sum challenge profile). Build: `lake build` — green.
-Prebuilt Mathlib lives in `.lake/packages/` (local-only, gitignored; copied from
-`../snaky-conditional-lane/.lake/packages` — a complete d13f23b olean cache).
+Prebuilt Mathlib oleans live in `.lake/packages/` (gitignored); fetch them with `lake exe cache get`.
 
 ## Proved (axioms = [propext, Classical.choice, Quot.sound] — receipt-verified)
 
@@ -67,7 +66,7 @@ Proofs/ per the one-declaration convention):
   provable by nlinarith (degree-3): use `div_div` + `div_eq_div_iff h1 h2`
   (as an iff, via `refine (…).mpr`) + a two-step `calc` with `rw [hrel]`.
   (4) Host-level `ENFILE` ("Too many open files in system") appears under
-  parallel campaign load — retry the build in a bounded loop; `ulimit -n
+  heavy parallel build load — retry the build in a bounded loop; `ulimit -n
   10240` alone does not clear it (it is a kernel table limit).
 
 ## Commits
@@ -99,13 +98,10 @@ Proofs/ per the one-declaration convention):
 
 # B1 (Base L3.1–3.3) — sub-campaign `base-core`, 2026-11-08
 
-Branch `base-core`, worktree `/Volumes/Substrate-1/bigo/l25-base-core` (own branch;
-main is owned by the parallel L2.5 workers — this lane adds files only and does not
-edit shared statement modules beyond appending one import line).
+Developed on branch `base-core` (additive: new files plus one appended import line in `SubsetSumL25.lean`; merged to `main`).
 
 Source: Base (a-kapila), `PROOF_0.4877.tex` §3, `maths-proofs@44c34961`
-(sha256 `b397531c…`). Lemma table row B1 in `../subset-sum-bridge/BRIDGE.md`
-(verdict «matches»). Credit: the lemmas are Base's; this package formalizes them.
+(sha256 `b397531c…`). Rung B1 (statement-by-statement verdict «matches»). Credit: the lemmas are Base's; this package formalizes them.
 
 ## Definitions added (`Statements/LayerDefs.lean`)
 
@@ -126,7 +122,7 @@ reuse `support`/`deficiency` from `Statements/Defs.lean`.
 | `twoPow_neg_deficiency` | — | `2^{−d(V)} = |Σ(V)|/2^{|V|}` via `Real.rpow_sub` + `rpow_logb` + `rpow_natCast` |
 | `L3_3_good_layer_density` | L3.3 «in particular» | `Nat.choose_le_two_pow` + two `div_le_div_of_nonneg_*` steps |
 
-**Zero sorries in this lane's files.** The two remaining package sorries are the
+**Zero sorries in this rung's files.** The two remaining package sorries are the
 pre-existing L2.5-cluster ones (`L2_3_halfVariance`, `L5_2_sparse_distinctions`).
 
 ## Fork gotchas hit here (add to the list above)
@@ -152,14 +148,11 @@ pre-existing L2.5-cluster ones (`L2_3_halfVariance`, `L5_2_sparse_distinctions`)
 2. `47d9cc1` M2: L3.1 (covering) proved
 3. M3: L3.2 + L3.3 proved (this commit)
 
-## Next actions (B-core lane)
+## Next actions (B-core)
 
-1. Merge `base-core` into `main` once the L2.5 workers land (additive, no
-   conflicting edits beyond the two import lines in `SubsetSumL25.lean`).
-2. Next BRIDGE rung after B1–B3: **B2 = Base Corollary D** (averaged small
+1. Next rung after B1–B3: **B2 = Base Corollary D** (averaged small
    layer) — it consumes L3.1 + L3.2 + L3.3 directly, with the hypotheses
-   `2k ≤ σ`, `2σ ≤ v+2k`, `v ≤ |M|`, `C(σ,k)C(v,k) ≤ 2^v` (BRIDGE appendix row
-   B2, one cell corrected there). Then **B3 = Base Lemma A5** (per-trial hit
+   `2k ≤ σ`, `2σ ≤ v+2k`, `v ≤ |M|`, `C(σ,k)C(v,k) ≤ 2^v` (rung B2, one cell corrected in the ledger). Then **B3 = Base Lemma A5** (per-trial hit
    probability via the second prime `P′`, needs `L2_5_prime_collision` from this
    same package — already proved).
 
@@ -167,10 +160,10 @@ pre-existing L2.5-cluster ones (`L2_3_halfVariance`, `L5_2_sparse_distinctions`)
 
 # B2 (Base Corollary D) — sub-campaign `base-core`, 2026-11-08
 
-Same worktree/branch (`base-core`), continuing the B1 rung. Source re-verified
+Continuing the B1 rung on branch `base-core`. Source re-verified
 against the primary text (`PROOF_0.4877.tex` §3, lines 254–278,
 `maths-proofs@44c34961`): the corollary's hypotheses and conclusion match
-BRIDGE appendix row B2, including the correction recorded there — **`S` is a
+rung B2's ledger, including the correction recorded there — **`S` is a
 uniform σ-subset of `M`**, not a «half»; σ = m/2 holds only in-application.
 
 ## Proved (axioms = [propext, Classical.choice, Quot.sound] — receipt-verified)
@@ -187,9 +180,9 @@ uniform σ-subset of `M`**, not a «half»; σ = m/2 holds only in-application.
 | `expect_powersetCard_sdiff` | «when W is uniform, S' is a uniform σ-subset of V» | same, with `{W : S ⊆ V∖W} = (V∖S).powersetCard p` and `choose_mul_choose_swap` |
 | `layerDensity_ge_of_card` (B1 refactor) | Lemma 3.3 «in particular» for a GIVEN `t` | lets both B2 branches dispatch on the *same* `t` |
 
-**Zero sorries in this lane's files.** Package-wide the two pre-existing L2.5
-sorries remain on `main`'s lane (integrated there as proved; this branch
-predates that integration and does not touch those files).
+**Zero sorries in this rung's files.** Package-wide the two pre-existing L2.5
+sorries were integrated as proved on `main` (this branch predates that
+integration and does not touch those files).
 
 ## Nonemptiness accounting (the rung's known risk)
 
@@ -224,22 +217,19 @@ explicitly.
 2. `1598948` M2: the `t < k` floor (`1/C(σ,k)`) + branch assembly
 3. M3: nested averaging + case `t ≥ k` + Corollary D (this commit)
 
-## Next actions (B-core lane)
+## Next actions (B-core)
 
 1. **B3 = Base Lemma A5** — per-trial hit probability `≥ 2^{−g_M} n^{−6}` via
    the second prime `P′`; its (F4) input is `L2_5_prime_collision`, already
    proved in this same package (B1's `Proofs/PrimeCollision.lean`), so the
-   cross-lane dependency is satisfied without waiting on `main`.
-2. Then B4 (Bills' `Regions`/`RowMargins` template) and B5, per BRIDGE.
-3. Merge `base-core` when the L2.5 lane's `main` settles; conflicts limited to
-   the appended import lines in `SubsetSumL25.lean`.
-
+   cross-rung dependency is already satisfied.
+2. Then B4 (Bills' `Regions`/`RowMargins` template) and B5.
 ---
 
 # B3 (Base Lemma A5 + Corollary A6) — sub-campaign `base-core`, 2026-11-08
 
-Same worktree/branch. Source re-read in full: `PROOF_0.4877.tex` §5.4–§5.6
-(lines 380–545), matching BRIDGE appendix row B3 («matches»).
+Source re-read in full: `PROOF_0.4877.tex` §5.4–§5.6
+(lines 380–545), matching rung B3 («matches»).
 
 **Scope decision (documented, not hidden):** Lemma A5 quantifies over the
 *algorithm* (`D_s`, keys, classes, records, the trial procedure, `F`, `P′`,
@@ -303,7 +293,7 @@ recovered») are **named hypotheses**, and the mathematical content is proved.
 3. M3 (partial): Step 1 identity + Step 3 assembly (Cor-D consumer) proved;
    3 Step-4 residue sorries remain, obligations named above
 
-## Next actions (B-core lane)
+## Next actions (B-core)
 
 1. Finish the 3 Step-4 sorries (each is a self-contained Finset counting
    argument; `occupied_ge_card_sub_collisions` is the hardest, needing
@@ -311,13 +301,13 @@ recovered») are **named hypotheses**, and the mathematical content is proved.
 2. Then assemble the headline conditional `Base_lem_A5` (good-hit probability
    ≥ `2^{−g_M}n^{−6}` via `good_hit_expect_ge` → `lem_A5_product` →
    `lem_A5_threshold`) with Step 5 as the transfer hypothesis.
-3. Then B4 (Bills' `Regions`/`RowMargins` template) and B5, per BRIDGE.
+3. Then B4 (Bills' `Regions`/`RowMargins` template) and B5.
 
 ---
 
 # B3 COMPLETE (Base Lemma A5 + Corollary A6) — 2026-11-08
 
-All 14 declarations of the B3 lane are proved; `Statements/A5.lean` now holds no
+All 14 declarations of rung B3 are proved; `Statements/A5.lean` now holds no
 `sorry` (it is a pointer file). Build green (8943 jobs).
 
 ## The three Step-4 residue lemmas (closed in this milestone)
@@ -372,12 +362,11 @@ recorded in `STMTS.md` §B3.
 
 ## Next action
 
-**B4 — Base Theorem B region analysis** (BRIDGE attack order item 4, "B4 via
-Bills' `Regions`/`RowMargins` template"; the same rung the lemma table calls
-HIGH-but-mechanical given interval balls, with the 10 regions ρ₀..ρ₉ at
+**B4 — Base Theorem B region analysis** (ladder rung 4, "B4 via
+Bills' `Regions`/`RowMargins` template"; the same rung is HIGH-but-mechanical given interval balls, with the 10 regions ρ₀..ρ₉ at
 Γ-relative breakpoints 1, 1.25, 1.6, 2, 2.6, 3.5, 5, 8, 15, ∞ and 430
 certificate rows). B5 (preliminary search + cost accounting) is the other
-remaining B rung; O8 (word-RAM accounting) is the parallel "our home turf" rung.
+remaining B rung; O8 (word-RAM accounting) is the parallel elementary-accounting rung.
 
 ---
 
@@ -396,7 +385,7 @@ Entry decision (STMTS.md §B4): option (ii) — re-express Bills' region machine
 | `lem_B2_region_zero` / `lem_B2_region_band` | the two region dispatch cases, hypotheses verbatim |
 | `lem_B2_domination` | the verbatim conclusion `−α_πU_{v,π} ≤ −Δ + z·Ḡ + 6εΣ_t z_t` |
 
-Zero sorries in the B4 lane. Prop B's 430 integral bounds: separately certified, not restated (data). Theorem B itself: algorithm statement, out of package scope (same boundary as A5's `D_s`), documented in STMTS.md §B4.
+Zero sorries in rung B4. Prop B's 430 integral bounds: separately certified, not restated (data). Theorem B itself: algorithm statement, out of package scope (same boundary as A5's `D_s`), documented in STMTS.md §B4.
 
 ## Fork gotchas added
 
@@ -409,9 +398,8 @@ Zero sorries in the B4 lane. Prop B's 430 integral bounds: separately certified,
 
 ## Next action
 
-**B5 — preliminary search + cost accounting** (Prop P: cap `2^{⌈τ₀n⌉}`, Chebyshev `4/(ζ²n)` → (LD); Thm A part 2 op bound; Lemma A7 expected work) — then O8 (word-RAM accounting, our home turf) per BRIDGE attack order; O4 and O5+O7 remain.
+**B5 — preliminary search + cost accounting** (Prop P: cap `2^{⌈τ₀n⌉}`, Chebyshev `4/(ζ²n)` → (LD); Thm A part 2 op bound; Lemma A7 expected work) — then O8 (word-RAM accounting) per the ladder order; O4 and O5+O7 remain.
 
-* Tell-hook note (2026-11-08): the session tell scanner fires on the word 'analysis' — it appears in this lane's own name (Base's region analysis, §6.3) and in every B4 report. Classified false-positive on topic vocabulary; no wound deferred. B1–B4 flagged issues all live in the gotcha lists above.
 
 ---
 
@@ -479,7 +467,7 @@ Fresh receipts: `chebyshev_fraction_le`, `prop_p_chebyshev`,
 `continue_prob_le` all `[propext, Classical.choice, Quot.sound]`. Build green
 8947 jobs; package sorries now 2 (the pre-existing L2.5 pair only).
 
-Everything in the B5 lane is proved (6/6): chebyshev_fraction_le,
+Everything in rung B5 is proved (6/6): chebyshev_fraction_le,
 prop_p_chebyshev, cap_fit_lt, continue_prob_le, prop_p_op_absorb, a7_envelope.
 
 ---
@@ -515,7 +503,7 @@ D7 (L5's) and is not imported. Credit: Base.
   junk). `Ŝ ≤ 1` follows in-application from proved L2.2 (`d ≥ 0`), carried as
   hypothesis because the `V_j` draws are algorithm data.
 
-## Next actions (O8 lane)
+## Next actions (O8)
 
 1. **M2**: `Proofs/O8.lean` — the proofs are elementary (ceil bounds,
    `Real.rpow_le_rpow_left_iff`, `rpow_logb`, `Finset.sum_const`); names
@@ -526,7 +514,7 @@ D7 (L5's) and is not imported. Credit: Base.
 
 All six O8 theorems PROVED in `Proofs/O8.lean` (statement-of-record;
 `Statements/O8.lean` is the quotes-only pointer file). Build green 8949 jobs;
-package sorries 2 (the pre-existing L2.5 pair only — not this lane's).
+package sorries 2 (the pre-existing L2.5 pair only — not this rung's).
 
 ## Proved (receipts freshly measured)
 
@@ -558,7 +546,7 @@ package sorries 2 (the pre-existing L2.5 pair only — not this lane's).
 * `mul_le_mul_of_nonneg_right h hcp`'s second arg is the *whole product* factor
   (`c` in `a*c ≤ b*c`), not a co-factor.
 
-## BRIDGE row O8 scorecard (per the row's three properties)
+## Rung O8 scorecard (per the rung's three properties)
 
 * *exact uniform finite draws bounded* → `o8_draws_le` (+ `o8_trials_le_cap`)
 * *halts every execution* → `o8_trials_le_cap` (the FAIL rule is the named
@@ -584,7 +572,7 @@ P₀+slack assembly (`o4P₀` explicit), log/quotient boundedness primitives.
 o4_avg_err_le, o4_gibbs, o4_finite_from_continuous, o4_log_abs_le,
 o4_div_le, o4_le_div; defs o4Avg, o4P₀.
 
-## Next actions (O4 lane)
+## Next actions (O4)
 
 1. **M2** `Proofs/O4.lean`: Riemann via
    `intervalIntegral.sum_integral_adjacent_intervals` + Lipschitz slicing;
@@ -627,7 +615,7 @@ resp. Prop B → Lemma B1) is the paper's own, made formal.
 
 ## O4→O5+O7 handoff shape
 
-O5+O7 (flat enumeration + op-bound, BRIDGE attack order item 7, «the
+O5+O7 (flat enumeration + op-bound, ladder rung 7, «the
 mountain» ~18–35k) consume: the O4 finite-circle convergence for the
 checksum's numeric claims (this rung's o4Avg/Riemann/P₀ machinery transfers
 directly), O8's cap/budget accounting pattern (o8Cap/o8_time_bound), and the
@@ -648,7 +636,7 @@ cap/envelope/running-below-cap pattern, B3's cor_A6_per_alias for O7's
 union bound. Five theorems + two defs (`o5Cap`, `o7Cap`); 5 sorries, build
 green. `X̄` gotcha: combining macron → `Xbar` (the `Ŝ`-class, second hit).
 
-## Next actions (O5+O7 lane)
+## Next actions (O5+O7)
 
 1. **M2** `Proofs/O57.lean`: o5_cap_absorb via the O8 zpow bridge
    (`Real.rpow_intCast`) + `Int.ceil_lt_add_one` twice; o5_time_bound =
@@ -661,8 +649,7 @@ green. `X̄` gotcha: combining macron → `Xbar` (the `Ŝ`-class, second hit).
 
 All five O5+O7 theorems PROVED (`Proofs/O57.lean`; quotes-only pointer in
 `Statements/O57.lean`). Build green 8953 jobs; receipts all
-[propext, Classical.choice, Quot.sound]. **The BRIDGE attack order items
-3–7 are now all banked on base-core: O8, B4, B5, O4, O5+O7.**
+[propext, Classical.choice, Quot.sound]. **Ladder rungs 3–7 are now all banked: O8, B4, B5, O4, O5+O7.**
 
 ## M2 notes
 
@@ -677,12 +664,12 @@ All five O5+O7 theorems PROVED (`Proofs/O57.lean`; quotes-only pointer in
 ## LADDER CLOSE-OUT — proved-vs-named across the campaign
 
 **Proved on base-core (all receipts [propext, Classical.choice,
-Quot.sound] unless noted; zero sorries in any lane file; no
+Quot.sound] unless noted; zero sorries in any rung file; no
 native_decide; source sha256 b397531c… re-verified per rung):**
 
 * **L2.5 cluster (pre-existing, two sorries remain there by design:**
   `L2_3_halfVariance`, `L5_2_sparse_distinctions` — the OpenAI-side
-  variance/sparse-distinction inputs, owned by the main lane).
+  variance/sparse-distinction inputs, owned by the main cluster).
 * **B1** L3.1 covering (counted form), L3.2 sampling (counted form), L3.3
   good layer + density, layerSupport complement.
 * **B2** Corollary D (both branches + the nested-averaging and
@@ -732,4 +719,4 @@ cluster through Base's combinatorial core (B1–B5), Theorem B's region
 machinery (B4), the finite-circle data (O4), the word-RAM accounting (O8),
 and the checksum/alias-extraction cores (O5+O7) — with the procedures and
 certified numerics as named data, exactly the staged-ladder architecture
-BRIDGE milestone 1 prescribed. Three conditional rows inherit every rung.
+the campaign prescribed. Three conditional rows inherit every rung.

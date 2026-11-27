@@ -1,9 +1,7 @@
 # STMTS — verbatim statements + translation notes for the L2.5 cluster
 
 Source of every quote: OpenAI preprint «Subset-Sum in Time O(2^0.49n)» (openai/math
-@ `adc7f124`, 2026-10-04), local LaTeX at
-`/Volumes/Substrate-1/bigo/subset-sum-subclassic/openai-math/preprints/Subset-Sum-in-Time-2-power-0-49n-October-4-2026/build/`
-(`sections/setup.tex`, `sections/aliases.tex`). Paper numbering: L2.1 = `lem:isolation`,
+@ `adc7f124`, 2026-10-04) (`sections/setup.tex`, `sections/aliases.tex`). Paper numbering: L2.1 = `lem:isolation`,
 L2.2 = `lem:deficiency`, L2.3 = `lem:half-variance`, L2.5 = `lem:prime-collision`,
 L5.2 = `lem:sparse-distinction`. Context line (setup.tex): «All logarithms are to
 base 2, except for ln.  Write [n]={1,…,n}, and for weights v₁,…,vₙ write
@@ -120,24 +118,21 @@ Lean: `L5_2_sparse_distinctions`.
    such vectors» is encoded as the explicit Finset `sparseAll n m` built from
    (support, sign pattern) — the counting `#(sparseAll n m) ≤ sparseCount n m`
    is PROVED (`sparseAll_card_le`), not assumed, so no `S` parameter appears
-   in the theorem signature (option (b) of the scoping round was executed
-   internally: the explicit `S` is `sparseAll`, with its cardinality bound
+   in the theorem signature (option (b) was executed: the explicit `S` is `sparseAll`, with its cardinality bound
    discharged in-proof).
 8. **Paper premise convention**: at lemma level, paper premises appear as named
    hypotheses (documented above), never as Lean `axiom`s. Nothing in this
-   package claims a board row; per BRIDGE.md milestone 1, hypotheses-in-
+   package claims a board row; hypotheses-in-
    statements is the staged-ladder architecture, and rev8g's Theorem 1 is
    conditional on exactly these lemmas.
 8. **M1 statements carry `sorry`** (placeholder proofs, precisely reported in
-   the campaign README/report); M2+ replaces them in `Proofs/` files. All
+   the milestone ledger); M2+ replaces them in `Proofs/` files. All
    proved theorems must satisfy `#print axioms` = `[propext, Classical.choice,
    Quot.sound]`.
 
 # Provenance for the conditional rows
 
-BRIDGE.md appendix (2026-11-07): Base primary source verified
-(`../subset-sum-base-src/`, a-kapila/maths-proofs@44c34961, PROOF_0.4877.tex
-sha256-verified). Boundary relevant here: Base's B3 invokes OpenAI L2.5
+Base primary source verified (a-kapila/maths-proofs@44c34961, PROOF_0.4877.tex sha256-verified). Boundary relevant here: Base's B3 invokes OpenAI L2.5
 («(F4)») as read-only premise — formalizing L2.5 (this package, M2) upgrades
 that link from paper-citation to kernel-checked statement; the remaining
 B-row/B4/B5 content stays outside this cluster.
@@ -146,11 +141,8 @@ B-row/B4/B5 content stays outside this cluster.
 
 Source of every quote: `a-kapila/maths-proofs` @ `44c34961`
 (subset-sum/PROOF_0.4877.tex, sha256
-`b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298`, local clone
-`/Volumes/Substrate-1/bigo/subset-sum-base-src/`), §3 «An averaged
-small-layer lemma». Statement-by-statement verification already recorded in
-`/Volumes/Substrate-1/bigo/subset-sum-bridge/BRIDGE.md` appendix, row B1 —
-verdict «matches». **Credit: the lemmas are Base's (paper-only); this package
+`b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298`), §3 «An averaged
+small-layer lemma». Statement-by-statement verification against the primary text is recorded in the B1 ledger below (verdict «matches»). **Credit: the lemmas are Base's (paper-only); this package
 formalizes them, it does not claim them.**
 
 Context (PROOF_0.4877.tex §3): «Let w be integer weights on a finite index
@@ -223,7 +215,7 @@ Lean: `SubsetSumL25.L3_3_good_layer` (existence half) and
    `Real.rpow_natCast`); no inequality or approximation enters.
 6. **Paper premise convention** (unchanged from the L2.5 cluster): paper
    premises are named hypotheses in Lean, never `axiom`s. Nothing here claims
-   a board row; per BRIDGE.md the staged ladder is hypotheses-in-statements.
+   a board row; the staged ladder is hypotheses-in-statements.
 7. **Status (M1–M3 complete, 2026-11-08):** all six B1 declarations are
    proved — `L3_1_covering`, `L3_2_sampling`, `L3_3_good_layer`,
    `L3_3_good_layer_density` plus the counted forms `L3_1_covering_card`,
@@ -238,8 +230,7 @@ Lean: `SubsetSumL25.L3_3_good_layer` (existence half) and
 Source of every quote: `a-kapila/maths-proofs` @ `44c34961`,
 `subset-sum/PROOF_0.4877.tex` §3 (sha256
 `b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298`), immediately
-after Lemma 3.3. Cross-checked against `subset-sum-bridge/BRIDGE.md` appendix
-row B2, verdict «matches», **with the one correction recorded there**: the old
+after Lemma 3.3. Cross-checked against the primary text (rung B2, verdict «matches»), **with the one correction recorded in the ledger**: the old
 condensation said «uniform half S», which is imprecise — the paper says
 «Let S be a uniform σ-subset and V a uniform v-subset of M», and σ = m/2 holds
 only in the application (§2.2, sizes S1), never in the corollary.
@@ -330,8 +321,7 @@ two-level averaging `expect_powersetCard_sdiff`. The cardinal inequality
 
 Source of every quote: `a-kapila/maths-proofs` @ `44c34961`,
 `subset-sum/PROOF_0.4877.tex` §5.4–§5.6 (sha256
-`b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298`). Cross-checked
-against `subset-sum-bridge/BRIDGE.md` appendix row B3 (verdict «matches»: the
+`b397531cc5997e88c439d5290774861b46a34aa32d9cd71fa7dcced130359298`). Cross-checked against the primary text (rung B3, verdict «matches»: the
 bound `≥ 2^{−g_M}·n^{−6}` under (LD)+E_3+A4 via the second prime `P′` + (F4),
 with `2^{−g_M} := E_V 2^{−d(V)}` and Corollary A6 requiring `T ≥ n⁷2^{g_M}`).
 **Credit: the lemma is Base's; this package formalizes it.**
@@ -371,7 +361,7 @@ become named hypotheses and the mathematics is proved**:
 
 1. **`g_M` is a definition, not a numeral.** §5.4 verbatim: «g_M = −log E_V
    2^{−d(V)}», all paper logs base 2, so `gM c M v = −Real.logb 2 (E_V
-   2^{−d(V)})`. The BRIDGE row's `2^{−g_M} := E_V 2^{−d(V)}` is then the
+   2^{−d(V)})`. The rung's `2^{−g_M} := E_V 2^{−d(V)}` is then the
    theorem `two_pow_neg_gM`, not a definitional coincidence — and it carries the
    hypothesis `v ≤ |M|`, because `Finset.expect` of an empty finset is `0` and
    `logb 2 0` would make `gM` junk. **Nonemptiness is stated, never assumed.**
@@ -401,7 +391,7 @@ become named hypotheses and the mathematics is proved**:
 
 ## B3 status (2026-11-08, complete)
 
-All 14 declarations of the B3 lane are PROVED (`Proofs/A5.lean` is the
+All 14 declarations of rung B3 are PROVED (`Proofs/A5.lean` is the
 statement-of-record for every one; `Statements/A5.lean` is a pointer file).
 Receipts: `#print axioms` = `[propext, Classical.choice, Quot.sound]` for all 14,
 freshly measured. The two statement corrections recorded above (the
@@ -412,29 +402,27 @@ corrected statements of the paper's intent; `collisionPairs_expect_le` gained
 # B4 — Base Theorem B region analysis: entry decision + statements
 
 Source of every quote: `a-kapila/maths-proofs` @ `44c34961`, §6.1 (regions,
-certificate data, Prop B) and §6.3 (Lemma B2).  Cross-checked against
-`subset-sum-bridge/BRIDGE.md` row B4 («matches»).  **Credit chain: Base
+certificate data, Prop B) and §6.3 (Lemma B2).  Cross-checked against the primary text (rung B4, «matches»).  **Credit chain: Base
 (regions, certificates, Lemma B2) → Bills (region-predicate template,
 `yannouli-ss/verification/lean/Verification/Regions.lean`) → this package
 (formalization).**
 
 ## ENTRY DECISION — re-express locally (option ii), do not import Bills' modules
 
-Examined at `subset-sum-subclassic/yannouli-ss/verification/lean/`:
-`Verification/Regions.lean` (64 lines), `Verification/RowMargins.lean` (99
-lines).  Reasons for (ii):
+Bills' template modules: `Verification/Regions.lean` (64 lines),
+`Verification/RowMargins.lean` (99 lines).  Reasons for (ii):
 
-1. **Pin mismatch.** Bills' `lean-toolchain` is `v4.24.0`; our lane pins
+1. **Pin mismatch.** Bills' `lean-toolchain` is `v4.24.0`; this package pins
    `v4.34.1` + Mathlib `d13f23b` (the subset-sum challenge profile).  Their
    `lakefile.toml` also requires an external git dep
    (`subset_sum_bound` @ bed8e18f) whose `SubsetSum.Asymptotics` defines their
    constants (`tau`, `eta`, `gammaB`, …).  Importing = vendoring two projects +
    toolchain reconciliation + porting: a dependency-management job, not a proof
-   obligation, and it would put a foreign dep in the lane's lakefile.
+   obligation, and it would put a foreign dep in this package's lakefile.
 2. **Their certificate layer is concrete, ours is abstract by contract.**
    Bills' `RowMargins.lean` runs `decide +kernel` over their own 43-filter
    `certificates : List RawCertificate` (their `DataBridge`/`Concrete` modules).
-   BRIDGE's B4 scope here is «structure + domination with the certificate rows
+   Rung B4's scope here is «structure + domination with the certificate rows
    as data»; the 430 rows are separately certified (Appendix C), so a
    kernel-decide layer would re-verify what we are told not to re-verify.
 3. **Their `firstBoundary v` is a Bills-specific refinement.** Bills sets the
@@ -458,7 +446,7 @@ lines).  Reasons for (ii):
   defined for all `ℕ`, but only `i ≤ 9` are regions — the lemmas carry `i ≤ 9`.
 * `region_existence` / `region_disjoint` / `region_unique` — Bills' trio,
   re-derived for Base's predicate (needs `Γ > 0` so the bounds order correctly).
-* `row_errors_le_six_eps` — the a_Γ ≤ 3/4 guard (BRIDGE row B4's «referee-
+* `row_errors_le_six_eps` — the a_Γ ≤ 3/4 guard (rung B4's «referee-
   extracted»): §6.3's six row errors 3ε, 4ε, 6ε, (4a_Γ+3)ε, 4ε, 4ε are all ≤ 6ε
   exactly because `(4a_Γ+3) ≤ 6 ⟺ a_Γ ≤ 3/4`.
 * `z_dot_Gbar_ge` — Lemma B2's display `z·Ḡ ≥ z₀G^π₀ − 6εΣz` in abstract
@@ -470,7 +458,7 @@ lines).  Reasons for (ii):
 
 **Theorem B itself is out of this package's scope**: it is an algorithm
 statement (FAIL / estimates / error / word count) with the checksum procedure
-of §6.2 inside — the same boundary as Lemma A5's `D_s`, and BRIDGE's B4 row
+of §6.2 inside — the same boundary as Lemma A5's `D_s`, and rung B4
 marks the domination argument as the formalizable content.  Prop B's 430
 integral bounds are separately certified and are *not* restated here (they
 would be data, and re-verification is explicitly out of scope).
@@ -486,15 +474,14 @@ lem_B2_domination); `region_unique` is already proved from the first two.
 # B5 — preliminary search (Prop P) + cost accounting: entry + statements
 
 Source of every quote: `a-kapila/maths-proofs` @ `44c34961`, §4 (Prop P, (LD)),
-§5.2 (Thm A part 2), §5.7 (Lemma A7), §5.8. Cross-checked against BRIDGE row B5
-(«matches»). **Credit: Base.**
+§5.2 (Thm A part 2), §5.7 (Lemma A7), §5.8. Cross-checked against the primary text (rung B5, «matches»). **Credit: Base.**
 
 ## Proved-vs-named ledger (the A5 pattern)
 
 | Paper piece | Lean | Kind |
 |---|---|---|
 | Chebyshev over the split side («Var d(U) ≤ n, and Chebyshev's inequality gives …») | `chebyshev_fraction_le` | PROVED (finite-space Chebyshev; `s.Nonempty` stated) |
-| The `4/(ζ²n)` instantiation («n/(ζn/2)² = 4/(ζ²n)») | `prop_p_chebyshev` | PROVED; variance input `Var d(U) ≤ n` = OpenAI L2.3's first clause, named hypothesis — the `hcount` cousin of the L2.5 lane |
+| The `4/(ζ²n)` instantiation («n/(ζn/2)² = 4/(ζ²n)») | `prop_p_chebyshev` | PROVED; variance input `Var d(U) ≤ n` = OpenAI L2.3's first clause, named hypothesis — the `hcount` cousin of the L2.5 cluster |
 | Cap fitting («log\|Σ(U)\| = \|U\| − d(U) ≤ n/2 + ½ − (½−τ₀+ζ/2)n < τ₀n for n > 1/ζ») | `cap_fit_lt` | PROVED (linear arithmetic; `1 < ζn`) |
 | «returns CONTINUE with probability O(1/n)» | `continue_prob_le` | PROVED (explicit `4/(ζ²n)`; the O(·) is the asymptotic reading) |
 | Thm A part 2 («Part 2 holds by Section 5.2»; op bound `2^{τ₀n+2n^{0.7}}poly`) | `prop_p_op_absorb` | PROVED (the absorption `2^{τ₀n} ≤ 2^{τ₀n+2n^{0.7}}`); the procedure's own op counts are the algorithm, named |
@@ -510,13 +497,12 @@ Source of every quote: `a-kapila/maths-proofs` @ `44c34961`, §4 (Prop P, (LD)),
 Source of every quote: `a-kapila/maths-proofs` @ `44c34961`,
 `subset-sum/PROOF_0.4877.tex` §5.1 (Thm A part 2), §5.2 (Steps 3 and 6, the
 closing accounting paragraph), §5.8 (bullet 5); sha256 re-verified this session
-(`b397531c…`). Cross-checked against BRIDGE appendix rows O8 («paper-only») and
-B5. **Credit: the accounting is Base's; this package formalizes it.**
+(`b397531c…`). Cross-checked against the primary text (rungs O8 («paper-only») and B5). **Credit: the accounting is Base's; this package formalizes it.**
 
 **Boundary (D7 note):** every O8 statement counts *word operations* /
 *elementary steps* in Base's OWN counters. The bit-cost → Light-step
 translation is D7, assigned to L5 — it is deliberately not imported, exactly as
-the APSP lane's FFT contract is stated over its own counters.
+a separate FFT contract is stated over its own counters.
 
 ## Verbatim anchors
 
@@ -584,7 +570,7 @@ the APSP lane's FFT contract is stated over its own counters.
 Sources: OpenAI preprint (`sections/filtering.tex`, Lemma 3.2 =
 `lemma:finite-filtering` + the Riemann estimate + the effective version) and
 Base `PROOF_0.4877.tex` (F7), §6.1 Lemma B1, Appendix B.2 (sha re-verified
-`b397531c…`). Cross-checked against BRIDGE rows O4 and V1. **Credit: L3.2 is
+`b397531c…`). Cross-checked against the primary text (rungs O4 and V1). **Credit: L3.2 is
 OpenAI's; the (F7) generalization observation and Lemma B1's use are Base's;
 this package formalizes the mathematical core.**
 
@@ -641,7 +627,7 @@ rows.
 Sources: OpenAI preprint `sections/checksum.tex` (Thm 4.1 =
 `thm:checksum`), `sections/aliases.tex` (Thm 5.1 = `thm:aliases`),
 `sections/implementation.tex`; Base `PROOF_0.4877.tex` §2.2 (F8)
-(sha re-verified `b397531c…`). Cross-checked against BRIDGE rows O5/O7.
+(sha re-verified `b397531c…`). Cross-checked against the primary text (rungs O5/O7).
 **Credit: Thm 4.1 and Thm 5.1 are OpenAI's; this package formalizes the
 mathematical core.** **D7 boundary:** the procedures stay named; op counts
 stay in the papers' own counters.
@@ -712,9 +698,9 @@ deprecated for `ite_eq_left` (warning only, M2 cleans it).
 Build receipt: `lake build SubsetSumL25.Statements` green, 8931 jobs,
 2026-11-09; the only package sorries are the two M2 placeholders above.
 
-# PRIMECOUNT M2a+M2b progress (2026-11-09, wip-hcount @ 8719a64)
+# PRIMECOUNT M2a+M2b progress (2026-11-09)
 
-Landed on wip-hcount (not yet merged to main):
+Landed (commits c0669f4, 8719a64; merged to main):
 * **M2a (c0669f4):** E3 zero-carries (`mid_factorization_eq_zero`), E4
   `large_factorization_eq_one`, `large_product_le` — all PROVED.
 * **M2b (8719a64):** `central_prod_factorization` (C = ∏ p^{v_p} over the
@@ -744,7 +730,7 @@ Landed on wip-hcount (not yet merged to main):
 * Package sorries: **0** (Statements 0, Proofs 0 — the entire ladder is
   sorry-free; grep of `sorry` in SubsetSumL25/ hits only prose comments
   about the M1 placeholders).
-* Axioms freshly measured (M2c closure, /tmp/axioms_m2c.lean):
+* Axioms freshly measured (M2c closure, via `#print axioms`):
   - `erdos_dyadic_primes`: [propext, Classical.choice, Quot.sound] ✓
   - `L2_5_prime_collision_unconditional`: [propext, Classical.choice,
     Quot.sound] ✓
@@ -754,8 +740,8 @@ Landed on wip-hcount (not yet merged to main):
   - `twelve_le_half`, `two_pow_ge_42_add`: [propext, Quot.sound] ✓
   - `L2_5_prime_collision`: house triple ✓
 
-## M2c CLOSED (this session) — the `hcount` premise is unconditional
-The three named pieces, all landed on wip-hcount:
+## M2c CLOSED — the `hcount` premise is unconditional
+The three named pieces (merged to main):
 1. **hprim log-bridge (mid_prod_le)**: θ-route via
    `Chebyshev.theta_eq_sum_primesLE_log` + `theta_le_log4_mul_x`; the
    product bridge via `Nat.cast_prod` + `Real.log_prod` (hypothesis is the
@@ -792,12 +778,12 @@ The three named pieces, all landed on wip-hcount:
 **Verdict: `hcount` CLOSED.** O3 (`L2_5_prime_collision`) and O6 (L5.2) now
 run on unconditional number theory — the last named premise of the O-cluster
 is discharged. The cluster's remaining named condition is V1 (jv1000 sine
-extension, O4's machinery, ~1–2k lines per BRIDGE.md).
+extension, O4's machinery, ~1–2k lines).
 
 ## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
 Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
 pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
-referee3 verdict, per the BRIDGE appendix row V1.
+referee3 verdict (rung V1).
 
 PROVED (all on [propext, Classical.choice, Quot.sound], module green 8926,
 full package green 8958):
@@ -821,39 +807,7 @@ NAMED (M2 targets, documented in Statements/JV1000.lean):
 * the «Lemma B1 transfers to P ≥ P₀» full statement (B1 itself is
   unformalized; the V1→B1 interface is the parity-free O4 hooks landed here).
 
-Verdict: **V1 CLOSED at the level the BRIDGE row names** (the sine extension's
-mathematical content — items 1 + 3 + the discrete form of item 2). The
-O-cluster conditions now stand: hcount ✓, V1 ✓ (ledger-documented residuals
-are integration items, not new mathematics).
-
-## Gotchas banked (M2b)## V1 LANDED (jv1000 sine extension) — the O-cluster's last named condition
-Statements/JV1000.lean (verbatim quotes + proved-vs-named ledger, O4 pointer
-pattern) + Proofs/JV1000.lean (statement-of-record). Source: rev8g §8 l.410 +
-referee3 verdict, per the BRIDGE appendix row V1.
-
-PROVED (all on [propext, Classical.choice, Quot.sound], module green 8926,
-full package green 8958):
-* item 1 (positivity/smoothness/densities): v1_pos, v1_smooth (ContDiff ⊤),
-  v1_density_pos (integral > 0 via support-criterion; rpow exp-form
-  continuity).
-* item 3 (uniform boundedness, the O4-invoking step): v1_amp_bound
-  (|r(x)| ≤ Σ(|a_j|+|b_j|)), v1_cert_amp (the 3.21 certified-point shape),
-  v1_cos_lip/v1_sin_lip (trig-identity Lipschitz, |sin x| ≤ |x|),
-  v1_lipschitz (r Lipschitz with constant Σ j(|a_j|+|b_j|)),
-  v1_o4_transfer (o4_finite_from_continuous at B := lip16 — NO parity
-  hypothesis anywhere, which is jv1000's «without an evenness assumption»),
-  v1_log_bounded (o4_log_abs_le ⇒ |log 2^r| ≤ 3.21·log 2 at the certified
-  point).
-* item 2 (entropy identities, discrete hook): v1_entropy_discrete —
-  o4_gibbs at the sine-density P-point weights, parity-free.
-
-NAMED (M2 targets, documented in Statements/JV1000.lean):
-* item 2's continuous integral-form assembly (D ≥ 0, D−A ≥ 0, D−E ≥ 0).
-* item 4's rig_M modulus bound Σ√(a²+b²)·cosh(jy).
-* the «Lemma B1 transfers to P ≥ P₀» full statement (B1 itself is
-  unformalized; the V1→B1 interface is the parity-free O4 hooks landed here).
-
-Verdict: **V1 CLOSED at the level the BRIDGE row names** (the sine extension's
+Verdict: **V1 CLOSED at the level rung V1 names** (the sine extension's
 mathematical content — items 1 + 3 + the discrete form of item 2). The
 O-cluster conditions now stand: hcount ✓, V1 ✓ (ledger-documented residuals
 are integration items, not new mathematics).
