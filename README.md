@@ -9,7 +9,7 @@ Status: formalization shelf (feeds the α < 1/2 campaign lanes).
 
 ## Why this repo is up
 
-Public research shelf: the OpenAI L-cluster coverage lemmas formalized in Lean — bridge material for the sub-1/2 campaign lanes.
+Private campaign shelf (active sub-1/2 work): the OpenAI L-cluster coverage lemmas formalized in Lean — bridge material for the sub-1/2 campaign lanes. The filed alpha=1/2 packages live in the public subset-sum umbrella.
 
 [BigO-Hunter](https://github.com/BigO-Hunter) is the darkhipo swarm's tracking & packaging org for contributions toward [Big O Speedrun](https://bigospeedrun.com) — a companion, never the project. Org story: [profile](https://github.com/BigO-Hunter/.github) · [bigo-hunter.github.io](https://bigo-hunter.github.io).
 
